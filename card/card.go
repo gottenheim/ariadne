@@ -53,6 +53,12 @@ func (c *Card) CreateCard(cardsDirPath string, templateDirPath string) (string, 
 	return cardDirPath, nil
 }
 
+/*
+	 	Preconditions:
+	 	- card directory exists and writable
+	 	Postconditions:
+		- all code artifacts (answers) compressed and saved to archive file
+*/
 func (c *Card) PackAnswer(cardDirPath string) error {
 	err := c.removeAnswerFile(cardDirPath)
 	if err != nil {
@@ -62,6 +68,13 @@ func (c *Card) PackAnswer(cardDirPath string) error {
 	return c.putCardFilesIntoArchive(cardDirPath)
 }
 
+/*
+	 	Preconditions:
+	 	- card directory exists and writable
+		- answer archive file exists
+	 	Postconditions:
+		- all code artifacts (answers) extracted and saved to card directory
+*/
 func (c *Card) UnpackAnswer(cardDirPath string) error {
 	return c.extractCardFilesFromArchive(cardDirPath)
 }
