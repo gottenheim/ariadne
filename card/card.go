@@ -6,6 +6,7 @@ import (
 	"path"
 	"strconv"
 
+	"github.com/gottenheim/ariadne/archive"
 	"github.com/spf13/afero"
 )
 
@@ -29,7 +30,7 @@ func New(fs afero.Fs, config *Config) *Card {
 		- new card directory created in cards directory
 		- template files copied to that directory
 */
-func (c *Card) CreateNew(cardsDirPath string) (string, error) {
+func (c *Card) CreateCard(cardsDirPath string) (string, error) {
 	cardDirPath, err := c.getNextCardDirPath(cardsDirPath)
 
 	if err != nil {
@@ -49,6 +50,15 @@ func (c *Card) CreateNew(cardsDirPath string) (string, error) {
 	}
 
 	return cardDirPath, nil
+}
+
+func (c *Card) PackAnswer(cardDirPath string) error {
+	err := c.removeAnswerFile(cardDirPath)
+	if err != nil {
+		return err
+	}
+
+	return c.putCardFilesIntoArchive(cardDirPath)
 }
 
 func (c *Card) getNextCardDirPath(cardsDirPath string) (string, error) {
@@ -95,4 +105,37 @@ func (c *Card) copyTemplateFilesToCardDirectory(cardDirPath string) error {
 		}
 		return nil
 	})
+}
+
+func (c *Card) getAnswerFilePath(cardDirPath string) string {
+	return path.Join(cardDirPath, c.config.AnswerFileName)
+}
+
+func (c *Card) removeAnswerFile(cardDirPath string) error {
+	answerFilePath := c.getAnswerFilePath(cardDirPath)
+	exists, err := afero.Exists(c.fs, answerFilePath)
+	if err != nil {
+		return err
+	}
+	if exists {
+		return c.fs.Remove(answerFilePath)
+	}
+	return nil
+}
+
+func (c *Card) putCardFilesIntoArchive(cardDirPath string) error {
+	archiveWriter := archive.NewWriter()
+	err := archiveWriter.AddDir(c.fs, cardDirPath)
+	if err != nil {
+		return err
+	}
+
+	answerFilePath := c.getAnswerFilePath(cardDirPath)
+
+	buf, err := archiveWriter.Buffer()
+	if err != nil {
+		return err
+	}
+
+	return afero.WriteFile(c.fs, answerFilePath, buf.Bytes(), os.ModePerm)
 }

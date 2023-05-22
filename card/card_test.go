@@ -1,8 +1,10 @@
 package card_test
 
 import (
+	"bytes"
 	"testing"
 
+	"github.com/gottenheim/ariadne/archive"
 	"github.com/gottenheim/ariadne/card"
 	"github.com/gottenheim/ariadne/fs"
 	"github.com/spf13/afero"
@@ -24,7 +26,7 @@ func TestFirstCard(t *testing.T) {
 	}
 
 	card := card.New(fakeFs, config)
-	_, err = card.CreateNew("/books/cpp")
+	_, err = card.CreateCard("/books/cpp")
 
 	if err != nil {
 		t.Fatal(err)
@@ -69,7 +71,7 @@ func TestSecondCard(t *testing.T) {
 	}
 
 	card := card.New(fakeFs, config)
-	_, err = card.CreateNew("/books/cpp")
+	_, err = card.CreateCard("/books/cpp")
 
 	if err != nil {
 		t.Fatal(err)
@@ -93,5 +95,47 @@ func TestSecondCard(t *testing.T) {
 
 	if string(headerText) != "template question header" {
 		t.Error("Header texts don't match")
+	}
+}
+
+func TestPackAnswer(t *testing.T) {
+	fakeFs, err := fs.NewFake([]fs.FakeEntry{
+		fs.NewFakeEntry("/books/cpp/1", "question.cpp", `question source file`),
+		fs.NewFakeEntry("/books/cpp/1", "question.h", `question header file`),
+	})
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	config := &card.Config{
+		AnswerFileName: "answer.tgz",
+	}
+
+	card := card.New(fakeFs, config)
+	err = card.PackAnswer("/books/cpp/1")
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	answerFileContents, err := afero.ReadFile(fakeFs, "/books/cpp/1/answer.tgz")
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	files, err := archive.GetFiles(bytes.NewReader(answerFileContents))
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if files["question.cpp"] != "question source file" {
+		t.Error("question.cpp was not compressed into answer file")
+	}
+
+	if files["question.h"] != "question header file" {
+		t.Error("question.h was not compressed into answer file")
 	}
 }
