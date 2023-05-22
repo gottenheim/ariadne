@@ -31,7 +31,7 @@ func New(fs afero.Fs, config *Config) *Card {
 		- new card directory created in cards directory
 		- template files copied to that directory
 */
-func (c *Card) CreateCard(cardsDirPath string) (string, error) {
+func (c *Card) CreateCard(cardsDirPath string, templateDirPath string) (string, error) {
 	cardDirPath, err := c.getNextCardDirPath(cardsDirPath)
 
 	if err != nil {
@@ -44,7 +44,7 @@ func (c *Card) CreateCard(cardsDirPath string) (string, error) {
 		return "", err
 	}
 
-	err = c.copyTemplateFilesToCardDirectory(cardDirPath)
+	err = c.copyTemplateFilesToCardDirectory(cardDirPath, templateDirPath)
 
 	if err != nil {
 		return "", err
@@ -70,11 +70,13 @@ func (c *Card) getNextCardDirPath(cardsDirPath string) (string, error) {
 	maxCardNumber := 0
 
 	err := afero.Walk(c.fs, cardsDirPath, func(filePath string, info os.FileInfo, err error) error {
-		if path.Base(filePath) == c.config.AnswerFileName {
-			cardDir := path.Base(path.Dir(filePath))
+		isDir, _ := afero.IsDir(c.fs, filePath)
+
+		if isDir {
+			cardDir := path.Base(filePath)
 			cardNumber, err := strconv.Atoi(cardDir)
 			if err != nil {
-				return err
+				return nil
 			}
 
 			if cardNumber > maxCardNumber {
@@ -97,8 +99,8 @@ func (c *Card) createCardDirectory(cardDirPath string) error {
 	return c.fs.MkdirAll(cardDirPath, os.ModePerm)
 }
 
-func (c *Card) copyTemplateFilesToCardDirectory(cardDirPath string) error {
-	return afero.Walk(c.fs, c.config.TemplateDir, func(filePath string, info os.FileInfo, err error) error {
+func (c *Card) copyTemplateFilesToCardDirectory(cardDirPath string, templateDirPath string) error {
+	return afero.Walk(c.fs, templateDirPath, func(filePath string, info os.FileInfo, err error) error {
 		if !info.IsDir() {
 			srcFileContents, err := afero.ReadFile(c.fs, filePath)
 			if err != nil {

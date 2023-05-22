@@ -21,12 +21,11 @@ func TestFirstCard(t *testing.T) {
 	}
 
 	config := &card.Config{
-		TemplateDir:    "/config/template",
 		AnswerFileName: "answer.tgz",
 	}
 
 	card := card.New(fakeFs, config)
-	_, err = card.CreateCard("/books/cpp")
+	_, err = card.CreateCard("/books/cpp", "/config/template")
 
 	if err != nil {
 		t.Fatal(err)
@@ -66,12 +65,11 @@ func TestSecondCard(t *testing.T) {
 	}
 
 	config := &card.Config{
-		TemplateDir:    "/config/template",
 		AnswerFileName: "answer.tgz",
 	}
 
 	card := card.New(fakeFs, config)
-	_, err = card.CreateCard("/books/cpp")
+	_, err = card.CreateCard("/books/cpp", "/config/template")
 
 	if err != nil {
 		t.Fatal(err)

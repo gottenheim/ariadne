@@ -1,39 +1,68 @@
-/*
-Copyright © 2023 NAME HERE <EMAIL ADDRESS>
-*/
 package cmd
 
 import (
+	"errors"
 	"fmt"
 
+	"github.com/gottenheim/ariadne/card"
+	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 )
 
-// newCmd represents the new command
 var newCmd = &cobra.Command{
 	Use:   "new",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Short: "Creates a new card",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		cardsDirPath, _ := cmd.Flags().GetString("cards-dir")
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("new called")
+		fs := afero.NewOsFs()
+
+		exists, err := afero.Exists(fs, cardsDirPath)
+		if err != nil {
+			return err
+		}
+
+		if !exists {
+			return errors.New(fmt.Sprintf("Directory '%s' does not exist", cardsDirPath))
+		}
+
+		templateDirPath, _ := cmd.Flags().GetString("template-dir")
+
+		exists, err = afero.Exists(fs, templateDirPath)
+		if err != nil {
+			return err
+		}
+
+		if !exists {
+			return errors.New(fmt.Sprintf("Directory '%s' does not exist", templateDirPath))
+		}
+
+		configFilePath, _ := cmd.Flags().GetString("config-file")
+
+		config, err := card.LoadConfig(fs, configFilePath)
+		if err != nil {
+			return err
+		}
+
+		card := card.New(fs, config)
+
+		cardDir, err := card.CreateCard(cardsDirPath, templateDirPath)
+
+		if err != nil {
+			return err
+		}
+
+		fmt.Printf("Card '%s' has been created\n", cardDir)
+
+		return nil
 	},
 }
 
 func init() {
 	cardCmd.AddCommand(newCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// newCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// newCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	newCmd.Flags().String("cards-dir", "", "Directory to create a new card")
+	newCmd.MarkFlagRequired("cards-dir")
+	newCmd.Flags().String("template-dir", "", "Directory to copy template from")
+	newCmd.MarkFlagRequired("template-dir")
 }
