@@ -82,6 +82,13 @@ func (c *Card) UnpackAnswer(cardDirPath string) error {
 	return c.extractCardFilesToCardDirectory(cardDirPath)
 }
 
+/*
+	 	Preconditions:
+	 	- card directory exists and readable
+		- answer archive file exists
+	 	Postconditions:
+		- all code artifacts (answers) extracted and sent to stdout
+*/
 func (c *Card) ShowAnswer(cardDirPath string) error {
 	return c.extractAndDisplayCardFiles(cardDirPath)
 }
