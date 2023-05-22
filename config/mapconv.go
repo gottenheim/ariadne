@@ -203,15 +203,3 @@ func (m MapStr) MakePath(path string) MapStr {
 
 	return mapValue.MakePath(tail)
 }
-
-func (m MapStr) GetKeys() []string {
-	keys := make([]string, len(m))
-
-	index := 0
-	for key, _ := range m {
-		keys[index] = key
-		index++
-	}
-
-	return keys
-}
