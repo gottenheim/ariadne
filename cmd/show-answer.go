@@ -11,9 +11,9 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
-var packAnswerCmd = &cobra.Command{
-	Use:   "pack-answer",
-	Short: "Packs files with correct answer to archive",
+var showAnswerCmd = &cobra.Command{
+	Use:   "show-answer",
+	Short: "Extracts and displays answer archive files",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cardDirPath, _ := cmd.Flags().GetString("card-dir")
 
@@ -39,20 +39,18 @@ var packAnswerCmd = &cobra.Command{
 
 		card := card.New(fs, config, ioStreams)
 
-		err = card.PackAnswer(cardDirPath)
+		err = card.ShowAnswer(cardDirPath)
 		if err != nil {
 			return err
 		}
-
-		fmt.Printf("Card '%s' answer packed sucessfully\n", cardDirPath)
 
 		return nil
 	},
 }
 
 func init() {
-	cardCmd.AddCommand(packAnswerCmd)
+	cardCmd.AddCommand(showAnswerCmd)
 
-	packAnswerCmd.Flags().String("card-dir", "", "Card directory")
-	packAnswerCmd.MarkFlagRequired("card-dir")
+	showAnswerCmd.Flags().String("card-dir", "", "Card directory")
+	showAnswerCmd.MarkFlagRequired("card-dir")
 }

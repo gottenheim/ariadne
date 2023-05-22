@@ -9,17 +9,20 @@ import (
 
 	"github.com/gottenheim/ariadne/archive"
 	"github.com/spf13/afero"
+	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
 type Card struct {
-	fs     afero.Fs
-	config *Config
+	fs        afero.Fs
+	ioStreams genericclioptions.IOStreams
+	config    *Config
 }
 
-func New(fs afero.Fs, config *Config) *Card {
+func New(fs afero.Fs, config *Config, ioStreams genericclioptions.IOStreams) *Card {
 	return &Card{
-		fs:     fs,
-		config: config,
+		fs:        fs,
+		ioStreams: ioStreams,
+		config:    config,
 	}
 }
 
@@ -76,7 +79,11 @@ func (c *Card) PackAnswer(cardDirPath string) error {
 		- all code artifacts (answers) extracted and saved to card directory
 */
 func (c *Card) UnpackAnswer(cardDirPath string) error {
-	return c.extractCardFilesFromArchive(cardDirPath)
+	return c.extractCardFilesToCardDirectory(cardDirPath)
+}
+
+func (c *Card) ShowAnswer(cardDirPath string) error {
+	return c.extractAndDisplayCardFiles(cardDirPath)
 }
 
 func (c *Card) getNextCardDirPath(cardsDirPath string) (string, error) {
@@ -160,14 +167,37 @@ func (c *Card) putCardFilesIntoArchive(cardDirPath string) error {
 	return afero.WriteFile(c.fs, answerFilePath, buf.Bytes(), os.ModePerm)
 }
 
-func (c *Card) extractCardFilesFromArchive(cardDirPath string) error {
+func (c *Card) extractCardFilesToCardDirectory(cardDirPath string) error {
 	answerFilePath := c.getAnswerFilePath(cardDirPath)
 
 	answerFileContents, err := afero.ReadFile(c.fs, answerFilePath)
 
 	if err != nil {
-		return nil
+		return err
 	}
 
 	return archive.Uncompress(bytes.NewReader(answerFileContents), c.fs, cardDirPath)
+}
+
+func (c *Card) extractAndDisplayCardFiles(cardDirPath string) error {
+	answerFilePath := c.getAnswerFilePath(cardDirPath)
+
+	answerFileContents, err := afero.ReadFile(c.fs, answerFilePath)
+
+	if err != nil {
+		return err
+	}
+
+	files, err := archive.GetFiles(bytes.NewReader(answerFileContents))
+
+	if err != nil {
+		return err
+	}
+
+	for fileName, fileContents := range files {
+		fmt.Fprintf(c.ioStreams.Out, "---- %s ----\n", fileName)
+		fmt.Fprintf(c.ioStreams.Out, "%s\n", string(fileContents))
+	}
+
+	return nil
 }

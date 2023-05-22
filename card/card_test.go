@@ -2,12 +2,14 @@ package card_test
 
 import (
 	"bytes"
+	"strings"
 	"testing"
 
 	"github.com/gottenheim/ariadne/archive"
 	"github.com/gottenheim/ariadne/card"
 	"github.com/gottenheim/ariadne/fs"
 	"github.com/spf13/afero"
+	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
 func TestFirstCard(t *testing.T) {
@@ -24,7 +26,10 @@ func TestFirstCard(t *testing.T) {
 		AnswerFileName: "answer.tgz",
 	}
 
-	card := card.New(fakeFs, config)
+	ioStreams, _, _, _ := genericclioptions.NewTestIOStreams()
+
+	card := card.New(fakeFs, config, ioStreams)
+
 	_, err = card.CreateCard("/books/cpp", "/config/template")
 
 	if err != nil {
@@ -68,7 +73,10 @@ func TestSecondCard(t *testing.T) {
 		AnswerFileName: "answer.tgz",
 	}
 
-	card := card.New(fakeFs, config)
+	ioStreams, _, _, _ := genericclioptions.NewTestIOStreams()
+
+	card := card.New(fakeFs, config, ioStreams)
+
 	_, err = card.CreateCard("/books/cpp", "/config/template")
 
 	if err != nil {
@@ -110,7 +118,10 @@ func TestPackAnswer(t *testing.T) {
 		AnswerFileName: "answer.tgz",
 	}
 
-	card := card.New(fakeFs, config)
+	ioStreams, _, _, _ := genericclioptions.NewTestIOStreams()
+
+	card := card.New(fakeFs, config, ioStreams)
+
 	err = card.PackAnswer("/books/cpp/1")
 
 	if err != nil {
@@ -152,7 +163,10 @@ func TestUnpackAnswer(t *testing.T) {
 		AnswerFileName: "answer.tgz",
 	}
 
-	card := card.New(fakeFs, config)
+	ioStreams, _, _, _ := genericclioptions.NewTestIOStreams()
+
+	card := card.New(fakeFs, config, ioStreams)
+
 	err = card.PackAnswer("/books/cpp/1")
 
 	if err != nil {
@@ -189,5 +203,37 @@ func TestUnpackAnswer(t *testing.T) {
 
 	if string(headerText) != "question header file" {
 		t.Fatal()
+	}
+}
+
+func TestShowAnswer(t *testing.T) {
+	fakeFs, err := fs.NewFake([]fs.FakeEntry{
+		fs.NewFakeEntry("/books/cpp/1", "question.cpp", `question source file`),
+		fs.NewFakeEntry("/books/cpp/1", "question.h", `question header file`),
+	})
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	config := &card.Config{
+		AnswerFileName: "answer.tgz",
+	}
+
+	ioStreams, _, outBuf, _ := genericclioptions.NewTestIOStreams()
+
+	card := card.New(fakeFs, config, ioStreams)
+	err = card.PackAnswer("/books/cpp/1")
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	card.ShowAnswer("/books/cpp/1")
+
+	actualAnswer := outBuf.String()
+
+	if !strings.Contains(actualAnswer, "question source file") || !strings.Contains(actualAnswer, "question header file") {
+		t.Fatal("Answer is not displayed")
 	}
 }

@@ -3,10 +3,12 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"os"
 
 	"github.com/gottenheim/ariadne/card"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
+	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
 var newCmd = &cobra.Command{
@@ -44,7 +46,9 @@ var newCmd = &cobra.Command{
 			return err
 		}
 
-		card := card.New(fs, config)
+		ioStreams := genericclioptions.IOStreams{In: os.Stdin, Out: os.Stdout, ErrOut: os.Stderr}
+
+		card := card.New(fs, config, ioStreams)
 
 		cardDir, err := card.CreateCard(cardsDirPath, templateDirPath)
 
