@@ -1,6 +1,7 @@
 package card
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"path"
@@ -59,6 +60,10 @@ func (c *Card) PackAnswer(cardDirPath string) error {
 	}
 
 	return c.putCardFilesIntoArchive(cardDirPath)
+}
+
+func (c *Card) UnpackAnswer(cardDirPath string) error {
+	return c.extractCardFilesFromArchive(cardDirPath)
 }
 
 func (c *Card) getNextCardDirPath(cardsDirPath string) (string, error) {
@@ -138,4 +143,16 @@ func (c *Card) putCardFilesIntoArchive(cardDirPath string) error {
 	}
 
 	return afero.WriteFile(c.fs, answerFilePath, buf.Bytes(), os.ModePerm)
+}
+
+func (c *Card) extractCardFilesFromArchive(cardDirPath string) error {
+	answerFilePath := c.getAnswerFilePath(cardDirPath)
+
+	answerFileContents, err := afero.ReadFile(c.fs, answerFilePath)
+
+	if err != nil {
+		return nil
+	}
+
+	return archive.Uncompress(bytes.NewReader(answerFileContents), c.fs, cardDirPath)
 }

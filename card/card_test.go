@@ -139,3 +139,57 @@ func TestPackAnswer(t *testing.T) {
 		t.Error("question.h was not compressed into answer file")
 	}
 }
+
+func TestUnpackAnswer(t *testing.T) {
+	fakeFs, err := fs.NewFake([]fs.FakeEntry{
+		fs.NewFakeEntry("/books/cpp/1", "question.cpp", `question source file`),
+		fs.NewFakeEntry("/books/cpp/1", "question.h", `question header file`),
+	})
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	config := &card.Config{
+		AnswerFileName: "answer.tgz",
+	}
+
+	card := card.New(fakeFs, config)
+	err = card.PackAnswer("/books/cpp/1")
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = fakeFs.Remove("/books/cpp/1/question.cpp")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = fakeFs.Remove("/books/cpp/1/question.h")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	card.UnpackAnswer("/books/cpp/1")
+
+	questionText, err := afero.ReadFile(fakeFs, "/books/cpp/1/question.cpp")
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if string(questionText) != "question source file" {
+		t.Fatal()
+	}
+
+	headerText, err := afero.ReadFile(fakeFs, "/books/cpp/1/question.h")
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if string(headerText) != "question header file" {
+		t.Fatal()
+	}
+}
