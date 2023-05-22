@@ -68,7 +68,7 @@ func (c *Card) PackAnswer(cardDirPath string) error {
 		return err
 	}
 
-	return c.putCardFilesIntoArchive(cardDirPath)
+	return c.putCardFilesIntoAnswerFile(cardDirPath)
 }
 
 /*
@@ -157,7 +157,7 @@ func (c *Card) removeAnswerFile(cardDirPath string) error {
 	return nil
 }
 
-func (c *Card) putCardFilesIntoArchive(cardDirPath string) error {
+func (c *Card) putCardFilesIntoAnswerFile(cardDirPath string) error {
 	archiveWriter := archive.NewWriter()
 	err := archiveWriter.AddDir(c.fs, cardDirPath)
 	if err != nil {
@@ -175,9 +175,7 @@ func (c *Card) putCardFilesIntoArchive(cardDirPath string) error {
 }
 
 func (c *Card) extractCardFilesToCardDirectory(cardDirPath string) error {
-	answerFilePath := c.getAnswerFilePath(cardDirPath)
-
-	answerFileContents, err := afero.ReadFile(c.fs, answerFilePath)
+	answerFileContents, err := c.getAnswerFileContents(cardDirPath)
 
 	if err != nil {
 		return err
@@ -187,24 +185,42 @@ func (c *Card) extractCardFilesToCardDirectory(cardDirPath string) error {
 }
 
 func (c *Card) extractAndDisplayCardFiles(cardDirPath string) error {
-	answerFilePath := c.getAnswerFilePath(cardDirPath)
-
-	answerFileContents, err := afero.ReadFile(c.fs, answerFilePath)
+	answerFileContents, err := c.getAnswerFileContents(cardDirPath)
 
 	if err != nil {
 		return err
 	}
 
+	files, err := c.extractAnswerFileToDictionary(answerFileContents)
+
+	if err != nil {
+		return err
+	}
+
+	c.displayCardFiles(files)
+
+	return nil
+}
+
+func (c *Card) getAnswerFileContents(cardDirPath string) ([]byte, error) {
+	answerFilePath := c.getAnswerFilePath(cardDirPath)
+
+	return afero.ReadFile(c.fs, answerFilePath)
+}
+
+func (c *Card) extractAnswerFileToDictionary(answerFileContents []byte) (map[string]string, error) {
 	files, err := archive.GetFiles(bytes.NewReader(answerFileContents))
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	for fileName, fileContents := range files {
+	return files, nil
+}
+
+func (c *Card) displayCardFiles(answerFiles map[string]string) {
+	for fileName, fileContents := range answerFiles {
 		fmt.Fprintf(c.ioStreams.Out, "---- %s ----\n", fileName)
 		fmt.Fprintf(c.ioStreams.Out, "%s\n", string(fileContents))
 	}
-
-	return nil
 }
