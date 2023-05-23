@@ -13,6 +13,7 @@ type Card struct {
 	sections  []string
 	orderNum  int
 	artifacts []CardArtifact
+	progress  *CardProgress
 }
 
 func NewCard(sections []string, orderNum int, artifacts []CardArtifact) *Card {
@@ -20,6 +21,9 @@ func NewCard(sections []string, orderNum int, artifacts []CardArtifact) *Card {
 		sections:  sections,
 		orderNum:  orderNum,
 		artifacts: artifacts,
+		progress: &CardProgress{
+			Status: New,
+		},
 	}
 }
 
@@ -41,6 +45,14 @@ func (c *Card) HasOrderNumber() bool {
 
 func (c *Card) Artifacts() []CardArtifact {
 	return c.artifacts
+}
+
+func (c *Card) SetProgress(progress *CardProgress) {
+	c.progress = progress
+}
+
+func (c *Card) Progress() *CardProgress {
+	return c.progress
 }
 
 func (c *Card) FindArtifactByName(name string) *CardArtifact {

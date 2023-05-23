@@ -1,6 +1,9 @@
 package test
 
 import (
+	"fmt"
+	"os"
+	"strings"
 	"testing"
 
 	"github.com/spf13/afero"
@@ -13,7 +16,7 @@ func AssertFileExistsAndHasContent(t *testing.T, fs afero.Fs, path string, expec
 		t.Errorf("File %s does not exist", path)
 	}
 
-	if string(fileText) != expectedContent {
+	if strings.TrimSpace(string(fileText)) != expectedContent {
 		t.Errorf("File %s has unexpected content. Actual: %s, expected: %s", path, fileText, expectedContent)
 	}
 }
@@ -27,5 +30,23 @@ func AssertFileDoesNotExists(t *testing.T, fs afero.Fs, path string) {
 
 	if exists {
 		t.Errorf("File %s exists, but it is not expected to be", path)
+	}
+}
+
+func AssertDirectoryFilesCount(t *testing.T, fs afero.Fs, path string, expectedCount int) {
+	filesCount := 0
+	err := afero.Walk(fs, path, func(filePath string, info os.FileInfo, err error) error {
+		if info != nil && !info.IsDir() {
+			filesCount++
+		}
+		return nil
+	})
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if filesCount != expectedCount {
+		t.Error(fmt.Sprintf("Directory %s is expected to have %d files, but have %d", path, expectedCount, filesCount))
 	}
 }

@@ -1,6 +1,8 @@
 package card_test
 
 import (
+	"fmt"
+	"path/filepath"
 	"reflect"
 	"testing"
 
@@ -139,5 +141,84 @@ func TestGetCardFromRepository(t *testing.T) {
 
 	if string(headerFile.Content()) != "header artifact" {
 		t.Error("Loaded card has unexpected header artifact content")
+	}
+}
+
+func TestSkipNewCardProgressDuringSaving(t *testing.T) {
+	fakeFs, err := fs.NewFake([]fs.FakeEntry{})
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	repo := card.NewFileCardRepository(fakeFs, "/home/user")
+
+	c := card.NewCard([]string{"books", "cpp"}, 0,
+		[]card.CardArtifact{
+			card.NewCardArtifact("source.cpp", []byte("source code artifact")),
+			card.NewCardArtifact("header.h", []byte("header artifact")),
+		})
+
+	err = repo.Save(c)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	progressFilePath := fmt.Sprintf("/home/user/books/cpp/1/%s", card.ProgressFileName)
+
+	test.AssertFileDoesNotExists(t, fakeFs, progressFilePath)
+	test.AssertDirectoryFilesCount(t, fakeFs, filepath.Dir(progressFilePath), 2)
+}
+
+func TestSaveCreatesCardProgressFileIfStatusIsNotNew(t *testing.T) {
+	fakeFs, err := fs.NewFake([]fs.FakeEntry{})
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	repo := card.NewFileCardRepository(fakeFs, "/home/user")
+
+	c := card.NewCard([]string{"books", "cpp"}, 0,
+		[]card.CardArtifact{
+			card.NewCardArtifact("source.cpp", []byte("source code artifact")),
+			card.NewCardArtifact("header.h", []byte("header artifact")),
+		})
+
+	c.SetProgress(card.ScheduledCard())
+
+	err = repo.Save(c)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	progressFilePath := fmt.Sprintf("/home/user/books/cpp/1/%s", card.ProgressFileName)
+
+	test.AssertFileExistsAndHasContent(t, fakeFs, progressFilePath, `Status: Scheduled`)
+}
+
+func TestReadCardProgress(t *testing.T) {
+	fakeFs, err := fs.NewFake([]fs.FakeEntry{
+		fs.NewFakeEntry("/home/user/books/cpp/2", "source.cpp", `source code artifact`),
+		fs.NewFakeEntry("/home/user/books/cpp/2", "header.h", `header artifact`),
+		fs.NewFakeEntry("/home/user/books/cpp/2", card.ProgressFileName, `Status: Scheduled`),
+	})
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	repo := card.NewFileCardRepository(fakeFs, "/home/user")
+
+	c, err := repo.Get("/books/cpp/2")
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if c.Progress().Status != card.Scheduled {
+		t.Fatal("Card progress status should be Scheduled")
 	}
 }

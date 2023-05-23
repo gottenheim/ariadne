@@ -2,9 +2,10 @@ package config
 
 import (
 	"encoding/json"
+	"io"
+
 	"github.com/imdario/mergo"
 	"github.com/pkg/errors"
-	"io"
 )
 
 type Configuration interface {

@@ -1,6 +1,7 @@
 package card
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"os"
@@ -9,9 +10,12 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/gottenheim/ariadne/config"
 	"github.com/gottenheim/ariadne/fs"
 	"github.com/spf13/afero"
 )
+
+const ProgressFileName = ".progress"
 
 type FileCardRepository struct {
 	fs      afero.Fs
@@ -44,6 +48,13 @@ func (r *FileCardRepository) Get(relativeCardPath string) (*Card, error) {
 
 	card.artifacts = artifacts
 
+	progress, err := r.readCardProgress(cardPath)
+	if err != nil {
+		return nil, err
+	}
+
+	card.progress = progress
+
 	return card, nil
 }
 
@@ -58,7 +69,12 @@ func (r *FileCardRepository) Save(card *Card) error {
 		return err
 	}
 
-	return r.saveArtifactFiles(card)
+	err = r.saveArtifactFiles(card)
+	if err != nil {
+		return err
+	}
+
+	return r.saveCardProgress(card)
 }
 
 func (r *FileCardRepository) assignOrderNumberIfNeeded(card *Card) error {
@@ -173,7 +189,7 @@ func (r *FileCardRepository) readCardArtifacts(cardPath string) ([]CardArtifact,
 	var artifacts []CardArtifact
 
 	err := afero.Walk(r.fs, cardPath, func(filePath string, info os.FileInfo, err error) error {
-		if info != nil && !info.IsDir() {
+		if info != nil && !info.IsDir() && !r.isServiceFile(filePath) {
 			fileContents, err := afero.ReadFile(r.fs, filePath)
 			if err != nil {
 				return err
@@ -189,4 +205,97 @@ func (r *FileCardRepository) readCardArtifacts(cardPath string) ([]CardArtifact,
 	}
 
 	return artifacts, nil
+}
+
+func (r *FileCardRepository) isServiceFile(fileName string) bool {
+	return fileName[0] == '.'
+}
+
+func (r *FileCardRepository) readCardProgress(cardPath string) (*CardProgress, error) {
+	progressFilePath := filepath.Join(cardPath, ProgressFileName)
+
+	exists, err := afero.Exists(r.fs, progressFilePath)
+	if err != nil {
+		return nil, err
+	}
+
+	if !exists {
+		return &CardProgress{
+			Status: New,
+		}, nil
+	}
+
+	contents, err := afero.ReadFile(r.fs, progressFilePath)
+	if err != nil {
+		return nil, err
+	}
+
+	cfg, err := config.FromYamlReader(bytes.NewReader(contents))
+
+	if err != nil {
+		return nil, err
+	}
+
+	progress := &CardProgress{}
+	err = cfg.Materialize(progress)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return progress, nil
+}
+
+func (r *FileCardRepository) saveCardProgress(card *Card) error {
+	cardPath := r.getCardPath(card)
+
+	progressFilePath := filepath.Join(cardPath, ProgressFileName)
+
+	exists, err := afero.Exists(r.fs, progressFilePath)
+	if err != nil {
+		return err
+	}
+
+	if exists {
+		err = r.fs.Remove(progressFilePath)
+		if err != nil {
+			return err
+		}
+	}
+
+	if card.progress.Status == New {
+		return nil
+	}
+
+	cfg := config.NewEmpty()
+
+	writableConfig, isWritable := cfg.(config.WritableConfiguration)
+
+	if !isWritable {
+		return errors.New("Configuration isn't writable")
+	}
+
+	err = writableConfig.Dematerialize(card.progress)
+	if err != nil {
+		return err
+	}
+
+	values, err := cfg.GetValues()
+	if err != nil {
+		return err
+	}
+
+	buffer := bytes.Buffer{}
+
+	err = config.WriteMapToYaml(&values, &buffer)
+	if err != nil {
+		return err
+	}
+
+	err = afero.WriteFile(r.fs, progressFilePath, buffer.Bytes(), os.ModePerm)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
