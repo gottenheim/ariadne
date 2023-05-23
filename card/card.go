@@ -2,225 +2,155 @@ package card
 
 import (
 	"bytes"
-	"fmt"
-	"os"
-	"path"
-	"strconv"
+	"errors"
 
 	"github.com/gottenheim/ariadne/archive"
-	"github.com/spf13/afero"
-	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
+const AnswerArtifactName = "answer.tgz"
+
 type Card struct {
-	fs        afero.Fs
-	ioStreams genericclioptions.IOStreams
-	config    *Config
+	sections  []string
+	orderNum  int
+	artifacts []CardArtifact
 }
 
-func New(fs afero.Fs, config *Config, ioStreams genericclioptions.IOStreams) *Card {
+func NewCard(sections []string, orderNum int, artifacts []CardArtifact) *Card {
 	return &Card{
-		fs:        fs,
-		ioStreams: ioStreams,
-		config:    config,
+		sections:  sections,
+		orderNum:  orderNum,
+		artifacts: artifacts,
 	}
 }
 
-/*
-	 	Preconditions:
-	 	- cards directory exists and writable
-		- template directory exists and readable
-	 	Postconditions:
-		- new card directory created in cards directory
-		- template files copied to that directory
-*/
-func (c *Card) CreateCard(cardsDirPath string, templateDirPath string) (string, error) {
-	cardDirPath, err := c.getNextCardDirPath(cardsDirPath)
-
-	if err != nil {
-		return "", err
-	}
-
-	err = c.createCardDirectory(cardDirPath)
-
-	if err != nil {
-		return "", err
-	}
-
-	err = c.copyTemplateFilesToCardDirectory(cardDirPath, templateDirPath)
-
-	if err != nil {
-		return "", err
-	}
-
-	return cardDirPath, nil
+func (c *Card) Sections() []string {
+	return c.sections
 }
 
-/*
-	 	Preconditions:
-	 	- card directory exists and writable
-	 	Postconditions:
-		- all code artifacts (answers) compressed and saved to archive file
-*/
-func (c *Card) PackAnswer(cardDirPath string) error {
-	err := c.removeAnswerFile(cardDirPath)
-	if err != nil {
-		return err
-	}
-
-	return c.putCardFilesIntoAnswerFile(cardDirPath)
+func (c *Card) OrderNumber() int {
+	return c.orderNum
 }
 
-/*
-	 	Preconditions:
-	 	- card directory exists and writable
-		- answer archive file exists
-	 	Postconditions:
-		- all code artifacts (answers) extracted and saved to card directory
-*/
-func (c *Card) UnpackAnswer(cardDirPath string) error {
-	return c.extractCardFilesToCardDirectory(cardDirPath)
+func (c *Card) SetOrderNumber(orderNum int) {
+	c.orderNum = orderNum
 }
 
-/*
-	 	Preconditions:
-	 	- card directory exists and readable
-		- answer archive file exists
-	 	Postconditions:
-		- all code artifacts (answers) extracted and sent to stdout
-*/
-func (c *Card) ShowAnswer(cardDirPath string) error {
-	return c.extractAndDisplayCardFiles(cardDirPath)
+func (c *Card) HasOrderNumber() bool {
+	return c.orderNum > 0
 }
 
-func (c *Card) getNextCardDirPath(cardsDirPath string) (string, error) {
-	maxCardNumber := 0
+func (c *Card) Artifacts() []CardArtifact {
+	return c.artifacts
+}
 
-	err := afero.Walk(c.fs, cardsDirPath, func(filePath string, info os.FileInfo, err error) error {
-		isDir, _ := afero.IsDir(c.fs, filePath)
-
-		if isDir {
-			cardDir := path.Base(filePath)
-			cardNumber, err := strconv.Atoi(cardDir)
-			if err != nil {
-				return nil
-			}
-
-			if cardNumber > maxCardNumber {
-				maxCardNumber = cardNumber
-			}
+func (c *Card) FindArtifactByName(name string) *CardArtifact {
+	for _, artifact := range c.artifacts {
+		if artifact.Name() == name {
+			return &artifact
 		}
-		return nil
-	})
-
-	if err != nil {
-		return "", err
-	}
-
-	cardDirPath := path.Join(cardsDirPath, fmt.Sprintf("%d", maxCardNumber+1))
-
-	return cardDirPath, nil
-}
-
-func (c *Card) createCardDirectory(cardDirPath string) error {
-	return c.fs.MkdirAll(cardDirPath, os.ModePerm)
-}
-
-func (c *Card) copyTemplateFilesToCardDirectory(cardDirPath string, templateDirPath string) error {
-	return afero.Walk(c.fs, templateDirPath, func(filePath string, info os.FileInfo, err error) error {
-		if !info.IsDir() {
-			srcFileContents, err := afero.ReadFile(c.fs, filePath)
-			if err != nil {
-				return err
-			}
-			fileName := path.Base(filePath)
-			dstFilePath := path.Join(cardDirPath, fileName)
-			afero.WriteFile(c.fs, dstFilePath, srcFileContents, os.ModePerm)
-		}
-		return nil
-	})
-}
-
-func (c *Card) getAnswerFilePath(cardDirPath string) string {
-	return path.Join(cardDirPath, c.config.AnswerFileName)
-}
-
-func (c *Card) removeAnswerFile(cardDirPath string) error {
-	answerFilePath := c.getAnswerFilePath(cardDirPath)
-	exists, err := afero.Exists(c.fs, answerFilePath)
-	if err != nil {
-		return err
-	}
-	if exists {
-		return c.fs.Remove(answerFilePath)
 	}
 	return nil
 }
 
-func (c *Card) putCardFilesIntoAnswerFile(cardDirPath string) error {
-	archiveWriter := archive.NewWriter()
-	err := archiveWriter.AddDir(c.fs, cardDirPath)
-	if err != nil {
-		return err
-	}
-
-	answerFilePath := c.getAnswerFilePath(cardDirPath)
-
-	buf, err := archiveWriter.Buffer()
-	if err != nil {
-		return err
-	}
-
-	return afero.WriteFile(c.fs, answerFilePath, buf.Bytes(), os.ModePerm)
+func (c *Card) FindAnswerArtifact() *CardArtifact {
+	return c.FindArtifactByName(AnswerArtifactName)
 }
 
-func (c *Card) extractCardFilesToCardDirectory(cardDirPath string) error {
-	answerFileContents, err := c.getAnswerFileContents(cardDirPath)
+func (c *Card) CompressAnswer() error {
+	c.removeAnswerArtifact()
 
+	compressedAnswer, err := c.compressArtifacts()
 	if err != nil {
 		return err
 	}
 
-	return archive.Uncompress(bytes.NewReader(answerFileContents), c.fs, cardDirPath)
-}
-
-func (c *Card) extractAndDisplayCardFiles(cardDirPath string) error {
-	answerFileContents, err := c.getAnswerFileContents(cardDirPath)
-
-	if err != nil {
-		return err
-	}
-
-	files, err := c.extractAnswerFileToDictionary(answerFileContents)
-
-	if err != nil {
-		return err
-	}
-
-	c.displayCardFiles(files)
+	c.addAnswerArtifact(compressedAnswer)
 
 	return nil
 }
 
-func (c *Card) getAnswerFileContents(cardDirPath string) ([]byte, error) {
-	answerFilePath := c.getAnswerFilePath(cardDirPath)
+func (c *Card) ExtractAnswer() error {
+	files, err := c.getAnswerFiles()
+	if err != nil {
+		return err
+	}
 
-	return afero.ReadFile(c.fs, answerFilePath)
+	c.removeAllArtifactsExceptAnswer()
+
+	for name, content := range files {
+		c.addArtifact(name, content)
+	}
+
+	return nil
 }
 
-func (c *Card) extractAnswerFileToDictionary(answerFileContents []byte) (map[string]string, error) {
-	files, err := archive.GetFiles(bytes.NewReader(answerFileContents))
+func (c *Card) removeAnswerArtifact() {
+	c.removeArtifact(AnswerArtifactName)
+}
+
+func (c *Card) removeArtifact(artifactName string) {
+	for index, artifact := range c.artifacts {
+		if artifact.Name() == artifactName {
+			c.artifacts = append(c.artifacts[:index], c.artifacts[index+1:]...)
+			break
+		}
+	}
+}
+
+func (c *Card) removeAllArtifactsExceptAnswer() {
+	var newArtifacts []CardArtifact
+
+	answerArtifact := c.FindAnswerArtifact()
+	if answerArtifact != nil {
+		newArtifacts = append(newArtifacts, *answerArtifact)
+	}
+
+	c.artifacts = newArtifacts
+}
+
+func (c *Card) compressArtifacts() ([]byte, error) {
+	artifacts := c.getArtifactsAsMap()
+
+	writer := archive.NewWriter()
+	writer.AddFiles(artifacts)
+	buf, err := writer.Buffer()
+	if err != nil {
+		return nil, err
+	}
+
+	return buf.Bytes(), nil
+}
+
+func (c *Card) getArtifactsAsMap() map[string][]byte {
+	artifacts := map[string][]byte{}
+
+	for _, artifact := range c.artifacts {
+		artifacts[artifact.name] = artifact.content
+	}
+
+	return artifacts
+}
+
+func (c *Card) addAnswerArtifact(contents []byte) {
+	c.addArtifact(AnswerArtifactName, contents)
+}
+
+func (c *Card) addArtifact(name string, contents []byte) {
+	c.artifacts = append(c.artifacts, NewCardArtifact(name, contents))
+}
+
+func (c *Card) getAnswerFiles() (map[string][]byte, error) {
+	answerArtifact := c.FindAnswerArtifact()
+
+	if answerArtifact == nil {
+		return nil, errors.New("Card doesn't contain answer artifact")
+	}
+
+	files, err := archive.GetFiles(bytes.NewReader(answerArtifact.content))
 
 	if err != nil {
 		return nil, err
 	}
 
 	return files, nil
-}
-
-func (c *Card) displayCardFiles(answerFiles map[string]string) {
-	for fileName, fileContents := range answerFiles {
-		fmt.Fprintf(c.ioStreams.Out, "---- %s ----\n", fileName)
-		fmt.Fprintf(c.ioStreams.Out, "%s\n", string(fileContents))
-	}
 }

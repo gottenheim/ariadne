@@ -6,11 +6,12 @@ import (
 	"compress/gzip"
 	"crypto/md5"
 	"fmt"
-	"github.com/spf13/afero"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/spf13/afero"
 )
 
 func Uncompress(src io.Reader, fs afero.Fs, targetDir string) error {
@@ -98,7 +99,7 @@ func GetDirectories(src io.Reader) ([]string, error) {
 	return archiveDirs, nil
 }
 
-func GetFiles(src io.Reader) (map[string]string, error) {
+func GetFiles(src io.Reader) (map[string][]byte, error) {
 	zr, err := gzip.NewReader(src)
 	if err != nil {
 		return nil, err
@@ -106,7 +107,7 @@ func GetFiles(src io.Reader) (map[string]string, error) {
 
 	tr := tar.NewReader(zr)
 
-	archiveFiles := map[string]string{}
+	archiveFiles := map[string][]byte{}
 
 	for {
 		header, err := tr.Next()
@@ -118,12 +119,12 @@ func GetFiles(src io.Reader) (map[string]string, error) {
 		}
 
 		if header.Typeflag == tar.TypeReg {
-			buf := new(strings.Builder)
+			buf := new(bytes.Buffer)
 			_, err := io.Copy(buf, tr)
 			if err != nil {
 				return nil, err
 			}
-			archiveFiles[header.Name] = buf.String()
+			archiveFiles[header.Name] = buf.Bytes()
 		}
 	}
 

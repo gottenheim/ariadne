@@ -2,238 +2,74 @@ package card_test
 
 import (
 	"bytes"
-	"strings"
 	"testing"
 
 	"github.com/gottenheim/ariadne/archive"
 	"github.com/gottenheim/ariadne/card"
-	"github.com/gottenheim/ariadne/fs"
-	"github.com/spf13/afero"
-	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
-func TestFirstCard(t *testing.T) {
-	fakeFs, err := fs.NewFake([]fs.FakeEntry{
-		fs.NewFakeEntry("/config/template", "question.cpp", `template question`),
-		fs.NewFakeEntry("/config/template", "header.h", `template question header`),
+func TestCompressAnswerArtifacts(t *testing.T) {
+	c := card.NewCard([]string{}, 0, []card.CardArtifact{
+		card.NewCardArtifact("source.cpp", []byte("source file contents")),
+		card.NewCardArtifact("header.h", []byte("header file contents")),
 	})
 
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	config := &card.Config{
-		AnswerFileName: "answer.tgz",
-	}
-
-	ioStreams, _, _, _ := genericclioptions.NewTestIOStreams()
-
-	card := card.New(fakeFs, config, ioStreams)
-
-	_, err = card.CreateCard("/books/cpp", "/config/template")
+	err := c.CompressAnswer()
 
 	if err != nil {
-		t.Fatal(err)
+		t.Fatal("Failed to compress card artifacts")
 	}
 
-	questionText, err := afero.ReadFile(fakeFs, "/books/cpp/1/question.cpp")
+	artifact := c.FindArtifactByName(card.AnswerArtifactName)
+
+	if artifact == nil {
+		t.Fatal("Artifacts weren't compressed")
+	}
+
+	files, err := archive.GetFiles(bytes.NewReader(artifact.Content()))
 
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if string(questionText) != "template question" {
-		t.Error("Question texts don't match")
+	if len(files) != 2 {
+		t.Error("Archive is expected to contain two files")
 	}
 
-	headerText, err := afero.ReadFile(fakeFs, "/books/cpp/1/header.h")
-
-	if err != nil {
-		t.Fatal(err)
+	if string(files["source.cpp"]) != "source file contents" {
+		t.Error("Archive contains corrupted source file")
 	}
 
-	if string(headerText) != "template question header" {
-		t.Error("Header texts don't match")
+	if string(files["header.h"]) != "header file contents" {
+		t.Error("Archive contains corrupted source file")
 	}
 }
 
-func TestSecondCard(t *testing.T) {
-	fakeFs, err := fs.NewFake([]fs.FakeEntry{
-		fs.NewFakeEntry("/config/template", "question.cpp", `template question`),
-		fs.NewFakeEntry("/config/template", "header.h", `template question header`),
-		fs.NewFakeEntry("/books/cpp/1", "answer.tgz", `answer number 1`),
-		fs.NewFakeEntry("/books/cpp/1", "question.cpp", `question number 1`),
+func TestExtractAnswerArtifacts(t *testing.T) {
+	card1 := card.NewCard([]string{}, 0, []card.CardArtifact{
+		card.NewCardArtifact("source.cpp", []byte("old source file contents")),
+		card.NewCardArtifact("header.h", []byte("old header file contents")),
 	})
 
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	config := &card.Config{
-		AnswerFileName: "answer.tgz",
-	}
-
-	ioStreams, _, _, _ := genericclioptions.NewTestIOStreams()
-
-	card := card.New(fakeFs, config, ioStreams)
-
-	_, err = card.CreateCard("/books/cpp", "/config/template")
+	err := card1.CompressAnswer()
 
 	if err != nil {
-		t.Fatal(err)
+		t.Fatal("Failed to compress card artifacts")
 	}
 
-	questionText, err := afero.ReadFile(fakeFs, "/books/cpp/2/question.cpp")
-
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if string(questionText) != "template question" {
-		t.Error("Question texts don't match")
-	}
-
-	headerText, err := afero.ReadFile(fakeFs, "/books/cpp/2/header.h")
-
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if string(headerText) != "template question header" {
-		t.Error("Header texts don't match")
-	}
-}
-
-func TestPackAnswer(t *testing.T) {
-	fakeFs, err := fs.NewFake([]fs.FakeEntry{
-		fs.NewFakeEntry("/books/cpp/1", "question.cpp", `question source file`),
-		fs.NewFakeEntry("/books/cpp/1", "question.h", `question header file`),
+	card2 := card.NewCard([]string{}, 0, []card.CardArtifact{
+		card.NewCardArtifact(card.AnswerArtifactName, card1.FindAnswerArtifact().Content()),
+		card.NewCardArtifact("source.cpp", []byte("new source file contents")),
+		card.NewCardArtifact("header.h", []byte("new header file contents")),
 	})
 
-	if err != nil {
-		t.Fatal(err)
+	card2.ExtractAnswer()
+
+	if string(card2.FindArtifactByName("source.cpp").Content()) != "old source file contents" {
+		t.Error("Source code artifact has unexpected contents")
 	}
 
-	config := &card.Config{
-		AnswerFileName: "answer.tgz",
-	}
-
-	ioStreams, _, _, _ := genericclioptions.NewTestIOStreams()
-
-	card := card.New(fakeFs, config, ioStreams)
-
-	err = card.PackAnswer("/books/cpp/1")
-
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	answerFileContents, err := afero.ReadFile(fakeFs, "/books/cpp/1/answer.tgz")
-
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	files, err := archive.GetFiles(bytes.NewReader(answerFileContents))
-
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if files["question.cpp"] != "question source file" {
-		t.Error("question.cpp was not compressed into answer file")
-	}
-
-	if files["question.h"] != "question header file" {
-		t.Error("question.h was not compressed into answer file")
-	}
-}
-
-func TestUnpackAnswer(t *testing.T) {
-	fakeFs, err := fs.NewFake([]fs.FakeEntry{
-		fs.NewFakeEntry("/books/cpp/1", "question.cpp", `question source file`),
-		fs.NewFakeEntry("/books/cpp/1", "question.h", `question header file`),
-	})
-
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	config := &card.Config{
-		AnswerFileName: "answer.tgz",
-	}
-
-	ioStreams, _, _, _ := genericclioptions.NewTestIOStreams()
-
-	card := card.New(fakeFs, config, ioStreams)
-
-	err = card.PackAnswer("/books/cpp/1")
-
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	err = fakeFs.Remove("/books/cpp/1/question.cpp")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	err = fakeFs.Remove("/books/cpp/1/question.h")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	card.UnpackAnswer("/books/cpp/1")
-
-	questionText, err := afero.ReadFile(fakeFs, "/books/cpp/1/question.cpp")
-
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if string(questionText) != "question source file" {
-		t.Fatal()
-	}
-
-	headerText, err := afero.ReadFile(fakeFs, "/books/cpp/1/question.h")
-
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if string(headerText) != "question header file" {
-		t.Fatal()
-	}
-}
-
-func TestShowAnswer(t *testing.T) {
-	fakeFs, err := fs.NewFake([]fs.FakeEntry{
-		fs.NewFakeEntry("/books/cpp/1", "question.cpp", `question source file`),
-		fs.NewFakeEntry("/books/cpp/1", "question.h", `question header file`),
-	})
-
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	config := &card.Config{
-		AnswerFileName: "answer.tgz",
-	}
-
-	ioStreams, _, outBuf, _ := genericclioptions.NewTestIOStreams()
-
-	card := card.New(fakeFs, config, ioStreams)
-	err = card.PackAnswer("/books/cpp/1")
-
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	card.ShowAnswer("/books/cpp/1")
-
-	actualAnswer := outBuf.String()
-
-	if !strings.Contains(actualAnswer, "question source file") || !strings.Contains(actualAnswer, "question header file") {
-		t.Fatal("Answer is not displayed")
+	if string(card2.FindArtifactByName("header.h").Content()) != "old header file contents" {
+		t.Error("Source header artifact has unexpected contents")
 	}
 }

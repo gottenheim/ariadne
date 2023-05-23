@@ -1,72 +1,36 @@
 package cmd
 
 import (
-	"errors"
-	"fmt"
-	"os"
-
 	"github.com/gottenheim/ariadne/card"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
-	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
 var newCmd = &cobra.Command{
 	Use:   "new",
 	Short: "Creates a new card",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		cardsDirPath, _ := cmd.Flags().GetString("cards-dir")
-
 		fs := afero.NewOsFs()
 
-		exists, err := afero.Exists(fs, cardsDirPath)
-		if err != nil {
-			return err
-		}
-
-		if !exists {
-			return errors.New(fmt.Sprintf("Directory '%s' does not exist", cardsDirPath))
-		}
-
-		templateDirPath, _ := cmd.Flags().GetString("template-dir")
-
-		exists, err = afero.Exists(fs, templateDirPath)
-		if err != nil {
-			return err
-		}
-
-		if !exists {
-			return errors.New(fmt.Sprintf("Directory '%s' does not exist", templateDirPath))
-		}
-
-		configFilePath, _ := cmd.Flags().GetString("config-file")
-
-		config, err := card.LoadConfig(fs, configFilePath)
-		if err != nil {
-			return err
-		}
-
-		ioStreams := genericclioptions.IOStreams{In: os.Stdin, Out: os.Stdout, ErrOut: os.Stderr}
-
-		card := card.New(fs, config, ioStreams)
-
-		cardDir, err := card.CreateCard(cardsDirPath, templateDirPath)
+		dirs, err := GetDirectoryFlags(cmd, fs, []string{"base-dir", "cards-dir", "template-dir"})
 
 		if err != nil {
 			return err
 		}
 
-		fmt.Printf("Card '%s' has been created\n", cardDir)
+		action := &card.NewCardAction{}
 
-		return nil
+		return action.Run(fs, dirs[0], dirs[1], dirs[2])
 	},
 }
 
 func init() {
 	cardCmd.AddCommand(newCmd)
 
-	newCmd.Flags().String("cards-dir", "", "Directory to create a new card")
+	newCmd.Flags().String("base-dir", "", "Base directory (e.g. git repo directory)")
+	newCmd.MarkFlagRequired("base-dir")
+	newCmd.Flags().String("cards-dir", "", "Cards subdirectory relative to base")
 	newCmd.MarkFlagRequired("cards-dir")
-	newCmd.Flags().String("template-dir", "", "Directory to copy template from")
+	newCmd.Flags().String("template-dir", "", "Template files directory")
 	newCmd.MarkFlagRequired("template-dir")
 }

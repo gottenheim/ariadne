@@ -26,6 +26,17 @@ func NewWriter() *Writer {
 	return writer
 }
 
+func (w *Writer) AddFiles(files map[string][]byte) error {
+	fs := afero.NewMemMapFs()
+
+	for fileName, content := range files {
+		filePath := filepath.Join("/", fileName)
+		afero.WriteFile(fs, filePath, content, os.ModePerm)
+	}
+
+	return w.AddDir(fs, "/")
+}
+
 func (w *Writer) AddDir(fs afero.Fs, path string) error {
 	return afero.Walk(fs, path, func(file string, fi os.FileInfo, err error) error {
 		header, err := tar.FileInfoHeader(fi, file)
