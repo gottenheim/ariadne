@@ -218,7 +218,7 @@ func TestReadCardProgress(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if c.Progress().Status != card.Scheduled {
+	if !c.Progress().IsScheduled() {
 		t.Fatal("Card progress status should be Scheduled")
 	}
 }

@@ -22,7 +22,7 @@ func NewCard(sections []string, orderNum int, artifacts []CardArtifact) *Card {
 		orderNum:  orderNum,
 		artifacts: artifacts,
 		progress: &CardProgress{
-			Status: New,
+			status: New,
 		},
 	}
 }

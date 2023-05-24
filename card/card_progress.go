@@ -8,11 +8,19 @@ const (
 )
 
 type CardProgress struct {
-	Status CardStatus
+	status CardStatus
 }
 
 func ScheduledCard() *CardProgress {
 	return &CardProgress{
-		Status: Scheduled,
+		status: Scheduled,
 	}
+}
+
+func (p *CardProgress) IsNew() bool {
+	return p.status == New
+}
+
+func (p *CardProgress) IsScheduled() bool {
+	return p.status == Scheduled
 }
