@@ -186,7 +186,7 @@ func TestSaveCreatesCardProgressFileIfStatusIsNotNew(t *testing.T) {
 			card.NewCardArtifact("header.h", []byte("header artifact")),
 		})
 
-	c.SetProgress(card.ScheduledCard())
+	c.SetProgress(card.GetScheduledCardProgress())
 
 	err = repo.Save(c)
 

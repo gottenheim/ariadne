@@ -11,7 +11,13 @@ type CardProgress struct {
 	status CardStatus
 }
 
-func ScheduledCard() *CardProgress {
+func GetNewCardProgress() *CardProgress {
+	return &CardProgress{
+		status: New,
+	}
+}
+
+func GetScheduledCardProgress() *CardProgress {
 	return &CardProgress{
 		status: Scheduled,
 	}

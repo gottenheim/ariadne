@@ -30,7 +30,7 @@ func (r *FileCardProgressRepository) ReadCardProgress(cardPath string) (*CardPro
 	}
 
 	if !fileExists {
-		return r.getDefaultProgress(), nil
+		return r.getNewCardProgress(), nil
 	}
 
 	return r.deserializeProgress(progressBinary)
@@ -145,8 +145,6 @@ func (r *FileCardProgressRepository) writeProgressToFile(progressFilePath string
 	return afero.WriteFile(r.fs, progressFilePath, progress, os.ModePerm)
 }
 
-func (r *FileCardProgressRepository) getDefaultProgress() *CardProgress {
-	return &CardProgress{
-		status: New,
-	}
+func (r *FileCardProgressRepository) getNewCardProgress() *CardProgress {
+	return GetNewCardProgress()
 }
