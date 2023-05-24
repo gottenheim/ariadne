@@ -9,13 +9,21 @@ type RemindCardActivity struct {
 	executionTime    time.Time
 }
 
-func CreateRemindCardActivity(scheduledTo time.Time, previousState CardActivity) CardActivity {
+func CreateRemindCardActivity(previousState CardActivity) *RemindCardActivity {
 	return &RemindCardActivity{
-		scheduledTo:      scheduledTo,
 		previousActivity: previousState,
 	}
 }
 
 func (s *RemindCardActivity) Accept(visitor CardActivityVisitor) error {
 	return visitor.OnRemindCard(s)
+}
+
+func (s *RemindCardActivity) ScheduleTo(scheduledTo time.Time) {
+	s.scheduledTo = scheduledTo
+}
+
+func (s *RemindCardActivity) MarkAsExecuted(executionTime time.Time) {
+	s.executed = true
+	s.executionTime = executionTime
 }

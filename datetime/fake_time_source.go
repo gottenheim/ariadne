@@ -1,14 +1,18 @@
 package datetime
 
-import "time"
+import (
+	"time"
+
+	"github.com/gottenheim/ariadne/test"
+)
 
 type FakeTimeSource struct {
 	now time.Time
 }
 
-func NewFakeTimeSource(now time.Time) *FakeTimeSource {
+func NewFakeTimeSource() *FakeTimeSource {
 	return &FakeTimeSource{
-		now: now,
+		now: test.GetLocalTestTime(),
 	}
 }
 

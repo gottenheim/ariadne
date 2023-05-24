@@ -2,16 +2,14 @@ package card_test
 
 import (
 	"testing"
-	"time"
 
 	"github.com/gottenheim/ariadne/card"
-	"github.com/gottenheim/ariadne/test"
 )
 
 func TestIsCardNew_IfLearnActivityIsNotExecuted(t *testing.T) {
-	learnCard := card.CreateLearnCardActivity()
+	activityChain := createTestActivityChain(learnCard)
 
-	isNew, err := card.IsNewCard(learnCard)
+	isNew, err := card.IsNewCard(activityChain)
 
 	if err != nil {
 		t.Fatal(err)
@@ -23,11 +21,9 @@ func TestIsCardNew_IfLearnActivityIsNotExecuted(t *testing.T) {
 }
 
 func TestIsCardNew_IfLearnActivityIsNotExecuted_AndRemindActivityInTheEndOfChain(t *testing.T) {
-	learnCard := card.CreateLearnCardActivity()
+	activityChain := createTestActivityChain(learnCard, remindCard)
 
-	remindCard := card.CreateRemindCardActivity(test.GetLocalTestTime(), learnCard)
-
-	isNew, err := card.IsNewCard(remindCard)
+	isNew, err := card.IsNewCard(activityChain)
 
 	if err != nil {
 		t.Fatal(err)
@@ -39,10 +35,9 @@ func TestIsCardNew_IfLearnActivityIsNotExecuted_AndRemindActivityInTheEndOfChain
 }
 
 func TestIsCardNew_IfLearnActivityHasAlreadyBeenExecuted(t *testing.T) {
-	learnCard := card.CreateLearnCardActivity()
-	learnCard.MarkAsExecuted(time.Now())
+	activityChain := createTestActivityChain(learnCard | cardExecutedToday)
 
-	isNew, err := card.IsNewCard(learnCard)
+	isNew, err := card.IsNewCard(activityChain)
 
 	if err != nil {
 		t.Fatal(err)
@@ -54,12 +49,9 @@ func TestIsCardNew_IfLearnActivityHasAlreadyBeenExecuted(t *testing.T) {
 }
 
 func TestIsCardNew_IfLearnActivityHasAlreadyBeenExecuted_AndRemindActivityInTheEndOfChain(t *testing.T) {
-	learnCard := card.CreateLearnCardActivity()
-	learnCard.MarkAsExecuted(time.Now())
+	activityChain := createTestActivityChain(learnCard|cardExecutedToday, remindCard)
 
-	remindCard := card.CreateRemindCardActivity(test.GetLocalTestTime(), learnCard)
-
-	isNew, err := card.IsNewCard(remindCard)
+	isNew, err := card.IsNewCard(activityChain)
 
 	if err != nil {
 		t.Fatal(err)
