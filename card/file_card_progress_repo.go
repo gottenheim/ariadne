@@ -111,34 +111,9 @@ func (r *FileCardProgressRepository) removeProgressFileIfExists(progressFilePath
 }
 
 func (r *FileCardProgressRepository) serializeProgress(cardProgress *CardProgress) ([]byte, error) {
-	cfg := config.NewEmpty()
-
-	writableConfig, isWritable := cfg.(config.WritableConfiguration)
-
-	if !isWritable {
-		panic("Configuration isn't writable. No way to continue normal work")
-	}
-
 	cardProgressModel := cardProgress.ToWriteModel()
 
-	err := writableConfig.Dematerialize(cardProgressModel)
-	if err != nil {
-		return nil, err
-	}
-
-	values, err := cfg.GetValues()
-	if err != nil {
-		return nil, err
-	}
-
-	buffer := bytes.Buffer{}
-
-	err = config.WriteMapToYaml(&values, &buffer)
-	if err != nil {
-		return nil, err
-	}
-
-	return buffer.Bytes(), nil
+	return config.SerializeToYaml(cardProgressModel)
 }
 
 func (r *FileCardProgressRepository) writeProgressToFile(progressFilePath string, progress []byte) error {

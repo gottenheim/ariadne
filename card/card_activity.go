@@ -6,5 +6,5 @@ type CardActivity interface {
 
 type CardActivityVisitor interface {
 	OnLearnCard(learn *LearnCardActivity) error
-	OnRemindCard(reming *RemindCardActivity) error
+	OnRemindCard(remind *RemindCardActivity) error
 }
