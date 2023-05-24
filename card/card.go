@@ -21,9 +21,7 @@ func NewCard(sections []string, orderNum int, artifacts []CardArtifact) *Card {
 		sections:  sections,
 		orderNum:  orderNum,
 		artifacts: artifacts,
-		progress: &CardProgress{
-			status: New,
-		},
+		progress:  GetNewCardProgress(),
 	}
 }
 

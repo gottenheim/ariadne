@@ -1,32 +1,26 @@
 package card
 
-type CardStatus string
-
-const (
-	New       CardStatus = "New"
-	Scheduled            = "Scheduled"
-)
-
 type CardProgress struct {
-	status CardStatus
+	previousStatus CardStatus
+	status         CardStatus
 }
 
 func GetNewCardProgress() *CardProgress {
 	return &CardProgress{
-		status: New,
+		status: &NewCardStatus{},
 	}
 }
 
 func GetScheduledCardProgress() *CardProgress {
 	return &CardProgress{
-		status: Scheduled,
+		status: &ScheduledCardStatus{},
 	}
 }
 
 func (p *CardProgress) IsNew() bool {
-	return p.status == New
+	return p.status.Name() == CardStatusNew
 }
 
 func (p *CardProgress) IsScheduled() bool {
-	return p.status == Scheduled
+	return p.status.Name() == CardStatusScheduled
 }
