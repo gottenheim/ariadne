@@ -18,9 +18,13 @@ var extractAnswerCmd = &cobra.Command{
 			return err
 		}
 
+		baseDir, cardDir := dirs[0], dirs[1]
+
+		cardRepo := card.NewFileCardRepository(fs, baseDir)
+
 		action := &card.ExtractCardAction{}
 
-		return action.Run(fs, dirs[0], dirs[1])
+		return action.Run(cardRepo, cardDir)
 	},
 }
 

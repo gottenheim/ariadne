@@ -1,16 +1,10 @@
 package card
 
-import (
-	"github.com/spf13/afero"
-)
-
 type ExtractCardAction struct {
 }
 
-func (a *ExtractCardAction) Run(fs afero.Fs, baseDirPath string, cardDirPath string) error {
-	cardRepo := NewFileCardRepository(fs, baseDirPath)
-
-	card, err := cardRepo.Get(cardDirPath)
+func (a *ExtractCardAction) Run(cardRepo CardRepository, cardKey string) error {
+	card, err := cardRepo.Get(cardKey)
 	if err != nil {
 		return err
 	}

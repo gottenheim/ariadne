@@ -1,5 +1,5 @@
 package card
 
-type TemplateRepository interface {
+type CardTemplateRepository interface {
 	GetTemplate() (*CardTemplate, error)
 }

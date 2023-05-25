@@ -121,6 +121,35 @@ func (r *FileCardRepository) getNextFreeOrderNumberInSection(cardSectionPath str
 	return maxCardNumber + 1, nil
 }
 
+func (r *FileCardRepository) isCardDir(dirPath string) (bool, error) {
+	answerFileExists, err := afero.Exists(r.fs, filepath.Join(dirPath, AnswerArtifactName))
+	if err != nil {
+		return false, err
+	}
+
+	if answerFileExists {
+		return true, nil
+	}
+
+	activitiesFileExists, err := afero.Exists(r.fs, filepath.Join(dirPath, ActivitiesFileName))
+	if err != nil {
+		return false, err
+	}
+
+	if activitiesFileExists {
+		return true, nil
+	}
+
+	dirName := path.Base(dirPath)
+
+	orderNumber, err := strconv.Atoi(dirName)
+	if err != nil {
+		return false, err
+	}
+
+	return orderNumber > 0, nil
+}
+
 func (r *FileCardRepository) getCardPath(card *Card) string {
 	cardSectionPath := r.getCardSectionPath(card)
 

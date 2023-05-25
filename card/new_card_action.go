@@ -1,30 +1,15 @@
 package card
 
-import (
-	"path/filepath"
-
-	"github.com/spf13/afero"
-)
-
 type NewCardAction struct {
 }
 
-func (a *NewCardAction) Run(fs afero.Fs, baseDirPath string, cardsDirPath string, templateDirPath string) error {
-	templateRepo := NewFileTemplateRepository(fs, templateDirPath)
+func (a *NewCardAction) Run(templateRepo CardTemplateRepository, cardRepo CardRepository, cardSection []string) error {
 	cardTemplate, err := templateRepo.GetTemplate()
 	if err != nil {
 		return err
 	}
 
-	cardSections := a.getCardSections(cardsDirPath)
-
-	card := NewCard(cardSections, 0, cardTemplate.Artifacts())
-
-	cardRepo := NewFileCardRepository(fs, baseDirPath)
+	card := NewCard(cardSection, 0, cardTemplate.Artifacts())
 
 	return cardRepo.Save(card)
-}
-
-func (a *NewCardAction) getCardSections(cardsDirPath string) []string {
-	return filepath.SplitList(cardsDirPath)
 }

@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"strings"
+
 	"github.com/gottenheim/ariadne/card"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
@@ -18,9 +20,15 @@ var newCmd = &cobra.Command{
 			return err
 		}
 
+		baseDir, cardsDir, templateDir := dirs[0], dirs[1], dirs[2]
+
 		action := &card.NewCardAction{}
 
-		return action.Run(fs, dirs[0], dirs[1], dirs[2])
+		templateRepo := card.NewFileTemplateRepository(fs, templateDir)
+
+		cardRepo := card.NewFileCardRepository(fs, baseDir)
+
+		return action.Run(templateRepo, cardRepo, strings.Split(cardsDir, afero.FilePathSeparator))
 	},
 }
 

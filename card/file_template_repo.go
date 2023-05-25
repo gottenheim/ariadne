@@ -12,7 +12,7 @@ type FileTemplateRepository struct {
 	templateDir string
 }
 
-func NewFileTemplateRepository(fs afero.Fs, templateDir string) TemplateRepository {
+func NewFileTemplateRepository(fs afero.Fs, templateDir string) CardTemplateRepository {
 	return &FileTemplateRepository{
 		fs:          fs,
 		templateDir: templateDir,

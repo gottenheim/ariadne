@@ -1,16 +1,10 @@
 package card
 
-import (
-	"github.com/spf13/afero"
-)
-
 type CompressAnswerAction struct {
 }
 
-func (a *CompressAnswerAction) Run(fs afero.Fs, baseDirPath string, cardDirPath string) error {
-	cardRepo := NewFileCardRepository(fs, baseDirPath)
-
-	card, err := cardRepo.Get(cardDirPath)
+func (a *CompressAnswerAction) Run(cardRepo CardRepository, cardKey string) error {
+	card, err := cardRepo.Get(cardKey)
 	if err != nil {
 		return err
 	}

@@ -18,9 +18,13 @@ var compressAnswerCmd = &cobra.Command{
 			return err
 		}
 
+		baseDir, cardDir := dirs[0], dirs[1]
+
+		repo := card.NewFileCardRepository(fs, baseDir)
+
 		action := &card.CompressAnswerAction{}
 
-		return action.Run(fs, dirs[0], dirs[1])
+		return action.Run(repo, cardDir)
 	},
 }
 

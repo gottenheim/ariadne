@@ -36,7 +36,7 @@ func TestExtractAnswerAction(t *testing.T) {
 	afero.WriteFile(fakeFs, "/home/user/books/cpp/1/header.h", []byte("new header artifact"), os.ModePerm)
 
 	extractAnswerAction := &card.ExtractCardAction{}
-	err = extractAnswerAction.Run(fakeFs, "/home/user/", "/books/cpp/1")
+	err = extractAnswerAction.Run(cardRepo, "books/cpp/1")
 
 	if err != nil {
 		t.Fatal(err)
