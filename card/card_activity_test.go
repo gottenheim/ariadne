@@ -1,6 +1,8 @@
 package card_test
 
 import (
+	"testing"
+
 	"github.com/gottenheim/ariadne/card"
 	"github.com/gottenheim/ariadne/test"
 )
@@ -64,4 +66,15 @@ func createTestActivityChain(activities ...testCardActivity) card.CardActivity {
 	}
 
 	return currentActivity
+}
+
+func createSerializedTestActivityChain(t *testing.T, activities ...testCardActivity) []byte {
+	chain := createTestActivityChain(activities...)
+
+	activitiesBinary, err := card.SerializeCardActivityChain(chain)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return activitiesBinary
 }

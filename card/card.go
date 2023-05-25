@@ -10,18 +10,18 @@ import (
 const AnswerArtifactName = "answer.tgz"
 
 type Card struct {
-	sections  []string
-	orderNum  int
-	artifacts []CardArtifact
-	progress  *CardProgress
+	sections   []string
+	orderNum   int
+	artifacts  []CardArtifact
+	activities CardActivity
 }
 
 func NewCard(sections []string, orderNum int, artifacts []CardArtifact) *Card {
 	return &Card{
-		sections:  sections,
-		orderNum:  orderNum,
-		artifacts: artifacts,
-		progress:  GetNewCardProgress(),
+		sections:   sections,
+		orderNum:   orderNum,
+		artifacts:  artifacts,
+		activities: CreateLearnCardActivity(),
 	}
 }
 
@@ -45,12 +45,12 @@ func (c *Card) Artifacts() []CardArtifact {
 	return c.artifacts
 }
 
-func (c *Card) SetProgress(progress *CardProgress) {
-	c.progress = progress
+func (c *Card) Activities() CardActivity {
+	return c.activities
 }
 
-func (c *Card) Progress() *CardProgress {
-	return c.progress
+func (c *Card) SetActivities(activities CardActivity) {
+	c.activities = activities
 }
 
 func (c *Card) FindArtifactByName(name string) *CardArtifact {

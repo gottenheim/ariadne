@@ -165,60 +165,79 @@ func TestSkipNewCardProgressDuringSaving(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	progressFilePath := fmt.Sprintf("/home/user/books/cpp/1/%s", card.ProgressFileName)
+	progressFilePath := fmt.Sprintf("/home/user/books/cpp/1/%s", card.ActivitiesFileName)
 
 	test.AssertFileDoesNotExists(t, fakeFs, progressFilePath)
 	test.AssertDirectoryFilesCount(t, fakeFs, filepath.Dir(progressFilePath), 2)
 }
 
-// func TestSaveCreatesCardProgressFileIfStatusIsNotNew(t *testing.T) {
-// 	fakeFs, err := fs.NewFake([]fs.FakeEntry{})
+func TestSaveCreatesCardActivitiesFileIfStatusIsNotNew(t *testing.T) {
+	fakeFs, err := fs.NewFake([]fs.FakeEntry{})
 
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
+	if err != nil {
+		t.Fatal(err)
+	}
 
-// 	repo := card.NewFileCardRepository(fakeFs, "/home/user")
+	repo := card.NewFileCardRepository(fakeFs, "/home/user")
 
-// 	c := card.NewCard([]string{"books", "cpp"}, 0,
-// 		[]card.CardArtifact{
-// 			card.NewCardArtifact("source.cpp", []byte("source code artifact")),
-// 			card.NewCardArtifact("header.h", []byte("header artifact")),
-// 		})
+	c := card.NewCard([]string{"books", "cpp"}, 0,
+		[]card.CardArtifact{
+			card.NewCardArtifact("source.cpp", []byte("source code artifact")),
+			card.NewCardArtifact("header.h", []byte("header artifact")),
+		})
 
-// 	c.SetProgress(card.GetScheduledCardProgress())
+	cardActivities := createTestActivityChain(learnCard|cardExecutedMonthAgo, remindCard|remindCardScheduledToYesterday|cardExecutedToday)
 
-// 	err = repo.Save(c)
+	c.SetActivities(cardActivities)
 
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
+	err = repo.Save(c)
 
-// 	progressFilePath := fmt.Sprintf("/home/user/books/cpp/1/%s", card.ProgressFileName)
+	if err != nil {
+		t.Fatal(err)
+	}
 
-// 	test.AssertFileExistsAndHasContent(t, fakeFs, progressFilePath, `Status: Scheduled`)
-// }
+	activitiesBinary, err := card.SerializeCardActivityChain(cardActivities)
+	if err != nil {
+		t.Fatal(err)
+	}
 
-// func TestReadCardProgress(t *testing.T) {
-// 	fakeFs, err := fs.NewFake([]fs.FakeEntry{
-// 		fs.NewFakeEntry("/home/user/books/cpp/2", "source.cpp", `source code artifact`),
-// 		fs.NewFakeEntry("/home/user/books/cpp/2", "header.h", `header artifact`),
-// 		fs.NewFakeEntry("/home/user/books/cpp/2", card.ProgressFileName, `Status: Scheduled`),
-// 	})
+	activitiesFilePath := fmt.Sprintf("/home/user/books/cpp/1/%s", card.ActivitiesFileName)
 
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
+	test.AssertFileExistsAndHasYamlContent(t, fakeFs, activitiesFilePath, string(activitiesBinary))
+}
 
-// 	repo := card.NewFileCardRepository(fakeFs, "/home/user")
+func TestReadCardActivities(t *testing.T) {
+	initialActivities := createTestActivityChain(learnCard|cardExecutedMonthAgo, remindCard|remindCardScheduledToYesterday|cardExecutedToday)
 
-// 	c, err := repo.Get("/books/cpp/2")
+	initialActivitiesBinary, err := card.SerializeCardActivityChain(initialActivities)
+	if err != nil {
+		t.Fatal(err)
+	}
 
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
+	fakeFs, err := fs.NewFake([]fs.FakeEntry{
+		fs.NewFakeEntry("/home/user/books/cpp/2", "source.cpp", `source code artifact`),
+		fs.NewFakeEntry("/home/user/books/cpp/2", "header.h", `header artifact`),
+		fs.NewFakeEntry("/home/user/books/cpp/2", card.ActivitiesFileName, string(initialActivitiesBinary)),
+	})
 
-// 	if !c.Progress().IsScheduled() {
-// 		t.Fatal("Card progress status should be Scheduled")
-// 	}
-// }
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	repo := card.NewFileCardRepository(fakeFs, "/home/user")
+
+	c, err := repo.Get("/books/cpp/2")
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	actualActivities := c.Activities()
+
+	actualActivitiesBinary, err := card.SerializeCardActivityChain(actualActivities)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	test.AssertIdenticalYamlStrings(t, string(initialActivitiesBinary), string(actualActivitiesBinary))
+}

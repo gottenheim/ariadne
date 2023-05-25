@@ -21,6 +21,16 @@ func AssertFileExistsAndHasContent(t *testing.T, fs afero.Fs, path string, expec
 	}
 }
 
+func AssertFileExistsAndHasYamlContent(t *testing.T, fs afero.Fs, path string, expectedContent string) {
+	fileText, err := afero.ReadFile(fs, path)
+
+	if err != nil {
+		t.Errorf("File %s does not exist", path)
+	}
+
+	AssertIdenticalYamlStrings(t, string(fileText), expectedContent)
+}
+
 func AssertFileDoesNotExists(t *testing.T, fs afero.Fs, path string) {
 	exists, err := afero.Exists(fs, path)
 

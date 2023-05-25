@@ -16,14 +16,14 @@ import (
 type FileCardRepository struct {
 	fs           afero.Fs
 	baseDir      string
-	progressRepo *FileCardProgressRepository
+	activityRepo *FileCardActivityRepository
 }
 
 func NewFileCardRepository(fs afero.Fs, baseDir string) *FileCardRepository {
 	return &FileCardRepository{
 		fs:           fs,
 		baseDir:      baseDir,
-		progressRepo: NewFileCardProgressRepository(fs),
+		activityRepo: NewFileCardActivityRepository(fs),
 	}
 }
 
@@ -46,12 +46,12 @@ func (r *FileCardRepository) Get(relativeCardPath string) (*Card, error) {
 
 	card.artifacts = artifacts
 
-	progress, err := r.progressRepo.ReadCardProgress(cardPath)
+	activities, err := r.activityRepo.ReadCardActivities(cardPath)
 	if err != nil {
 		return nil, err
 	}
 
-	card.progress = progress
+	card.activities = activities
 
 	return card, nil
 }
@@ -72,7 +72,7 @@ func (r *FileCardRepository) Save(card *Card) error {
 		return err
 	}
 
-	return r.progressRepo.SaveCardProgress(card.Progress(), r.getCardPath(card))
+	return r.activityRepo.SaveCardActivities(card.Activities(), r.getCardPath(card))
 }
 
 func (r *FileCardRepository) assignOrderNumberIfNeeded(card *Card) error {
