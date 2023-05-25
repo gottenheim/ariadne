@@ -1,23 +1,23 @@
-package card_test
+package card_repo_test
 
 import (
 	"testing"
 
-	"github.com/gottenheim/ariadne/card"
-	"github.com/gottenheim/ariadne/fs"
+	"github.com/gottenheim/ariadne/details/fs"
+	"github.com/gottenheim/ariadne/details/fs/card_repo"
 )
 
 func TestFileTemplateRepository_GetTemplate(t *testing.T) {
-	fakeFs, err := fs.NewFake([]fs.FakeEntry{
-		fs.NewFakeEntry("/config/template", "source.cpp", `template source code file`),
-		fs.NewFakeEntry("/config/template", "header.h", `template header file`),
+	fakeFs, err := fs.NewFakeFs([]fs.FakeFileEntry{
+		fs.NewFakeFileEntry("/config/template", "source.cpp", `template source code file`),
+		fs.NewFakeFileEntry("/config/template", "header.h", `template header file`),
 	})
 
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	repo := card.NewFileTemplateRepository(fakeFs, "/config/template")
+	repo := card_repo.NewFileTemplateRepository(fakeFs, "/config/template")
 
 	cardTemplate, err := repo.GetTemplate()
 

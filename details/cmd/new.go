@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/gottenheim/ariadne/card"
+	"github.com/gottenheim/ariadne/details/fs/card_repo"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 )
@@ -12,9 +13,9 @@ var newCmd = &cobra.Command{
 	Use:   "new",
 	Short: "Creates a new card",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		fs := afero.NewOsFs()
+		osFs := afero.NewOsFs()
 
-		dirs, err := GetDirectoryFlags(cmd, fs, []string{"base-dir", "cards-dir", "template-dir"})
+		dirs, err := GetDirectoryFlags(cmd, osFs, []string{"base-dir", "cards-dir", "template-dir"})
 
 		if err != nil {
 			return err
@@ -24,9 +25,9 @@ var newCmd = &cobra.Command{
 
 		action := &card.NewCardAction{}
 
-		templateRepo := card.NewFileTemplateRepository(fs, templateDir)
+		templateRepo := card_repo.NewFileTemplateRepository(osFs, templateDir)
 
-		cardRepo := card.NewFileCardRepository(fs, baseDir)
+		cardRepo := card_repo.NewFileCardRepository(osFs, baseDir)
 
 		return action.Run(templateRepo, cardRepo, strings.Split(cardsDir, afero.FilePathSeparator))
 	},

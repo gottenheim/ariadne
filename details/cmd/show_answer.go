@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/gottenheim/ariadne/card"
+	"github.com/gottenheim/ariadne/details/fs/card_repo"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 )
@@ -12,9 +13,9 @@ var showAnswerCmd = &cobra.Command{
 	Use:   "show-answer",
 	Short: "Shows card answer",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		fs := afero.NewOsFs()
+		osFs := afero.NewOsFs()
 
-		dirs, err := GetDirectoryFlags(cmd, fs, []string{"base-dir", "card-dir"})
+		dirs, err := GetDirectoryFlags(cmd, osFs, []string{"base-dir", "card-dir"})
 
 		if err != nil {
 			return err
@@ -22,7 +23,7 @@ var showAnswerCmd = &cobra.Command{
 
 		baseDir, cardDir := dirs[0], dirs[1]
 
-		cardRepo := card.NewFileCardRepository(fs, baseDir)
+		cardRepo := card_repo.NewFileCardRepository(osFs, baseDir)
 
 		action := &card.ShowAnswerAction{}
 

@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"fmt"
 
-	"github.com/gottenheim/ariadne/config"
+	"github.com/gottenheim/ariadne/details/config"
 	"github.com/pkg/errors"
 	"github.com/spf13/afero"
 )

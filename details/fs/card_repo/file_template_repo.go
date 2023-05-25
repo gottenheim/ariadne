@@ -1,9 +1,10 @@
-package card
+package card_repo
 
 import (
 	"os"
 	"path"
 
+	"github.com/gottenheim/ariadne/card"
 	"github.com/spf13/afero"
 )
 
@@ -12,15 +13,15 @@ type FileTemplateRepository struct {
 	templateDir string
 }
 
-func NewFileTemplateRepository(fs afero.Fs, templateDir string) CardTemplateRepository {
+func NewFileTemplateRepository(fs afero.Fs, templateDir string) card.CardTemplateRepository {
 	return &FileTemplateRepository{
 		fs:          fs,
 		templateDir: templateDir,
 	}
 }
 
-func (r *FileTemplateRepository) GetTemplate() (*CardTemplate, error) {
-	var artifacts []CardArtifact
+func (r *FileTemplateRepository) GetTemplate() (*card.CardTemplate, error) {
+	var artifacts []card.CardArtifact
 
 	err := afero.Walk(r.fs, r.templateDir, func(filePath string, info os.FileInfo, err error) error {
 		if !info.IsDir() {
@@ -29,7 +30,7 @@ func (r *FileTemplateRepository) GetTemplate() (*CardTemplate, error) {
 				return err
 			}
 			fileName := path.Base(filePath)
-			artifacts = append(artifacts, NewCardArtifact(fileName, fileContents))
+			artifacts = append(artifacts, card.NewCardArtifact(fileName, fileContents))
 		}
 		return nil
 	})
@@ -38,5 +39,5 @@ func (r *FileTemplateRepository) GetTemplate() (*CardTemplate, error) {
 		return nil, err
 	}
 
-	return NewCardTemplate(artifacts), nil
+	return card.NewCardTemplate(artifacts), nil
 }

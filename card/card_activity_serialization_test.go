@@ -7,12 +7,12 @@ import (
 	"time"
 
 	"github.com/gottenheim/ariadne/card"
-	"github.com/gottenheim/ariadne/config"
-	"github.com/gottenheim/ariadne/test"
+	"github.com/gottenheim/ariadne/details/config"
+	"github.com/gottenheim/ariadne/details/datetime"
 )
 
 func TestSerializeCardActivityChain(t *testing.T) {
-	cardActivity := createTestActivityChain(learnCard|cardExecutedMonthAgo, remindCard|remindCardScheduledToYesterday|cardExecutedToday)
+	cardActivity := card.GenerateActivityChain(card.LearnCard|card.CardExecutedMonthAgo, card.RemindCard|card.RemindCardScheduledToYesterday|card.CardExecutedToday)
 
 	chainBinary, err := card.SerializeCardActivityChain(cardActivity)
 
@@ -47,7 +47,7 @@ func TestSerializeCardActivityChain(t *testing.T) {
 		t.Error("Remind activity is expected to be executed")
 	}
 
-	today := test.GetLocalTestTime()
+	today := datetime.GetLocalTestTime()
 
 	if remind.ExecutionTime != today.Format(time.DateTime) {
 		t.Error("Remind activity execution time must be today")
@@ -106,7 +106,7 @@ func (v *testCardActivityVisitor) OnRemindCard(remind *card.RemindCardActivity) 
 }
 
 func TestDeserializeCardActivityChain(t *testing.T) {
-	today := test.GetLocalTestTime()
+	today := datetime.GetLocalTestTime()
 	monthAgo := today.AddDate(0, -1, 0)
 	yesterday := today.AddDate(0, 0, -1)
 

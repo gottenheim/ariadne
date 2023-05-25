@@ -9,24 +9,24 @@ import (
 	"github.com/spf13/afero"
 )
 
-type FakeEntry struct {
+type FakeFileEntry struct {
 	path     string
 	name     string
 	contents []byte
 }
 
-func NewFakeEntry(path string, name string, contents string) FakeEntry {
-	return FakeEntry{
+func NewFakeFileEntry(path string, name string, contents string) FakeFileEntry {
+	return FakeFileEntry{
 		path:     path,
 		name:     name,
 		contents: []byte(contents),
 	}
 }
 
-func NewFake(entries []FakeEntry) (afero.Fs, error) {
+func NewFakeFs(entries []FakeFileEntry) (afero.Fs, error) {
 	fs := afero.NewMemMapFs()
 
-	err := AddFakeEntries(fs, entries)
+	err := AddFakeFileEntries(fs, entries)
 
 	if err != nil {
 		return nil, err
@@ -35,7 +35,7 @@ func NewFake(entries []FakeEntry) (afero.Fs, error) {
 	return fs, nil
 }
 
-func AddFakeEntries(fs afero.Fs, entries []FakeEntry) error {
+func AddFakeFileEntries(fs afero.Fs, entries []FakeFileEntry) error {
 	for _, dirEntry := range entries {
 		err := fs.MkdirAll(dirEntry.path, os.ModePerm)
 		if err != nil {

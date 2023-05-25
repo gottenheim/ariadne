@@ -3,7 +3,7 @@ package card
 import (
 	"time"
 
-	"github.com/gottenheim/ariadne/config"
+	"github.com/gottenheim/ariadne/details/config"
 )
 
 type cardActivitySerializer struct {

@@ -1,4 +1,4 @@
-package card
+package card_repo
 
 import (
 	"errors"
@@ -9,7 +9,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/gottenheim/ariadne/fs"
+	"github.com/gottenheim/ariadne/card"
+	"github.com/gottenheim/ariadne/details/fs"
 	"github.com/spf13/afero"
 )
 
@@ -18,14 +19,14 @@ type FileCardRepository struct {
 	baseDir string
 }
 
-func NewFileCardRepository(fs afero.Fs, baseDir string) CardRepository {
+func NewFileCardRepository(fs afero.Fs, baseDir string) card.CardRepository {
 	return &FileCardRepository{
 		fs:      fs,
 		baseDir: baseDir,
 	}
 }
 
-func (r *FileCardRepository) Get(relativeCardPath string) (*Card, error) {
+func (r *FileCardRepository) Get(relativeCardPath string) (*card.Card, error) {
 	card, err := r.createCardFromPath(relativeCardPath)
 	if err != nil {
 		return nil, err
@@ -42,19 +43,19 @@ func (r *FileCardRepository) Get(relativeCardPath string) (*Card, error) {
 		return nil, errors.New("Path %s doesn't contain card artifacts")
 	}
 
-	card.artifacts = artifacts
+	card.SetArtifacts(artifacts)
 
 	activities, err := r.ReadCardActivities(cardPath)
 	if err != nil {
 		return nil, err
 	}
 
-	card.activities = activities
+	card.SetActivities(activities)
 
 	return card, nil
 }
 
-func (r *FileCardRepository) Save(card *Card) error {
+func (r *FileCardRepository) Save(card *card.Card) error {
 	err := r.assignOrderNumberIfNeeded(card)
 	if err != nil {
 		return err
@@ -73,7 +74,7 @@ func (r *FileCardRepository) Save(card *Card) error {
 	return r.SaveCardActivities(card.Activities(), r.getCardPath(card))
 }
 
-func (r *FileCardRepository) assignOrderNumberIfNeeded(card *Card) error {
+func (r *FileCardRepository) assignOrderNumberIfNeeded(card *card.Card) error {
 	if !card.HasOrderNumber() {
 		cardSectionPath := r.getCardSectionPath(card)
 		orderNum, err := r.getNextFreeOrderNumberInSection(cardSectionPath)
@@ -88,8 +89,8 @@ func (r *FileCardRepository) assignOrderNumberIfNeeded(card *Card) error {
 	return nil
 }
 
-func (r *FileCardRepository) getCardSectionPath(card *Card) string {
-	relPath := filepath.Join(card.sections...)
+func (r *FileCardRepository) getCardSectionPath(card *card.Card) string {
+	relPath := filepath.Join(card.Sections()...)
 
 	return filepath.Join(r.baseDir, relPath)
 }
@@ -122,7 +123,7 @@ func (r *FileCardRepository) getNextFreeOrderNumberInSection(cardSectionPath str
 }
 
 func (r *FileCardRepository) isCardDir(dirPath string) (bool, error) {
-	answerFileExists, err := afero.Exists(r.fs, filepath.Join(dirPath, AnswerArtifactName))
+	answerFileExists, err := afero.Exists(r.fs, filepath.Join(dirPath, card.AnswerArtifactName))
 	if err != nil {
 		return false, err
 	}
@@ -150,13 +151,13 @@ func (r *FileCardRepository) isCardDir(dirPath string) (bool, error) {
 	return orderNumber > 0, nil
 }
 
-func (r *FileCardRepository) getCardPath(card *Card) string {
+func (r *FileCardRepository) getCardPath(card *card.Card) string {
 	cardSectionPath := r.getCardSectionPath(card)
 
-	return filepath.Join(cardSectionPath, strconv.Itoa(card.orderNum))
+	return filepath.Join(cardSectionPath, strconv.Itoa(card.OrderNumber()))
 }
 
-func (r *FileCardRepository) emptyCardDirectory(card *Card) error {
+func (r *FileCardRepository) emptyCardDirectory(card *card.Card) error {
 	cardPath := r.getCardPath(card)
 
 	cardDirExists, err := afero.Exists(r.fs, cardPath)
@@ -166,13 +167,13 @@ func (r *FileCardRepository) emptyCardDirectory(card *Card) error {
 	}
 
 	if cardDirExists {
-		fs.EmptyDirectory(r.fs, cardPath)
+		fs.RemoveAllDirectoryFiles(r.fs, cardPath)
 	}
 
 	return nil
 }
 
-func (r *FileCardRepository) saveArtifactFiles(card *Card) error {
+func (r *FileCardRepository) saveArtifactFiles(card *card.Card) error {
 	cardPath := r.getCardPath(card)
 
 	err := r.fs.MkdirAll(cardPath, os.ModePerm)
@@ -181,8 +182,8 @@ func (r *FileCardRepository) saveArtifactFiles(card *Card) error {
 		return err
 	}
 
-	for _, artifact := range card.artifacts {
-		filePath := filepath.Join(cardPath, artifact.name)
+	for _, artifact := range card.Artifacts() {
+		filePath := filepath.Join(cardPath, artifact.Name())
 		err = afero.WriteFile(r.fs, filePath, artifact.Content(), os.ModePerm)
 		if err != nil {
 			return err
@@ -192,7 +193,7 @@ func (r *FileCardRepository) saveArtifactFiles(card *Card) error {
 	return nil
 }
 
-func (r *FileCardRepository) createCardFromPath(cardPath string) (*Card, error) {
+func (r *FileCardRepository) createCardFromPath(cardPath string) (*card.Card, error) {
 	if cardPath[0] == filepath.Separator {
 		cardPath = cardPath[1:]
 	}
@@ -204,14 +205,11 @@ func (r *FileCardRepository) createCardFromPath(cardPath string) (*Card, error) 
 		return nil, err
 	}
 
-	return &Card{
-		sections: sections,
-		orderNum: orderNum,
-	}, nil
+	return card.NewCard(sections, orderNum, []card.CardArtifact{}), nil
 }
 
-func (r *FileCardRepository) readCardArtifacts(cardPath string) ([]CardArtifact, error) {
-	var artifacts []CardArtifact
+func (r *FileCardRepository) readCardArtifacts(cardPath string) ([]card.CardArtifact, error) {
+	var artifacts []card.CardArtifact
 
 	err := afero.Walk(r.fs, cardPath, func(filePath string, info os.FileInfo, err error) error {
 		if info != nil && !info.IsDir() && !r.isServiceFile(filePath) {
@@ -220,7 +218,7 @@ func (r *FileCardRepository) readCardArtifacts(cardPath string) ([]CardArtifact,
 				return err
 			}
 			fileName := path.Base(filePath)
-			artifacts = append(artifacts, NewCardArtifact(fileName, fileContents))
+			artifacts = append(artifacts, card.NewCardArtifact(fileName, fileContents))
 		}
 		return nil
 	})

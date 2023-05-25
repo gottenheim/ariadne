@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"time"
 
-	"github.com/gottenheim/ariadne/config"
+	"github.com/gottenheim/ariadne/details/config"
 )
 
 func DeserializeCardActivityChain(activitiesBinary []byte) (CardActivity, error) {

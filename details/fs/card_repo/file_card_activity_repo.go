@@ -1,15 +1,16 @@
-package card
+package card_repo
 
 import (
 	"os"
 	"path/filepath"
 
+	"github.com/gottenheim/ariadne/card"
 	"github.com/spf13/afero"
 )
 
 const ActivitiesFileName = ".activities"
 
-func (r *FileCardRepository) ReadCardActivities(cardPath string) (CardActivity, error) {
+func (r *FileCardRepository) ReadCardActivities(cardPath string) (card.CardActivity, error) {
 	activitiesFilePath := r.getActivitiesFilePath(cardPath)
 
 	fileExists, activitiesBinary, err := r.readActivitiesFromFile(activitiesFilePath)
@@ -18,18 +19,18 @@ func (r *FileCardRepository) ReadCardActivities(cardPath string) (CardActivity, 
 	}
 
 	if !fileExists {
-		return CreateLearnCardActivity(), nil
+		return card.CreateLearnCardActivity(), nil
 	}
 
-	return DeserializeCardActivityChain(activitiesBinary)
+	return card.DeserializeCardActivityChain(activitiesBinary)
 }
 
-func (r *FileCardRepository) SaveCardActivities(cardActivity CardActivity, cardPath string) error {
+func (r *FileCardRepository) SaveCardActivities(cardActivity card.CardActivity, cardPath string) error {
 	activitiesFilePath := r.getActivitiesFilePath(cardPath)
 
 	r.removeActivitiesFileIfExists(activitiesFilePath)
 
-	isNewCard, err := IsNewCard(cardActivity)
+	isNewCard, err := card.IsNewCard(cardActivity)
 
 	if err != nil {
 		return err
@@ -39,7 +40,7 @@ func (r *FileCardRepository) SaveCardActivities(cardActivity CardActivity, cardP
 		return nil
 	}
 
-	activitiesBinary, err := SerializeCardActivityChain(cardActivity)
+	activitiesBinary, err := card.SerializeCardActivityChain(cardActivity)
 	if err != nil {
 		return err
 	}

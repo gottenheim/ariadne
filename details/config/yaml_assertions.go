@@ -1,15 +1,13 @@
-package test
+package config
 
 import (
 	"reflect"
 	"strings"
 	"testing"
-
-	"github.com/gottenheim/ariadne/config"
 )
 
 func AssertIdenticalYamlStrings(t *testing.T, first string, second string) {
-	firstConf, err := config.FromYamlReader(strings.NewReader(first))
+	firstConf, err := FromYamlReader(strings.NewReader(first))
 
 	if err != nil {
 		t.Error("First string doesn't have yaml format")
@@ -17,7 +15,7 @@ func AssertIdenticalYamlStrings(t *testing.T, first string, second string) {
 
 	firstValues, _ := firstConf.GetValues()
 
-	secondConf, err := config.FromYamlReader(strings.NewReader(second))
+	secondConf, err := FromYamlReader(strings.NewReader(second))
 
 	if err != nil {
 		t.Error("Second string doesn't have yaml format")

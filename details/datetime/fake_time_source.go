@@ -2,8 +2,6 @@ package datetime
 
 import (
 	"time"
-
-	"github.com/gottenheim/ariadne/test"
 )
 
 type FakeTimeSource struct {
@@ -12,7 +10,7 @@ type FakeTimeSource struct {
 
 func NewFakeTimeSource() *FakeTimeSource {
 	return &FakeTimeSource{
-		now: test.GetLocalTestTime(),
+		now: GetLocalTestTime(),
 	}
 }
 

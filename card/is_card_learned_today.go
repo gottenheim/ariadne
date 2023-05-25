@@ -1,6 +1,6 @@
 package card
 
-import "github.com/gottenheim/ariadne/datetime"
+import "github.com/gottenheim/ariadne/details/datetime"
 
 type isCardLearnedToday struct {
 	timeSource datetime.TimeSource

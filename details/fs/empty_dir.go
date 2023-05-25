@@ -1,11 +1,12 @@
 package fs
 
 import (
-	"github.com/spf13/afero"
 	"path/filepath"
+
+	"github.com/spf13/afero"
 )
 
-func EmptyDirectory(fs afero.Fs, dir string) error {
+func RemoveAllDirectoryFiles(fs afero.Fs, dir string) error {
 	d, err := fs.Open(dir)
 	if err != nil {
 		return err

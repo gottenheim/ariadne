@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/gottenheim/ariadne/archive"
 	"github.com/gottenheim/ariadne/card"
+	"github.com/gottenheim/ariadne/details/archive"
 )
 
 func TestCompressAnswerArtifacts(t *testing.T) {

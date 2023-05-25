@@ -5,22 +5,22 @@ import (
 	"testing"
 
 	"github.com/gottenheim/ariadne/card"
-	"github.com/gottenheim/ariadne/fs"
-	"github.com/gottenheim/ariadne/test"
+	"github.com/gottenheim/ariadne/details/fs"
+	"github.com/gottenheim/ariadne/details/fs/card_repo"
 	"github.com/spf13/afero"
 )
 
 func TestExtractAnswerAction(t *testing.T) {
-	fakeFs, err := fs.NewFake([]fs.FakeEntry{
-		fs.NewFakeEntry("/home/user/books/cpp/1", "source.cpp", `old source code artifact`),
-		fs.NewFakeEntry("/home/user/books/cpp/1", "header.h", `old header artifact`),
+	fakeFs, err := fs.NewFakeFs([]fs.FakeFileEntry{
+		fs.NewFakeFileEntry("/home/user/books/cpp/1", "source.cpp", `old source code artifact`),
+		fs.NewFakeFileEntry("/home/user/books/cpp/1", "header.h", `old header artifact`),
 	})
 
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	cardRepo := card.NewFileCardRepository(fakeFs, "/home/user")
+	cardRepo := card_repo.NewFileCardRepository(fakeFs, "/home/user")
 
 	c, err := cardRepo.Get("books/cpp/1")
 
@@ -42,6 +42,6 @@ func TestExtractAnswerAction(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	test.AssertFileExistsAndHasContent(t, fakeFs, "/home/user/books/cpp/1/source.cpp", "old source code artifact")
-	test.AssertFileExistsAndHasContent(t, fakeFs, "/home/user/books/cpp/1/header.h", "old header artifact")
+	fs.AssertFileExistsAndHasContent(t, fakeFs, "/home/user/books/cpp/1/source.cpp", "old source code artifact")
+	fs.AssertFileExistsAndHasContent(t, fakeFs, "/home/user/books/cpp/1/header.h", "old header artifact")
 }

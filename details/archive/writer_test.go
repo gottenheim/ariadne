@@ -4,16 +4,16 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/gottenheim/ariadne/fs"
+	"github.com/gottenheim/ariadne/details/fs"
 	"github.com/spf13/afero"
 )
 
 func TestCompressingAndDecompressingArchive(t *testing.T) {
-	fakeFs, err := fs.NewFake([]fs.FakeEntry{
-		fs.NewFakeEntry("/dev/frontend", "deploy.yaml", `first: firstValue`),
-		fs.NewFakeEntry("/dev/frontend", "app.yaml", `second: secondValue`),
-		fs.NewFakeEntry("/dev/backend", "deploy.yaml", `third: thirdValue`),
-		fs.NewFakeEntry("/dev/backend", "app.yaml", `fourth: fourthValue`),
+	fakeFs, err := fs.NewFakeFs([]fs.FakeFileEntry{
+		fs.NewFakeFileEntry("/dev/frontend", "deploy.yaml", `first: firstValue`),
+		fs.NewFakeFileEntry("/dev/frontend", "app.yaml", `second: secondValue`),
+		fs.NewFakeFileEntry("/dev/backend", "deploy.yaml", `third: thirdValue`),
+		fs.NewFakeFileEntry("/dev/backend", "app.yaml", `fourth: fourthValue`),
 	})
 
 	if err != nil {

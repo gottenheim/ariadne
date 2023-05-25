@@ -7,7 +7,7 @@ import (
 )
 
 func TestIsCardNew_IfLearnActivityIsNotExecuted(t *testing.T) {
-	activityChain := createTestActivityChain(learnCard)
+	activityChain := card.GenerateActivityChain(card.LearnCard)
 
 	isNew, err := card.IsNewCard(activityChain)
 
@@ -21,7 +21,7 @@ func TestIsCardNew_IfLearnActivityIsNotExecuted(t *testing.T) {
 }
 
 func TestIsCardNew_IfLearnActivityIsNotExecuted_AndRemindActivityInTheEndOfChain(t *testing.T) {
-	activityChain := createTestActivityChain(learnCard, remindCard)
+	activityChain := card.GenerateActivityChain(card.LearnCard, card.RemindCard)
 
 	isNew, err := card.IsNewCard(activityChain)
 
@@ -35,7 +35,7 @@ func TestIsCardNew_IfLearnActivityIsNotExecuted_AndRemindActivityInTheEndOfChain
 }
 
 func TestIsCardNew_IfLearnActivityHasAlreadyBeenExecuted(t *testing.T) {
-	activityChain := createTestActivityChain(learnCard | cardExecutedToday)
+	activityChain := card.GenerateActivityChain(card.LearnCard | card.CardExecutedToday)
 
 	isNew, err := card.IsNewCard(activityChain)
 
@@ -49,7 +49,7 @@ func TestIsCardNew_IfLearnActivityHasAlreadyBeenExecuted(t *testing.T) {
 }
 
 func TestIsCardNew_IfLearnActivityHasAlreadyBeenExecuted_AndRemindActivityInTheEndOfChain(t *testing.T) {
-	activityChain := createTestActivityChain(learnCard|cardExecutedToday, remindCard)
+	activityChain := card.GenerateActivityChain(card.LearnCard|card.CardExecutedToday, card.RemindCard)
 
 	isNew, err := card.IsNewCard(activityChain)
 

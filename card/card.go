@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"errors"
 
-	"github.com/gottenheim/ariadne/archive"
+	"github.com/gottenheim/ariadne/details/archive"
 )
 
 const AnswerArtifactName = "answer.tgz"
@@ -43,6 +43,10 @@ func (c *Card) HasOrderNumber() bool {
 
 func (c *Card) Artifacts() []CardArtifact {
 	return c.artifacts
+}
+
+func (c *Card) SetArtifacts(artifacts []CardArtifact) {
+	c.artifacts = artifacts
 }
 
 func (c *Card) Activities() CardActivity {

@@ -4,12 +4,12 @@ import (
 	"testing"
 
 	"github.com/gottenheim/ariadne/card"
-	"github.com/gottenheim/ariadne/datetime"
+	"github.com/gottenheim/ariadne/details/datetime"
 )
 
 func TestIsCardRemindedToday_IfNoRemindActivityCreated(t *testing.T) {
 	timeSource := datetime.NewFakeTimeSource()
-	activityChain := createTestActivityChain(learnCard)
+	activityChain := card.GenerateActivityChain(card.LearnCard)
 
 	isRemindedToday, err := card.IsCardRemindedToday(timeSource, activityChain)
 
@@ -24,7 +24,7 @@ func TestIsCardRemindedToday_IfNoRemindActivityCreated(t *testing.T) {
 
 func TestIsCardRemindedToday_IfRemindActivityScheduledToTomorrow(t *testing.T) {
 	timeSource := datetime.NewFakeTimeSource()
-	activityChain := createTestActivityChain(learnCard, remindCard|remindCardScheduledToTomorrow)
+	activityChain := card.GenerateActivityChain(card.LearnCard, card.RemindCard|card.RemindCardScheduledToTomorrow)
 
 	isRemindedToday, err := card.IsCardRemindedToday(timeSource, activityChain)
 
@@ -39,7 +39,7 @@ func TestIsCardRemindedToday_IfRemindActivityScheduledToTomorrow(t *testing.T) {
 
 func TestIsCardRemindedToday_IfRemindActivityScheduledToToday_ButNotExecuted(t *testing.T) {
 	timeSource := datetime.NewFakeTimeSource()
-	activityChain := createTestActivityChain(learnCard, remindCard|remindCardScheduledToToday)
+	activityChain := card.GenerateActivityChain(card.LearnCard, card.RemindCard|card.RemindCardScheduledToToday)
 
 	isRemindedToday, err := card.IsCardRemindedToday(timeSource, activityChain)
 
@@ -54,7 +54,7 @@ func TestIsCardRemindedToday_IfRemindActivityScheduledToToday_ButNotExecuted(t *
 
 func TestIsCardRemindedToday_IfRemindActivityScheduledToToday_AndExecuted(t *testing.T) {
 	timeSource := datetime.NewFakeTimeSource()
-	activityChain := createTestActivityChain(learnCard, remindCard|remindCardScheduledToToday|cardExecutedToday)
+	activityChain := card.GenerateActivityChain(card.LearnCard, card.RemindCard|card.RemindCardScheduledToToday|card.CardExecutedToday)
 
 	isRemindedToday, err := card.IsCardRemindedToday(timeSource, activityChain)
 
@@ -69,7 +69,7 @@ func TestIsCardRemindedToday_IfRemindActivityScheduledToToday_AndExecuted(t *tes
 
 func TestIsCardRemindedToday_IfRemindActivityScheduledToYesterday_AndExecutedToday(t *testing.T) {
 	timeSource := datetime.NewFakeTimeSource()
-	activityChain := createTestActivityChain(learnCard, remindCard|remindCardScheduledToYesterday|cardExecutedToday)
+	activityChain := card.GenerateActivityChain(card.LearnCard, card.RemindCard|card.RemindCardScheduledToYesterday|card.CardExecutedToday)
 
 	isRemindedToday, err := card.IsCardRemindedToday(timeSource, activityChain)
 
@@ -84,7 +84,7 @@ func TestIsCardRemindedToday_IfRemindActivityScheduledToYesterday_AndExecutedTod
 
 func TestIsCardRemindedToday_IfRemindActivityScheduledToYesterday_AndExecutedYesterday(t *testing.T) {
 	timeSource := datetime.NewFakeTimeSource()
-	activityChain := createTestActivityChain(learnCard, remindCard|remindCardScheduledToYesterday|cardExecutedYesterday)
+	activityChain := card.GenerateActivityChain(card.LearnCard, card.RemindCard|card.RemindCardScheduledToYesterday|card.CardExecutedYesterday)
 
 	isRemindedToday, err := card.IsCardRemindedToday(timeSource, activityChain)
 
@@ -99,7 +99,7 @@ func TestIsCardRemindedToday_IfRemindActivityScheduledToYesterday_AndExecutedYes
 
 func TestIsCardRemindedToday_IfRemindActivityScheduledToToday_AndExecutedToday_AndNewRemindActivityHasAlreadyScheduled(t *testing.T) {
 	timeSource := datetime.NewFakeTimeSource()
-	activityChain := createTestActivityChain(learnCard, remindCard|remindCardScheduledToToday|cardExecutedToday, remindCard|remindCardScheduledToTomorrow)
+	activityChain := card.GenerateActivityChain(card.LearnCard, card.RemindCard|card.RemindCardScheduledToToday|card.CardExecutedToday, card.RemindCard|card.RemindCardScheduledToTomorrow)
 
 	isRemindedToday, err := card.IsCardRemindedToday(timeSource, activityChain)
 

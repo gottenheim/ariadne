@@ -4,12 +4,12 @@ import (
 	"testing"
 
 	"github.com/gottenheim/ariadne/card"
-	"github.com/gottenheim/ariadne/datetime"
+	"github.com/gottenheim/ariadne/details/datetime"
 )
 
 func TestIsCardLearnedToday_IfLearnActivityIsNotExecuted(t *testing.T) {
 	timeSource := datetime.NewFakeTimeSource()
-	activityChain := createTestActivityChain(learnCard)
+	activityChain := card.GenerateActivityChain(card.LearnCard)
 
 	isLearnedToday, err := card.IsCardLearnedToday(timeSource, activityChain)
 
@@ -24,7 +24,7 @@ func TestIsCardLearnedToday_IfLearnActivityIsNotExecuted(t *testing.T) {
 
 func TestIsCardLearnedToday_IfLearnActivityIsNotExecuted_AndRemindActivityInTheEndOfChain(t *testing.T) {
 	timeSource := datetime.NewFakeTimeSource()
-	activityChain := createTestActivityChain(learnCard, remindCard)
+	activityChain := card.GenerateActivityChain(card.LearnCard, card.RemindCard)
 
 	isLearnedToday, err := card.IsCardLearnedToday(timeSource, activityChain)
 
@@ -40,7 +40,7 @@ func TestIsCardLearnedToday_IfLearnActivityIsNotExecuted_AndRemindActivityInTheE
 func TestIsCardLearnedToday_IfLearnActivityHasBeenExecutedYesterday(t *testing.T) {
 	timeSource := datetime.NewFakeTimeSource()
 
-	activityChain := createTestActivityChain(learnCard | cardExecutedYesterday)
+	activityChain := card.GenerateActivityChain(card.LearnCard | card.CardExecutedYesterday)
 
 	isLearnedToday, err := card.IsCardLearnedToday(timeSource, activityChain)
 
@@ -56,7 +56,7 @@ func TestIsCardLearnedToday_IfLearnActivityHasBeenExecutedYesterday(t *testing.T
 func TestIsCardLearnedToday_IfLearnActivityHasBeenExecutedToday(t *testing.T) {
 	timeSource := datetime.NewFakeTimeSource()
 
-	activityChain := createTestActivityChain(learnCard | cardExecutedToday)
+	activityChain := card.GenerateActivityChain(card.LearnCard | card.CardExecutedToday)
 
 	isLearnedToday, err := card.IsCardLearnedToday(timeSource, activityChain)
 
@@ -72,7 +72,7 @@ func TestIsCardLearnedToday_IfLearnActivityHasBeenExecutedToday(t *testing.T) {
 func TestIsCardLearnedToday_IfLearnActivityHasBeenExecutedToday_AndSomeRemindActivitiesAddedAfterIt(t *testing.T) {
 	timeSource := datetime.NewFakeTimeSource()
 
-	activityChain := createTestActivityChain(learnCard|cardExecutedToday, remindCard|remindCardScheduledToToday, remindCard|remindCardScheduledToTomorrow)
+	activityChain := card.GenerateActivityChain(card.LearnCard|card.CardExecutedToday, card.RemindCard|card.RemindCardScheduledToToday, card.RemindCard|card.RemindCardScheduledToTomorrow)
 
 	isLearnedToday, err := card.IsCardLearnedToday(timeSource, activityChain)
 

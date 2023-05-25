@@ -4,23 +4,24 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/gottenheim/ariadne/archive"
 	"github.com/gottenheim/ariadne/card"
-	"github.com/gottenheim/ariadne/fs"
+	"github.com/gottenheim/ariadne/details/archive"
+	"github.com/gottenheim/ariadne/details/fs"
+	"github.com/gottenheim/ariadne/details/fs/card_repo"
 	"github.com/spf13/afero"
 )
 
 func TestCompressAnswerAction(t *testing.T) {
-	fakeFs, err := fs.NewFake([]fs.FakeEntry{
-		fs.NewFakeEntry("/home/user/books/cpp/1", "source.cpp", `source code artifact`),
-		fs.NewFakeEntry("/home/user/books/cpp/1", "header.h", `header artifact`),
+	fakeFs, err := fs.NewFakeFs([]fs.FakeFileEntry{
+		fs.NewFakeFileEntry("/home/user/books/cpp/1", "source.cpp", `source code artifact`),
+		fs.NewFakeFileEntry("/home/user/books/cpp/1", "header.h", `header artifact`),
 	})
 
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	cardRepo := card.NewFileCardRepository(fakeFs, "/home/user")
+	cardRepo := card_repo.NewFileCardRepository(fakeFs, "/home/user")
 
 	comressAnswerAction := &card.CompressAnswerAction{}
 	err = comressAnswerAction.Run(cardRepo, "/books/cpp/1")

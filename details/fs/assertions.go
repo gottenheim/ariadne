@@ -1,4 +1,4 @@
-package test
+package fs
 
 import (
 	"fmt"
@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/gottenheim/ariadne/details/config"
 	"github.com/spf13/afero"
 )
 
@@ -28,7 +29,7 @@ func AssertFileExistsAndHasYamlContent(t *testing.T, fs afero.Fs, path string, e
 		t.Errorf("File %s does not exist", path)
 	}
 
-	AssertIdenticalYamlStrings(t, string(fileText), expectedContent)
+	config.AssertIdenticalYamlStrings(t, string(fileText), expectedContent)
 }
 
 func AssertFileDoesNotExists(t *testing.T, fs afero.Fs, path string) {

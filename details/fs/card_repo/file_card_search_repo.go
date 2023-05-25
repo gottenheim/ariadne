@@ -1,6 +1,8 @@
-package card
+package card_repo
 
-func (r *FileCardRepository) FindCardsForStudy(newCards int, cardsToRemind int) ([]*Card, error) {
+import "github.com/gottenheim/ariadne/card"
+
+func (r *FileCardRepository) FindCardsForStudy(newCards int, cardsToRemind int) ([]*card.Card, error) {
 	// var foundCards []*Card
 
 	// err := afero.Walk(r.fs, r.baseDir, func(filePath string, info os.FileInfo, err error) error {
