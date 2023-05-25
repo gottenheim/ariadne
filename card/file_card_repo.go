@@ -14,16 +14,14 @@ import (
 )
 
 type FileCardRepository struct {
-	fs           afero.Fs
-	baseDir      string
-	activityRepo *FileCardActivityRepository
+	fs      afero.Fs
+	baseDir string
 }
 
 func NewFileCardRepository(fs afero.Fs, baseDir string) *FileCardRepository {
 	return &FileCardRepository{
-		fs:           fs,
-		baseDir:      baseDir,
-		activityRepo: NewFileCardActivityRepository(fs),
+		fs:      fs,
+		baseDir: baseDir,
 	}
 }
 
@@ -46,7 +44,7 @@ func (r *FileCardRepository) Get(relativeCardPath string) (*Card, error) {
 
 	card.artifacts = artifacts
 
-	activities, err := r.activityRepo.ReadCardActivities(cardPath)
+	activities, err := r.ReadCardActivities(cardPath)
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +70,7 @@ func (r *FileCardRepository) Save(card *Card) error {
 		return err
 	}
 
-	return r.activityRepo.SaveCardActivities(card.Activities(), r.getCardPath(card))
+	return r.SaveCardActivities(card.Activities(), r.getCardPath(card))
 }
 
 func (r *FileCardRepository) assignOrderNumberIfNeeded(card *Card) error {
