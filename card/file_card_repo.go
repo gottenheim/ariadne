@@ -18,7 +18,7 @@ type FileCardRepository struct {
 	baseDir string
 }
 
-func NewFileCardRepository(fs afero.Fs, baseDir string) *FileCardRepository {
+func NewFileCardRepository(fs afero.Fs, baseDir string) CardRepository {
 	return &FileCardRepository{
 		fs:      fs,
 		baseDir: baseDir,
