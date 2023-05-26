@@ -52,6 +52,8 @@ func (g *BatchCardGenerator) Generate() []*Card {
 		if activities != nil {
 			card := NewFakeCard().WithKey(Key(i + 1)).WithActivities(activities...).Build()
 			cards = append(cards, card)
+		} else {
+			i--
 		}
 	}
 
