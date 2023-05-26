@@ -1,9 +1,12 @@
 package pipeline
 
-import "sync"
+import (
+	"sync"
+)
 
 type WaitGroupEventHandler struct {
 	waitGroup sync.WaitGroup
+	errors    []error
 }
 
 func (h *WaitGroupEventHandler) OnStart() {
@@ -12,6 +15,10 @@ func (h *WaitGroupEventHandler) OnStart() {
 
 func (h *WaitGroupEventHandler) OnFinish() {
 	h.waitGroup.Done()
+}
+
+func (h *WaitGroupEventHandler) OnError(err error) {
+	h.errors = append(h.errors, err)
 }
 
 func (h *WaitGroupEventHandler) Wait() {

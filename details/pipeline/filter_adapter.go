@@ -2,7 +2,7 @@ package pipeline
 
 type producerFilterAdapter[K interface{}] interface {
 	SetOutputChannel(output chan<- K)
-	Run() error
+	Run()
 }
 
 type consumerFilterAdapter[T interface{}] interface {
@@ -34,15 +34,10 @@ func (f *filterAdapter[T, K]) SetProducerFilter(producer producerFilterAdapter[T
 	f.producer = producer
 }
 
-func (f *filterAdapter[T, K]) Run() error {
+func (f *filterAdapter[T, K]) Run() {
 	go f.filter.Run(f.input, f.output)
 
 	if f.producer != nil {
-		err := f.producer.Run()
-		if err != nil {
-			return err
-		}
+		f.producer.Run()
 	}
-
-	return nil
 }

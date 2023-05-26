@@ -10,7 +10,7 @@ type serialNumbers struct {
 	events pipeline.FilterEvents
 }
 
-func newSerialNumbers(events pipeline.FilterEvents) pipeline.Filter[int, int] {
+func newSerialNumbers(events pipeline.FilterEvents) pipeline.Filter[interface{}, int] {
 	events.OnStart()
 
 	return &serialNumbers{
@@ -18,7 +18,7 @@ func newSerialNumbers(events pipeline.FilterEvents) pipeline.Filter[int, int] {
 	}
 }
 
-func (f *serialNumbers) Run(input <-chan int, output chan<- int) {
+func (f *serialNumbers) Run(input <-chan interface{}, output chan<- int) {
 	for i := 0; i < 100; i++ {
 		output <- i
 	}
@@ -95,11 +95,7 @@ func TestFilterProducingAndCollectingFilteredIntegers(t *testing.T) {
 			newLessThanFifty(wgEvents)),
 		newCollectNumbers(wgEvents, result))
 
-	err := pipeLine.Run()
-
-	if err != nil {
-		t.Fatal(err)
-	}
+	pipeLine.Run()
 
 	wgEvents.Wait()
 

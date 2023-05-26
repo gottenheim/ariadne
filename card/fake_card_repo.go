@@ -5,7 +5,9 @@ type FakeCardRepository struct {
 }
 
 func NewFakeCardRepository(cards ...*Card) CardRepository {
-	repo := &FakeCardRepository{}
+	repo := &FakeCardRepository{
+		cards: map[Key]*Card{},
+	}
 
 	for _, card := range cards {
 		repo.cards[card.Key()] = card

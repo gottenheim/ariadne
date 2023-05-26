@@ -1,6 +1,6 @@
 package pipeline
 
-func New[T interface{}](filter Filter[T, T]) *filterAdapter[T, T] {
+func New[T interface{}](filter Filter[interface{}, T]) *filterAdapter[interface{}, T] {
 	return newFilterAdapter(filter)
 }
 
