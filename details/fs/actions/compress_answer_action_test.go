@@ -21,10 +21,10 @@ func TestCompressAnswerAction(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	cardRepo := card_repo.NewFileCardRepository(fakeFs, "/home/user")
+	cardRepo := card_repo.NewFileCardRepository(fakeFs, "/home/user/books/cpp")
 
 	comressAnswerAction := &card.CompressAnswerAction{}
-	err = comressAnswerAction.Run(cardRepo, "/books/cpp/1")
+	err = comressAnswerAction.Run(cardRepo, 1)
 
 	if err != nil {
 		t.Fatal(err)

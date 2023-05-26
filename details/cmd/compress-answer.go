@@ -1,6 +1,10 @@
 package cmd
 
 import (
+	"errors"
+	"path/filepath"
+	"strconv"
+
 	"github.com/gottenheim/ariadne/card"
 	"github.com/gottenheim/ariadne/details/fs/card_repo"
 	"github.com/spf13/afero"
@@ -13,27 +17,31 @@ var compressAnswerCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		osFs := afero.NewOsFs()
 
-		dirs, err := GetDirectoryFlags(cmd, osFs, []string{"base-dir", "card-dir"})
+		dirs, err := GetDirectoryFlags(cmd, osFs, []string{"card-dir"})
 
 		if err != nil {
 			return err
 		}
 
-		baseDir, cardDir := dirs[0], dirs[1]
+		cardDir := filepath.Dir(dirs[0])
 
-		repo := card_repo.NewFileCardRepository(osFs, baseDir)
+		repo := card_repo.NewFileCardRepository(osFs, cardDir)
 
 		action := &card.CompressAnswerAction{}
 
-		return action.Run(repo, cardDir)
+		cardKey, err := strconv.Atoi(filepath.Base(dirs[0]))
+
+		if err != nil {
+			return errors.New("Card directory should be a number")
+		}
+
+		return action.Run(repo, card.Key(cardKey))
 	},
 }
 
 func init() {
 	cardCmd.AddCommand(compressAnswerCmd)
 
-	compressAnswerCmd.Flags().String("base-dir", "", "Base directory (e.g. git repo directory)")
-	compressAnswerCmd.MarkFlagRequired("base-dir")
 	compressAnswerCmd.Flags().String("card-dir", "", "Card directory (relative to base)")
 	compressAnswerCmd.MarkFlagRequired("card-dir")
 }

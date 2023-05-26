@@ -3,7 +3,7 @@ package card
 type ExtractCardAction struct {
 }
 
-func (a *ExtractCardAction) Run(cardRepo CardRepository, cardKey string) error {
+func (a *ExtractCardAction) Run(cardRepo CardRepository, cardKey Key) error {
 	card, err := cardRepo.Get(cardKey)
 	if err != nil {
 		return err

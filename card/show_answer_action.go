@@ -7,7 +7,7 @@ import (
 type ShowAnswerAction struct {
 }
 
-func (a *ShowAnswerAction) Run(cardRepo CardRepository, output io.Writer, cardKey string) error {
+func (a *ShowAnswerAction) Run(cardRepo CardRepository, output io.Writer, cardKey Key) error {
 	card, err := cardRepo.Get(cardKey)
 
 	if err != nil {

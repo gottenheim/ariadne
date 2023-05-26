@@ -3,7 +3,7 @@ package card
 type CompressAnswerAction struct {
 }
 
-func (a *CompressAnswerAction) Run(cardRepo CardRepository, cardKey string) error {
+func (a *CompressAnswerAction) Run(cardRepo CardRepository, cardKey Key) error {
 	card, err := cardRepo.Get(cardKey)
 	if err != nil {
 		return err

@@ -1,36 +1,25 @@
 package card
 
-import (
-	"strconv"
-	"strings"
-)
-
 type FakeCardRepository struct {
-	cards map[string]*Card
+	cards map[Key]*Card
 }
 
 func NewFakeCardRepository(cards ...*Card) CardRepository {
 	repo := &FakeCardRepository{}
 
 	for _, card := range cards {
-		cardKey := repo.getCardKey(card)
-		repo.cards[cardKey] = card
+		repo.cards[card.Key()] = card
 	}
 
 	return repo
 }
 
-func (r *FakeCardRepository) Get(key string) (*Card, error) {
+func (r *FakeCardRepository) Get(key Key) (*Card, error) {
 	card, _ := r.cards[key]
 	return card, nil
 }
 
 func (r *FakeCardRepository) Save(card *Card) error {
-	cardKey := r.getCardKey(card)
-	r.cards[cardKey] = card
+	r.cards[card.Key()] = card
 	return nil
-}
-
-func (r *FakeCardRepository) getCardKey(card *Card) string {
-	return strings.Join(card.sections, "/") + strconv.Itoa(card.orderNum)
 }

@@ -1,6 +1,6 @@
 package card
 
 type CardRepository interface {
-	Get(key string) (*Card, error)
+	Get(key Key) (*Card, error)
 	Save(card *Card) error
 }

@@ -2,12 +2,10 @@ package card_repo
 
 import (
 	"errors"
-	"fmt"
 	"os"
 	"path"
 	"path/filepath"
 	"strconv"
-	"strings"
 
 	"github.com/gottenheim/ariadne/card"
 	"github.com/gottenheim/ariadne/details/fs"
@@ -15,19 +13,19 @@ import (
 )
 
 type FileCardRepository struct {
-	fs      afero.Fs
-	baseDir string
+	fs       afero.Fs
+	cardsDir string
 }
 
-func NewFileCardRepository(fs afero.Fs, baseDir string) card.CardRepository {
+func NewFileCardRepository(fs afero.Fs, cardsDir string) card.CardRepository {
 	return &FileCardRepository{
-		fs:      fs,
-		baseDir: baseDir,
+		fs:       fs,
+		cardsDir: cardsDir,
 	}
 }
 
-func (r *FileCardRepository) Get(relativeCardPath string) (*card.Card, error) {
-	card, err := r.createCardFromPath(relativeCardPath)
+func (r *FileCardRepository) Get(cardKey card.Key) (*card.Card, error) {
+	card, err := r.createCard(cardKey)
 	if err != nil {
 		return nil, err
 	}
@@ -56,12 +54,12 @@ func (r *FileCardRepository) Get(relativeCardPath string) (*card.Card, error) {
 }
 
 func (r *FileCardRepository) Save(card *card.Card) error {
-	err := r.assignOrderNumberIfNeeded(card)
+	err := r.generateKeyIfNeeded(card)
 	if err != nil {
 		return err
 	}
 
-	err = r.emptyCardDirectory(card)
+	err = r.clearCardDirectory(card)
 	if err != nil {
 		return err
 	}
@@ -74,42 +72,35 @@ func (r *FileCardRepository) Save(card *card.Card) error {
 	return r.SaveCardActivities(card.Activities(), r.getCardPath(card))
 }
 
-func (r *FileCardRepository) assignOrderNumberIfNeeded(card *card.Card) error {
-	if !card.HasOrderNumber() {
-		cardSectionPath := r.getCardSectionPath(card)
-		orderNum, err := r.getNextFreeOrderNumberInSection(cardSectionPath)
+func (r *FileCardRepository) generateKeyIfNeeded(card *card.Card) error {
+	if card.Key() == 0 {
+		cardKey, err := r.getNextFreeCardKey()
 
 		if err != nil {
 			return err
 		}
 
-		card.SetOrderNumber(orderNum)
+		card.SetKey(cardKey)
 	}
 
 	return nil
 }
 
-func (r *FileCardRepository) getCardSectionPath(card *card.Card) string {
-	relPath := filepath.Join(card.Sections()...)
+func (r *FileCardRepository) getNextFreeCardKey() (card.Key, error) {
+	maxCardKey := 0
 
-	return filepath.Join(r.baseDir, relPath)
-}
-
-func (r *FileCardRepository) getNextFreeOrderNumberInSection(cardSectionPath string) (int, error) {
-	maxCardNumber := 0
-
-	err := afero.Walk(r.fs, cardSectionPath, func(filePath string, info os.FileInfo, err error) error {
+	err := afero.Walk(r.fs, r.cardsDir, func(filePath string, info os.FileInfo, err error) error {
 		isDir, _ := afero.IsDir(r.fs, filePath)
 
 		if isDir {
 			cardDir := path.Base(filePath)
-			cardNumber, err := strconv.Atoi(cardDir)
+			cardKey, err := strconv.Atoi(cardDir)
 			if err != nil {
 				return nil
 			}
 
-			if cardNumber > maxCardNumber {
-				maxCardNumber = cardNumber
+			if cardKey > maxCardKey {
+				maxCardKey = cardKey
 			}
 		}
 		return nil
@@ -119,7 +110,7 @@ func (r *FileCardRepository) getNextFreeOrderNumberInSection(cardSectionPath str
 		return 0, err
 	}
 
-	return maxCardNumber + 1, nil
+	return card.Key(maxCardKey + 1), nil
 }
 
 func (r *FileCardRepository) isCardDir(dirPath string) (bool, error) {
@@ -152,12 +143,10 @@ func (r *FileCardRepository) isCardDir(dirPath string) (bool, error) {
 }
 
 func (r *FileCardRepository) getCardPath(card *card.Card) string {
-	cardSectionPath := r.getCardSectionPath(card)
-
-	return filepath.Join(cardSectionPath, strconv.Itoa(card.OrderNumber()))
+	return filepath.Join(r.cardsDir, strconv.Itoa(int(card.Key())))
 }
 
-func (r *FileCardRepository) emptyCardDirectory(card *card.Card) error {
+func (r *FileCardRepository) clearCardDirectory(card *card.Card) error {
 	cardPath := r.getCardPath(card)
 
 	cardDirExists, err := afero.Exists(r.fs, cardPath)
@@ -193,19 +182,8 @@ func (r *FileCardRepository) saveArtifactFiles(card *card.Card) error {
 	return nil
 }
 
-func (r *FileCardRepository) createCardFromPath(cardPath string) (*card.Card, error) {
-	if cardPath[0] == filepath.Separator {
-		cardPath = cardPath[1:]
-	}
-	pathItems := strings.Split(cardPath, fmt.Sprintf("%c", filepath.Separator))
-	sections := pathItems[0 : len(pathItems)-1]
-	orderNum, err := strconv.Atoi(pathItems[len(pathItems)-1])
-
-	if err != nil {
-		return nil, err
-	}
-
-	return card.NewCard(sections, orderNum, []card.CardArtifact{}), nil
+func (r *FileCardRepository) createCard(cardKey card.Key) (*card.Card, error) {
+	return card.NewCard(cardKey, []card.CardArtifact{}), nil
 }
 
 func (r *FileCardRepository) readCardArtifacts(cardPath string) ([]card.CardArtifact, error) {

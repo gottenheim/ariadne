@@ -3,13 +3,13 @@ package card
 type NewCardAction struct {
 }
 
-func (a *NewCardAction) Run(templateRepo CardTemplateRepository, cardRepo CardRepository, cardSection []string) error {
+func (a *NewCardAction) Run(templateRepo CardTemplateRepository, cardRepo CardRepository) error {
 	cardTemplate, err := templateRepo.GetTemplate()
 	if err != nil {
 		return err
 	}
 
-	card := NewCard(cardSection, 0, cardTemplate.Artifacts())
+	card := NewCard(0, cardTemplate.Artifacts())
 
 	return cardRepo.Save(card)
 }

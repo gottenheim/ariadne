@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"strings"
-
 	"github.com/gottenheim/ariadne/card"
 	"github.com/gottenheim/ariadne/details/fs/card_repo"
 	"github.com/spf13/afero"
@@ -15,29 +13,27 @@ var newCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		osFs := afero.NewOsFs()
 
-		dirs, err := GetDirectoryFlags(cmd, osFs, []string{"base-dir", "cards-dir", "template-dir"})
+		dirs, err := GetDirectoryFlags(cmd, osFs, []string{"cards-dir", "template-dir"})
 
 		if err != nil {
 			return err
 		}
 
-		baseDir, cardsDir, templateDir := dirs[0], dirs[1], dirs[2]
+		cardsDir, templateDir := dirs[0], dirs[1]
 
 		action := &card.NewCardAction{}
 
 		templateRepo := card_repo.NewFileTemplateRepository(osFs, templateDir)
 
-		cardRepo := card_repo.NewFileCardRepository(osFs, baseDir)
+		cardRepo := card_repo.NewFileCardRepository(osFs, cardsDir)
 
-		return action.Run(templateRepo, cardRepo, strings.Split(cardsDir, afero.FilePathSeparator))
+		return action.Run(templateRepo, cardRepo)
 	},
 }
 
 func init() {
 	cardCmd.AddCommand(newCmd)
 
-	newCmd.Flags().String("base-dir", "", "Base directory (e.g. git repo directory)")
-	newCmd.MarkFlagRequired("base-dir")
 	newCmd.Flags().String("cards-dir", "", "Cards subdirectory relative to base")
 	newCmd.MarkFlagRequired("cards-dir")
 	newCmd.Flags().String("template-dir", "", "Template files directory")
