@@ -1,15 +1,15 @@
 package card
 
-type isNewCard struct {
+type newCardVisitor struct {
 	result bool
 }
 
-func (s *isNewCard) OnLearnCard(learn *LearnCardActivity) error {
+func (s *newCardVisitor) OnLearnCard(learn *LearnCardActivity) error {
 	s.result = !learn.executed
 	return nil
 }
 
-func (s *isNewCard) OnRemindCard(remind *RemindCardActivity) error {
+func (s *newCardVisitor) OnRemindCard(remind *RemindCardActivity) error {
 	if remind.previousActivity == nil {
 		return nil
 	}
@@ -17,11 +17,11 @@ func (s *isNewCard) OnRemindCard(remind *RemindCardActivity) error {
 	return remind.previousActivity.Accept(s)
 }
 
-func IsNewCard(activity CardActivity) (bool, error) {
-	isNew := &isNewCard{
+func IsNewCardActivities(activities CardActivity) (bool, error) {
+	isNew := &newCardVisitor{
 		result: true,
 	}
-	err := activity.Accept(isNew)
+	err := activities.Accept(isNew)
 	if err != nil {
 		return false, err
 	}

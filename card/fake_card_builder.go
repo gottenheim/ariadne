@@ -32,10 +32,10 @@ func (b *FakeCardBuilder) Build() *Card {
 	return card
 }
 
-func ExtractKeysWithActivities(cards []*Card) []*KeyWithActivities {
-	var result []*KeyWithActivities
+func ExtractBriefCards(cards []*Card) []BriefCard {
+	var result []BriefCard
 	for _, card := range cards {
-		result = append(result, &KeyWithActivities{
+		result = append(result, BriefCard{
 			Key:        card.Key(),
 			Activities: card.Activities(),
 		})

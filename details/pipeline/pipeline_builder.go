@@ -21,7 +21,7 @@ func WithFilter[T interface{}, K interface{}](pipeline *Pipeline, producer produ
 	return filterAdapter
 }
 
-func WithCondition[T interface{}, K interface{}](pipeline *Pipeline, producer producer[T], condition Condition[T, K]) *conditionAdapter[T, K] {
+func WithCondition[T interface{}, K interface{}, L interface{}](pipeline *Pipeline, producer producer[T], condition Condition[T, K, L]) *conditionAdapter[T, K, L] {
 	conditionAdapter := newConditionAdapter(pipeline, condition)
 	ch := make(chan T)
 	producer.SetOutputChannel(ch)
@@ -29,11 +29,11 @@ func WithCondition[T interface{}, K interface{}](pipeline *Pipeline, producer pr
 	return conditionAdapter
 }
 
-func OnPositiveDecision[T interface{}, K interface{}](condition *conditionAdapter[T, K]) producer[K] {
+func OnPositiveDecision[T interface{}, K interface{}, L interface{}](condition *conditionAdapter[T, K, L]) producer[K] {
 	return newPositiveDecisionAdapter(condition)
 }
 
-func OnNegativeDecision[T interface{}, K interface{}](condition *conditionAdapter[T, K]) producer[K] {
+func OnNegativeDecision[T interface{}, K interface{}, L interface{}](condition *conditionAdapter[T, K, L]) producer[L] {
 	return newNegativeDecisionAdapter(condition)
 }
 

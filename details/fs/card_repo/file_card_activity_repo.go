@@ -25,12 +25,12 @@ func (r *FileCardRepository) ReadCardActivities(cardPath string) (card.CardActiv
 	return card.DeserializeCardActivityChain(activitiesBinary)
 }
 
-func (r *FileCardRepository) SaveCardActivities(cardActivity card.CardActivity, cardPath string) error {
+func (r *FileCardRepository) SaveCardActivities(cardActivities card.CardActivity, cardPath string) error {
 	activitiesFilePath := r.getActivitiesFilePath(cardPath)
 
 	r.removeActivitiesFileIfExists(activitiesFilePath)
 
-	isNewCard, err := card.IsNewCard(cardActivity)
+	isNewCard, err := card.IsNewCardActivities(cardActivities)
 
 	if err != nil {
 		return err
@@ -40,7 +40,7 @@ func (r *FileCardRepository) SaveCardActivities(cardActivity card.CardActivity, 
 		return nil
 	}
 
-	activitiesBinary, err := card.SerializeCardActivityChain(cardActivity)
+	activitiesBinary, err := card.SerializeCardActivityChain(cardActivities)
 	if err != nil {
 		return err
 	}

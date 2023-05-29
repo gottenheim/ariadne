@@ -1,5 +1,5 @@
 package pipeline
 
-type Condition[T interface{}, K interface{}] interface {
-	Run(input <-chan T, positiveDecision chan<- K, negativeDecision chan<- K) error
+type Condition[T interface{}, K interface{}, L interface{}] interface {
+	Run(input <-chan T, positiveDecision chan<- K, negativeDecision chan<- L) error
 }

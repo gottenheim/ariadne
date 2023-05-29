@@ -68,7 +68,7 @@ func (f *lessThanFiftyFilter) Run(input <-chan int, output chan<- int) error {
 
 type lessThanFiftyCondition struct{}
 
-func ifLessThanFifty() pipeline.Condition[int, int] {
+func ifLessThanFifty() pipeline.Condition[int, int, int] {
 	return &lessThanFiftyCondition{}
 }
 
