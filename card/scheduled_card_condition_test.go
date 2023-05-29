@@ -13,7 +13,8 @@ func TestCardScheduledToTodayFilter(t *testing.T) {
 
 	cards := card.NewBatchCardGenerator().
 		WithCards(card.NewCardGenerationSpec("Cards scheduled to today", 80, card.LearnCard|card.CardExecutedMonthAgo, card.RemindCard|card.RemindCardScheduledToToday)).
-		WithCards(card.NewCardGenerationSpec("Cards not scheduled to today", 90, card.LearnCard|card.CardExecutedMonthAgo, card.RemindCard|card.RemindCardScheduledToTomorrow)).
+		WithCards(card.NewCardGenerationSpec("Cards scheduled to yesterday", 90, card.LearnCard|card.CardExecutedMonthAgo, card.RemindCard|card.RemindCardScheduledToYesterday)).
+		WithCards(card.NewCardGenerationSpec("Cards scheduled to future", 100, card.LearnCard|card.CardExecutedMonthAgo, card.RemindCard|card.RemindCardScheduledToTomorrow)).
 		Generate()
 
 	briefCards := card.ExtractBriefCards(cards)
@@ -36,11 +37,11 @@ func TestCardScheduledToTodayFilter(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if len(scheduledCardCollector.Items) != 80 {
-		t.Fatal("Filter should find 80 scheduled cards")
+	if len(scheduledCardCollector.Items) != 170 {
+		t.Fatal("Filter should find 170 scheduled cards")
 	}
 
-	if len(notScheduledCardCollector.Items) != 90 {
-		t.Fatal("Filter should find 90 not scheduled cards")
+	if len(notScheduledCardCollector.Items) != 100 {
+		t.Fatal("Filter should find 100 not scheduled cards")
 	}
 }
