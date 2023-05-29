@@ -25,6 +25,11 @@ func (b *FakeCardBuilder) WithActivities(activities ...GenerateActivity) *FakeCa
 	return b
 }
 
+func (b *FakeCardBuilder) WithActivityChain(activities CardActivity) *FakeCardBuilder {
+	b.activities = activities
+	return b
+}
+
 func (b *FakeCardBuilder) Build() *Card {
 	card := NewCard(b.key, b.artifacts)
 	card.SetArtifacts(b.artifacts)

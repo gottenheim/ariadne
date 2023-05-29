@@ -8,12 +8,12 @@ import (
 	"github.com/gottenheim/ariadne/details/pipeline"
 )
 
-func TestScheduledCardFilter(t *testing.T) {
+func TestCardScheduledToTodayFilter(t *testing.T) {
 	p := pipeline.New()
 
 	cards := card.NewBatchCardGenerator().
-		WithCardsScheduledToRemind(90).
-		WithNewCards(80).
+		WithCards(card.NewCardGenerationSpec("Cards scheduled to today", 80, card.LearnCard|card.CardExecutedMonthAgo, card.RemindCard|card.RemindCardScheduledToToday)).
+		WithCards(card.NewCardGenerationSpec("Cards not scheduled to today", 90, card.LearnCard|card.CardExecutedMonthAgo, card.RemindCard|card.RemindCardScheduledToTomorrow)).
 		Generate()
 
 	briefCards := card.ExtractBriefCards(cards)
@@ -22,13 +22,13 @@ func TestScheduledCardFilter(t *testing.T) {
 	cardRepo := card.NewFakeCardRepository(cards...)
 
 	scheduledCardCollector := pipeline.NewItemCollector[*card.Card]()
-	nonScheduledCardCollector := pipeline.NewItemCollector[card.BriefCard]()
+	notScheduledCardCollector := pipeline.NewItemCollector[card.BriefCard]()
 
 	cardEmitter := pipeline.NewEmitter[card.BriefCard](p, &cardEmitter{cards: briefCards})
 	newCardCondition := pipeline.WithCondition[card.BriefCard](p, cardEmitter, card.ScheduledCardCondition(timeSource, cardRepo))
 
 	pipeline.WithAcceptor[*card.Card](p, pipeline.OnPositiveDecision(newCardCondition), scheduledCardCollector)
-	pipeline.WithAcceptor[card.BriefCard](p, pipeline.OnNegativeDecision(newCardCondition), nonScheduledCardCollector)
+	pipeline.WithAcceptor[card.BriefCard](p, pipeline.OnNegativeDecision(newCardCondition), notScheduledCardCollector)
 
 	err := p.SyncRun()
 
@@ -36,11 +36,11 @@ func TestScheduledCardFilter(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if len(scheduledCardCollector.Items) != 90 {
-		t.Fatal("Filter should find 90 scheduled cards")
+	if len(scheduledCardCollector.Items) != 80 {
+		t.Fatal("Filter should find 80 scheduled cards")
 	}
 
-	if len(nonScheduledCardCollector.Items) != 80 {
-		t.Fatal("Filter should find 90 non scheduled cards")
+	if len(notScheduledCardCollector.Items) != 90 {
+		t.Fatal("Filter should find 90 not scheduled cards")
 	}
 }

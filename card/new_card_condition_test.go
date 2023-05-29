@@ -27,8 +27,8 @@ func TestNewCardFilter(t *testing.T) {
 	p := pipeline.New()
 
 	cards := card.NewBatchCardGenerator().
-		WithNewCards(80).
-		WithCardsScheduledToRemind(90).
+		WithCards(card.NewCardGenerationSpec("New cards", 80, card.LearnCard)).
+		WithCards(card.NewCardGenerationSpec("Learned cards", 90, card.LearnCard|card.CardExecutedYesterday, card.RemindCard|card.RemindCardScheduledToTomorrow)).
 		Generate()
 
 	briefCards := card.ExtractBriefCards(cards)

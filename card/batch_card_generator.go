@@ -2,51 +2,59 @@ package card
 
 import "math/rand"
 
+type CardGenerationSpec struct {
+	name       string
+	count      int
+	activities []GenerateActivity
+}
+
+func NewCardGenerationSpec(name string, count int, activities ...GenerateActivity) CardGenerationSpec {
+	return CardGenerationSpec{
+		name:       name,
+		count:      count,
+		activities: activities,
+	}
+}
+
 type BatchCardGenerator struct {
-	newCards               int
-	cardsScheduledToRemind int
+	specs []CardGenerationSpec
 }
 
 func NewBatchCardGenerator() *BatchCardGenerator {
 	return &BatchCardGenerator{}
 }
 
-func (g *BatchCardGenerator) WithNewCards(newCards int) *BatchCardGenerator {
-	g.newCards = newCards
-	return g
-}
-
-func (g *BatchCardGenerator) WithCardsScheduledToRemind(cardsScheduledToRemind int) *BatchCardGenerator {
-	g.cardsScheduledToRemind = cardsScheduledToRemind
+func (g *BatchCardGenerator) WithCards(spec CardGenerationSpec) *BatchCardGenerator {
+	g.specs = append(g.specs, spec)
 	return g
 }
 
 func (g *BatchCardGenerator) Generate() []*Card {
 	var cards []*Card
 
-	newCards, cardsScheduledToRemind := g.newCards, g.cardsScheduledToRemind
-	cardsTotal := newCards + cardsScheduledToRemind
+	cardsTotal := g.getCardsTotal()
 
 	for i := 0; i < cardsTotal; i++ {
-		index := rand.Int() % 2
+		index := rand.Int() % len(g.specs)
 
-		var activities []GenerateActivity
+		spec := &g.specs[index]
 
-		if index == 0 && newCards > 0 {
-			activities = []GenerateActivity{LearnCard}
-			newCards--
-		} else if index == 1 && cardsScheduledToRemind > 0 {
-			activities = []GenerateActivity{LearnCard | CardExecutedMonthAgo, RemindCard | RemindCardScheduledToToday}
-			cardsScheduledToRemind--
-		}
-
-		if activities != nil {
-			card := NewFakeCard().WithKey(Key(i + 1)).WithActivities(activities...).Build()
+		if spec.count > 0 {
+			card := NewFakeCard().WithKey(Key(i + 1)).WithActivities(spec.activities...).Build()
 			cards = append(cards, card)
+			spec.count--
 		} else {
 			i--
 		}
 	}
 
 	return cards
+}
+
+func (g *BatchCardGenerator) getCardsTotal() int {
+	cardsTotal := 0
+	for _, spec := range g.specs {
+		cardsTotal += spec.count
+	}
+	return cardsTotal
 }
