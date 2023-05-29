@@ -1,5 +1,7 @@
 package pipeline
 
+import "context"
+
 type Emitter[K interface{}] interface {
-	Run(output chan<- K) error
+	Run(ctx context.Context, output chan<- K) error
 }

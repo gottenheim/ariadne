@@ -1,6 +1,7 @@
 package pipeline_test
 
 import (
+	"context"
 	"errors"
 	"math/rand"
 	"testing"
@@ -18,9 +19,13 @@ func generateNSerialNumbers(count int) pipeline.Emitter[int] {
 	}
 }
 
-func (f *serialNumbers) Run(output chan<- int) error {
+func (f *serialNumbers) Run(ctx context.Context, output chan<- int) error {
 	for i := 0; i < f.count; i++ {
-		output <- i
+		select {
+		case <-ctx.Done():
+			break
+		case output <- i:
+		}
 	}
 	return nil
 }
@@ -35,7 +40,7 @@ func generateNRandomNumbers(count int) pipeline.Emitter[int] {
 	}
 }
 
-func (f *randomNumberGenerator) Run(output chan<- int) error {
+func (f *randomNumberGenerator) Run(ctx context.Context, output chan<- int) error {
 	for i := 0; i < f.count; i++ {
 		output <- rand.Int() % 100
 	}
@@ -49,7 +54,7 @@ func filterLessThanFifty() pipeline.Filter[int, int] {
 	return &lessThanFiftyFilter{}
 }
 
-func (f *lessThanFiftyFilter) Run(input <-chan int, output chan<- int) error {
+func (f *lessThanFiftyFilter) Run(ctx context.Context, input <-chan int, output chan<- int) error {
 	for {
 		val, ok := <-input
 		if !ok {
@@ -69,7 +74,7 @@ func ifLessThanFifty() pipeline.Condition[int, int, int] {
 	return &lessThanFiftyCondition{}
 }
 
-func (f *lessThanFiftyCondition) Run(input <-chan int, positiveDecision chan<- int, negativeDecision chan<- int) error {
+func (f *lessThanFiftyCondition) Run(ctx context.Context, input <-chan int, positiveDecision chan<- int, negativeDecision chan<- int) error {
 	for {
 		val, ok := <-input
 		if !ok {
@@ -92,8 +97,39 @@ func generateFailure() pipeline.Emitter[int] {
 	return &failureGenerator{}
 }
 
-func (f *failureGenerator) Run(output chan<- int) error {
+func (f *failureGenerator) Run(ctx context.Context, output chan<- int) error {
 	return errors.New("Failed to generate numbers")
+}
+
+type limitNumberCountCondition struct {
+	pipeline *pipeline.Pipeline
+	limit    int
+	actual   int
+}
+
+func limitNumberCount(pipeline *pipeline.Pipeline, limit int) pipeline.Filter[int, int] {
+	return &limitNumberCountCondition{
+		pipeline: pipeline,
+		limit:    limit,
+	}
+}
+
+func (f *limitNumberCountCondition) Run(ctx context.Context, input <-chan int, output chan<- int) error {
+	for {
+		val, ok := <-input
+		if !ok {
+			break
+		}
+
+		output <- val
+		f.actual++
+
+		if f.actual >= f.limit {
+			f.pipeline.Cancel()
+			break
+		}
+	}
+	return nil
 }
 
 type pipelineResult struct {
@@ -160,7 +196,11 @@ func TestApplyingConditions(t *testing.T) {
 func TestPipelineFailure(t *testing.T) {
 	p := pipeline.New()
 
-	pipeline.NewEmitter(p, generateFailure())
+	collector := pipeline.NewItemCollector[int]()
+
+	emitter := pipeline.NewEmitter(p, generateFailure())
+
+	pipeline.WithAcceptor[int](p, emitter, collector)
 
 	err := p.SyncRun()
 
@@ -170,5 +210,21 @@ func TestPipelineFailure(t *testing.T) {
 
 	if err.Error() != "Failed to generate numbers" {
 		t.Fatal("Unexpected error")
+	}
+}
+
+func TestPipelineCancelling(t *testing.T) {
+	p := pipeline.New()
+
+	collector := pipeline.NewItemCollector[int]()
+
+	generator := pipeline.NewEmitter(p, generateNSerialNumbers(100))
+	filter := pipeline.WithFilter[int](p, generator, limitNumberCount(p, 30))
+	pipeline.WithAcceptor[int](p, filter, collector)
+
+	p.SyncRun()
+
+	if len(collector.Items) != 30 {
+		t.Fatal("Pipeline must produce 30 numbers")
 	}
 }

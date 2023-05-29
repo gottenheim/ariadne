@@ -1,6 +1,8 @@
 package card
 
 import (
+	"context"
+
 	"github.com/gottenheim/ariadne/details/datetime"
 	"github.com/gottenheim/ariadne/details/pipeline"
 )
@@ -17,7 +19,7 @@ func RemindedCardCondition(timeSource datetime.TimeSource, cardRepo CardReposito
 	}
 }
 
-func (f *remindedCardCondition) Run(input <-chan BriefCard, positiveDecision chan<- *Card, negativeDecision chan<- BriefCard) error {
+func (f *remindedCardCondition) Run(ctx context.Context, input <-chan BriefCard, positiveDecision chan<- *Card, negativeDecision chan<- BriefCard) error {
 	for {
 		briefCard, ok := <-input
 

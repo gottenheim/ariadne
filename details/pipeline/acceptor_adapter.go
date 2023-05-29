@@ -1,5 +1,7 @@
 package pipeline
 
+import "context"
+
 type acceptorAdapter[T interface{}] struct {
 	input    <-chan T
 	acceptor Acceptor[T]
@@ -19,9 +21,6 @@ func (f *acceptorAdapter[T]) SetInputChannel(input <-chan T) {
 	f.input = input
 }
 
-func (f *acceptorAdapter[T]) Run() error {
-	return f.acceptor.Run(f.input)
-}
-
-func (f *acceptorAdapter[T]) Cancel() {
+func (f *acceptorAdapter[T]) Run(ctx context.Context) error {
+	return f.acceptor.Run(ctx, f.input)
 }

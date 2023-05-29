@@ -1,6 +1,7 @@
 package card_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/gottenheim/ariadne/card"
@@ -11,7 +12,7 @@ type cardEmitter struct {
 	cards []card.BriefCard
 }
 
-func (g *cardEmitter) Run(output chan<- card.BriefCard) error {
+func (g *cardEmitter) Run(ctx context.Context, output chan<- card.BriefCard) error {
 	for _, card := range g.cards {
 		output <- card
 	}

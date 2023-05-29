@@ -1,6 +1,7 @@
 package pipeline
 
+import "context"
+
 type task interface {
-	Run() error
-	Cancel()
+	Run(ctx context.Context) error
 }

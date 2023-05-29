@@ -1,5 +1,7 @@
 package pipeline
 
+import "context"
+
 type emitterAdapter[K interface{}] struct {
 	output   chan<- K
 	emitter  Emitter[K]
@@ -20,22 +22,10 @@ func (a *emitterAdapter[K]) SetOutputChannel(output chan<- K) {
 	a.output = output
 }
 
-func (a *emitterAdapter[K]) Run() error {
+func (a *emitterAdapter[K]) Run(ctx context.Context) error {
 	defer func() {
-		a.closeOutputChannel()
+		close(a.output)
 	}()
 
-	return a.emitter.Run(a.output)
-}
-
-func (a *emitterAdapter[K]) Cancel() {
-	a.closeOutputChannel()
-}
-
-func (a *emitterAdapter[K]) closeOutputChannel() {
-	if a.output != nil {
-		output := a.output
-		a.output = nil
-		close(output)
-	}
+	return a.emitter.Run(ctx, a.output)
 }

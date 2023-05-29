@@ -1,5 +1,7 @@
 package pipeline
 
+import "context"
+
 type Acceptor[T interface{}] interface {
-	Run(input <-chan T) error
+	Run(ctx context.Context, input <-chan T) error
 }

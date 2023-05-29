@@ -1,5 +1,7 @@
 package pipeline
 
+import "context"
+
 type conditionAdapter[T interface{}, K interface{}, L interface{}] struct {
 	input            <-chan T
 	positiveDecision chan<- K
@@ -29,27 +31,11 @@ func (f *conditionAdapter[T, K, L]) SetNegativeDecisionChannel(negativeDecision 
 	f.negativeDecision = negativeDecision
 }
 
-func (f *conditionAdapter[T, K, L]) Run() error {
+func (f *conditionAdapter[T, K, L]) Run(ctx context.Context) error {
 	defer func() {
-		f.closeOutputChannels()
+		close(f.positiveDecision)
+		close(f.negativeDecision)
 	}()
 
-	return f.condition.Run(f.input, f.positiveDecision, f.negativeDecision)
-}
-
-func (f *conditionAdapter[T, L, K]) Cancel() {
-	f.closeOutputChannels()
-}
-
-func (f *conditionAdapter[T, L, K]) closeOutputChannels() {
-	if f.positiveDecision != nil {
-		positiveDecision := f.positiveDecision
-		f.positiveDecision = nil
-		close(positiveDecision)
-	}
-	if f.negativeDecision != nil {
-		negativeDecision := f.negativeDecision
-		f.negativeDecision = nil
-		close(negativeDecision)
-	}
+	return f.condition.Run(ctx, f.input, f.positiveDecision, f.negativeDecision)
 }

@@ -1,5 +1,7 @@
 package pipeline
 
+import "context"
+
 type positiveDecisionAdapter[T interface{}, K interface{}, L interface{}] struct {
 	conditionAdapter *conditionAdapter[T, K, L]
 }
@@ -14,8 +16,8 @@ func (f *positiveDecisionAdapter[T, K, L]) SetOutputChannel(output chan<- K) {
 	f.conditionAdapter.SetPositiveDecisionChannel(output)
 }
 
-func (f *positiveDecisionAdapter[T, K, L]) Run() error {
-	return f.conditionAdapter.Run()
+func (f *positiveDecisionAdapter[T, K, L]) Run(ctx context.Context) error {
+	return f.conditionAdapter.Run(ctx)
 }
 
 type negativeDecisionAdapter[T interface{}, K interface{}, L interface{}] struct {
@@ -32,6 +34,6 @@ func (f *negativeDecisionAdapter[T, K, L]) SetOutputChannel(output chan<- L) {
 	f.conditionAdapter.SetNegativeDecisionChannel(output)
 }
 
-func (f *negativeDecisionAdapter[T, K, L]) Run() error {
-	return f.conditionAdapter.Run()
+func (f *negativeDecisionAdapter[T, K, L]) Run(ctx context.Context) error {
+	return f.conditionAdapter.Run(ctx)
 }

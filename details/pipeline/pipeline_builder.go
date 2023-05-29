@@ -1,8 +1,10 @@
 package pipeline
 
+import "context"
+
 type producer[K interface{}] interface {
 	SetOutputChannel(output chan<- K)
-	Run() error
+	Run(ctx context.Context) error
 }
 
 type consumer[T interface{}] interface {

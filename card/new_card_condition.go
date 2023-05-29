@@ -1,6 +1,10 @@
 package card
 
-import "github.com/gottenheim/ariadne/details/pipeline"
+import (
+	"context"
+
+	"github.com/gottenheim/ariadne/details/pipeline"
+)
 
 type newCardCondition struct {
 	cardRepo CardRepository
@@ -12,7 +16,7 @@ func NewCardCondition(cardRepo CardRepository) pipeline.Condition[BriefCard, *Ca
 	}
 }
 
-func (f *newCardCondition) Run(input <-chan BriefCard, positiveDecision chan<- *Card, negativeDecision chan<- BriefCard) error {
+func (f *newCardCondition) Run(ctx context.Context, input <-chan BriefCard, positiveDecision chan<- *Card, negativeDecision chan<- BriefCard) error {
 	for {
 		briefCard, ok := <-input
 
