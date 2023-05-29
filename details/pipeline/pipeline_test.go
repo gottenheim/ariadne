@@ -12,7 +12,7 @@ type serialNumbers struct {
 	count int
 }
 
-func generateNSerialNumbers(count int) pipeline.Generator[int] {
+func generateNSerialNumbers(count int) pipeline.Emitter[int] {
 	return &serialNumbers{
 		count: count,
 	}
@@ -30,7 +30,7 @@ type randomNumberGenerator struct {
 	count int
 }
 
-func generateNRandomNumbers(count int) pipeline.Generator[int] {
+func generateNRandomNumbers(count int) pipeline.Emitter[int] {
 	return &randomNumberGenerator{
 		count: count,
 	}
@@ -93,7 +93,7 @@ func (f *lessThanFiftyCondition) Run(input <-chan int, positiveDecision chan<- i
 type failureGenerator struct {
 }
 
-func generateFailure() pipeline.Generator[int] {
+func generateFailure() pipeline.Emitter[int] {
 	return &failureGenerator{}
 }
 
@@ -105,45 +105,23 @@ type pipelineResult struct {
 	numbers []int
 }
 
-type numberCollector struct {
-	result *pipelineResult
-}
-
-func collectNumbers(result *pipelineResult) pipeline.Filter[int, int] {
-	return &numberCollector{
-		result: result,
-	}
-}
-
-func (f *numberCollector) Run(input <-chan int, output chan<- int) error {
-	for {
-		val, ok := <-input
-		if !ok {
-			break
-		}
-
-		f.result.numbers = append(f.result.numbers, val)
-	}
-	return nil
-}
-
 func TestGeneratorsAndFilters(t *testing.T) {
 	p := pipeline.New()
 
-	result := &pipelineResult{}
+	collector := pipeline.NewItemCollector[int]()
 
-	generator := pipeline.NewGenerator(p, generateNSerialNumbers(100))
+	generator := pipeline.NewEmitter(p, generateNSerialNumbers(100))
 	filter := pipeline.WithFilter[int](p, generator, filterLessThanFifty())
-	pipeline.WithFilter[int](p, filter, collectNumbers(result))
+	pipeline.WithAcceptor[int](p, filter, collector)
 
 	p.SyncRun()
 
-	if len(result.numbers) != 50 {
+	if len(collector.Items) != 50 {
 		t.Fatal("Pipeline must produce 50 numbers")
 	}
 
 	for i := 0; i < 50; i++ {
-		if result.numbers[i] != i {
+		if collector.Items[i] != i {
 			t.Fatal("Pipeline contains an unexpected number")
 		}
 	}
@@ -152,30 +130,33 @@ func TestGeneratorsAndFilters(t *testing.T) {
 func TestApplyingConditions(t *testing.T) {
 	p := pipeline.New()
 
-	positiveResult, negativeResult := &pipelineResult{}, &pipelineResult{}
+	positiveResult, negativeResult := pipeline.NewItemCollector[int](), pipeline.NewItemCollector[int]()
 
-	randomNumbers := pipeline.NewGenerator(p, generateNRandomNumbers(1000))
+	randomNumbers := pipeline.NewEmitter(p, generateNRandomNumbers(1000))
 
 	lessThanFifty := pipeline.WithCondition[int](p, randomNumbers, ifLessThanFifty())
 
-	pipeline.WithFilter(p, pipeline.OnPositiveDecision(lessThanFifty), collectNumbers(positiveResult))
+	pipeline.WithAcceptor[int](p, pipeline.OnPositiveDecision(lessThanFifty), positiveResult)
 
-	pipeline.WithFilter(p, pipeline.OnNegativeDecision(lessThanFifty), collectNumbers(negativeResult))
+	pipeline.WithAcceptor[int](p, pipeline.OnNegativeDecision(lessThanFifty), negativeResult)
 
-	p.SyncRun()
+	err := p.SyncRun()
+	if err != nil {
+		t.Fatal(err)
+	}
 
-	if len(positiveResult.numbers)+len(negativeResult.numbers) != 1000 {
+	if len(positiveResult.Items)+len(negativeResult.Items) != 1000 {
 		t.Fatal("Pipeline must produce 1000 numbers")
 	}
 
-	for i := range positiveResult.numbers {
-		if positiveResult.numbers[i] >= 50 {
+	for i := range positiveResult.Items {
+		if positiveResult.Items[i] >= 50 {
 			t.Fatal("Number must be less than fifty")
 		}
 	}
 
-	for i := range negativeResult.numbers {
-		if negativeResult.numbers[i] < 50 {
+	for i := range negativeResult.Items {
+		if negativeResult.Items[i] < 50 {
 			t.Fatal("Number must be more than fifty")
 		}
 	}
@@ -184,7 +165,7 @@ func TestApplyingConditions(t *testing.T) {
 func TestPipelineFailure(t *testing.T) {
 	p := pipeline.New()
 
-	pipeline.NewGenerator(p, generateFailure())
+	pipeline.NewEmitter(p, generateFailure())
 
 	err := p.SyncRun()
 

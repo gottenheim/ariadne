@@ -1,5 +1,5 @@
 package pipeline
 
-type Generator[K interface{}] interface {
+type Emitter[K interface{}] interface {
 	Run(output chan<- K) error
 }

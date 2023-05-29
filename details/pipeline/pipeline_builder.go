@@ -9,8 +9,8 @@ type consumer[T interface{}] interface {
 	SetInputChannel(input <-chan T)
 }
 
-func NewGenerator[T interface{}](pipeline *Pipeline, generator Generator[T]) *generatorAdapter[T] {
-	return newGeneratorAdapter(pipeline, generator)
+func NewEmitter[T interface{}](pipeline *Pipeline, emitter Emitter[T]) *emitterAdapter[T] {
+	return newEmitterAdapter(pipeline, emitter)
 }
 
 func WithFilter[T interface{}, K interface{}](pipeline *Pipeline, producer producer[T], filter Filter[T, K]) *filterAdapter[T, K] {
@@ -35,4 +35,12 @@ func OnPositiveDecision[T interface{}, K interface{}](condition *conditionAdapte
 
 func OnNegativeDecision[T interface{}, K interface{}](condition *conditionAdapter[T, K]) producer[K] {
 	return newNegativeDecisionAdapter(condition)
+}
+
+func WithAcceptor[T interface{}](pipeline *Pipeline, producer producer[T], acceptor Acceptor[T]) *acceptorAdapter[T] {
+	acceptorAdapter := newAcceptorAdapter(pipeline, acceptor)
+	ch := make(chan T)
+	producer.SetOutputChannel(ch)
+	acceptorAdapter.SetInputChannel(ch)
+	return acceptorAdapter
 }
