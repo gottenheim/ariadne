@@ -66,8 +66,8 @@ func TestNewCardFilter(t *testing.T) {
 	events := &pipeline.WaitGroupEventHandler{}
 
 	cards := card.NewBatchCardGenerator().
-		WithNewCards(100).
-		WithLearnedCards(100).
+		WithNewCards(80).
+		WithLearnedCards(90).
 		WithRemindedCards(100).
 		Generate()
 
@@ -88,7 +88,7 @@ func TestNewCardFilter(t *testing.T) {
 
 	events.Wait()
 
-	if len(filteringResult.cards) != 100 {
+	if len(filteringResult.cards) != 80 {
 		t.Fatal("Filter should find ten cards")
 	}
 }
