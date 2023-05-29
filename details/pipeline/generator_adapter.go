@@ -3,18 +3,23 @@ package pipeline
 type generatorAdapter[K interface{}] struct {
 	output    chan<- K
 	generator Generator[K]
+	pipeline  *Pipeline
 }
 
-func newGeneratorAdapter[K interface{}](generator Generator[K]) *generatorAdapter[K] {
-	return &generatorAdapter[K]{
+func newGeneratorAdapter[K interface{}](pipeline *Pipeline, generator Generator[K]) *generatorAdapter[K] {
+	adapter := &generatorAdapter[K]{
 		generator: generator,
+		pipeline:  pipeline,
 	}
+
+	pipeline.attach(adapter)
+	return adapter
 }
 
-func (f *generatorAdapter[K]) SetOutputChannel(output chan<- K) {
-	f.output = output
+func (a *generatorAdapter[K]) SetOutputChannel(output chan<- K) {
+	a.output = output
 }
 
-func (f *generatorAdapter[K]) Run() {
-	go f.generator.Run(f.output)
+func (a *generatorAdapter[K]) Run() {
+	a.generator.Run(a.output)
 }

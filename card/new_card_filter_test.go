@@ -8,22 +8,18 @@ import (
 )
 
 type cardGenerator struct {
-	events pipeline.FilterEvents
-	cards  []*card.KeyWithActivities
+	cards []*card.KeyWithActivities
 }
 
-func newCardGenerator(events pipeline.FilterEvents, cards ...*card.KeyWithActivities) *cardGenerator {
-	events.OnStart()
+func newCardGenerator(cards ...*card.KeyWithActivities) *cardGenerator {
 	return &cardGenerator{
-		events: events,
-		cards:  cards,
+		cards: cards,
 	}
 }
 
 func (g *cardGenerator) Run(output chan<- *card.KeyWithActivities) {
 	defer func() {
 		close(output)
-		g.events.OnFinish()
 	}()
 
 	for _, card := range g.cards {
@@ -36,23 +32,16 @@ type cardFilteringResult struct {
 }
 
 type cardAccumulator struct {
-	events pipeline.FilterEvents
 	result *cardFilteringResult
 }
 
-func newCardAccumulator(events pipeline.FilterEvents, result *cardFilteringResult) *cardAccumulator {
-	events.OnStart()
+func newCardAccumulator(result *cardFilteringResult) *cardAccumulator {
 	return &cardAccumulator{
-		events: events,
 		result: result,
 	}
 }
 
 func (g *cardAccumulator) Run(input <-chan *card.Card, output chan<- interface{}) {
-	defer func() {
-		g.events.OnFinish()
-	}()
-
 	for {
 		card, ok := <-input
 		if !ok {
@@ -63,7 +52,7 @@ func (g *cardAccumulator) Run(input <-chan *card.Card, output chan<- interface{}
 }
 
 func TestNewCardFilter(t *testing.T) {
-	events := &pipeline.WaitGroupEventHandler{}
+	p := pipeline.New()
 
 	cards := card.NewBatchCardGenerator().
 		WithNewCards(80).
@@ -77,16 +66,11 @@ func TestNewCardFilter(t *testing.T) {
 
 	filteringResult := &cardFilteringResult{}
 
-	cardPipeline := pipeline.WithFilter[*card.Card, interface{}](
-		pipeline.WithFilter[*card.KeyWithActivities](
-			pipeline.NewGenerator[*card.KeyWithActivities](
-				newCardGenerator(events, keysWithActivities...)),
-			card.NewCardFilter(events, cardRepo)),
-		newCardAccumulator(events, filteringResult))
+	generator := pipeline.NewGenerator[*card.KeyWithActivities](p, newCardGenerator(keysWithActivities...))
+	filter := pipeline.WithFilter[*card.KeyWithActivities](p, generator, card.NewCardFilter(cardRepo))
+	pipeline.WithFilter[*card.Card, interface{}](p, filter, newCardAccumulator(filteringResult))
 
-	cardPipeline.Run()
-
-	events.Wait()
+	p.SyncRun()
 
 	if len(filteringResult.cards) != 80 {
 		t.Fatal("Filter should find ten cards")

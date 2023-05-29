@@ -8,55 +8,44 @@ import (
 )
 
 type serialNumbers struct {
-	events pipeline.FilterEvents
+	count int
 }
 
-func newSerialNumbers(events pipeline.FilterEvents) pipeline.Generator[int] {
-	events.OnStart()
-
+func generateNSerialNumbers(count int) pipeline.Generator[int] {
 	return &serialNumbers{
-		events: events,
+		count: count,
 	}
 }
 
 func (f *serialNumbers) Run(output chan<- int) {
-	for i := 0; i < 100; i++ {
+	for i := 0; i < f.count; i++ {
 		output <- i
 	}
 	close(output)
-	f.events.OnFinish()
 }
 
-type randomNumbers struct {
-	events pipeline.FilterEvents
+type randomNumberGenerator struct {
+	count int
 }
 
-func newRandomNumbers(events pipeline.FilterEvents) pipeline.Generator[int] {
-	events.OnStart()
-
-	return &randomNumbers{
-		events: events,
+func generateNRandomNumbers(count int) pipeline.Generator[int] {
+	return &randomNumberGenerator{
+		count: count,
 	}
 }
 
-func (f *randomNumbers) Run(output chan<- int) {
-	for i := 0; i < 100; i++ {
+func (f *randomNumberGenerator) Run(output chan<- int) {
+	for i := 0; i < f.count; i++ {
 		output <- rand.Int() % 100
 	}
 	close(output)
-	f.events.OnFinish()
 }
 
 type lessThanFiftyFilter struct {
-	events pipeline.FilterEvents
 }
 
-func filterLessThanFifty(events pipeline.FilterEvents) pipeline.Filter[int, int] {
-	events.OnStart()
-
-	return &lessThanFiftyFilter{
-		events: events,
-	}
+func filterLessThanFifty() pipeline.Filter[int, int] {
+	return &lessThanFiftyFilter{}
 }
 
 func (f *lessThanFiftyFilter) Run(input <-chan int, output chan<- int) {
@@ -71,19 +60,12 @@ func (f *lessThanFiftyFilter) Run(input <-chan int, output chan<- int) {
 		}
 	}
 	close(output)
-	f.events.OnFinish()
 }
 
-type lessThanFiftyCondition struct {
-	events pipeline.FilterEvents
-}
+type lessThanFiftyCondition struct{}
 
-func ifLessThanFifty(events pipeline.FilterEvents) pipeline.Condition[int, int] {
-	events.OnStart()
-
-	return &lessThanFiftyCondition{
-		events: events,
-	}
+func ifLessThanFifty() pipeline.Condition[int, int] {
+	return &lessThanFiftyCondition{}
 }
 
 func (f *lessThanFiftyCondition) Run(input <-chan int, positiveDecision chan<- int, negativeDecision chan<- int) {
@@ -101,28 +83,23 @@ func (f *lessThanFiftyCondition) Run(input <-chan int, positiveDecision chan<- i
 	}
 	close(positiveDecision)
 	close(negativeDecision)
-	f.events.OnFinish()
 }
 
 type pipelineResult struct {
 	numbers []int
 }
 
-type collectNumbers struct {
-	events pipeline.FilterEvents
+type numberCollector struct {
 	result *pipelineResult
 }
 
-func newNumberCollector(events pipeline.FilterEvents, result *pipelineResult) pipeline.Filter[int, int] {
-	events.OnStart()
-
-	return &collectNumbers{
-		events: events,
+func collectNumbers(result *pipelineResult) pipeline.Filter[int, int] {
+	return &numberCollector{
 		result: result,
 	}
 }
 
-func (f *collectNumbers) Run(input <-chan int, output chan<- int) {
+func (f *numberCollector) Run(input <-chan int, output chan<- int) {
 	for {
 		val, ok := <-input
 		if !ok {
@@ -131,24 +108,18 @@ func (f *collectNumbers) Run(input <-chan int, output chan<- int) {
 
 		f.result.numbers = append(f.result.numbers, val)
 	}
-	f.events.OnFinish()
 }
 
-func TestFilterProducingAndCollectingFilteredIntegers(t *testing.T) {
-	wgEvents := &pipeline.WaitGroupEventHandler{}
+func TestGeneratorsAndFilters(t *testing.T) {
+	p := pipeline.New()
 
 	result := &pipelineResult{}
 
-	pipeLine := pipeline.WithFilter[int](
-		pipeline.WithFilter[int](
-			pipeline.NewGenerator(
-				newSerialNumbers(wgEvents)),
-			filterLessThanFifty(wgEvents)),
-		newNumberCollector(wgEvents, result))
+	generator := pipeline.NewGenerator(p, generateNSerialNumbers(100))
+	filter := pipeline.WithFilter[int](p, generator, filterLessThanFifty())
+	pipeline.WithFilter[int](p, filter, collectNumbers(result))
 
-	pipeLine.Run()
-
-	wgEvents.Wait()
+	p.SyncRun()
 
 	if len(result.numbers) != 50 {
 		t.Fatal("Pipeline must produce 50 numbers")
@@ -156,32 +127,28 @@ func TestFilterProducingAndCollectingFilteredIntegers(t *testing.T) {
 
 	for i := 0; i < 50; i++ {
 		if result.numbers[i] != i {
-			t.Fatal("Pipeline contains a wrong number")
+			t.Fatal("Pipeline contains an unexpected number")
 		}
 	}
 }
 
-func TestCondition(t *testing.T) {
-	wgEvents := &pipeline.WaitGroupEventHandler{}
+func TestApplyingConditions(t *testing.T) {
+	p := pipeline.New()
 
-	positiveResult := &pipelineResult{}
-	negativeResult := &pipelineResult{}
+	positiveResult, negativeResult := &pipelineResult{}, &pipelineResult{}
 
-	randomNumbers := pipeline.NewGenerator(newRandomNumbers(wgEvents))
+	randomNumbers := pipeline.NewGenerator(p, generateNRandomNumbers(1000))
 
-	lessThanFifty := pipeline.WithCondition[int](randomNumbers, ifLessThanFifty(wgEvents))
+	lessThanFifty := pipeline.WithCondition[int](p, randomNumbers, ifLessThanFifty())
 
-	positiveCollector := pipeline.WithFilter(pipeline.OnPositiveDecision(lessThanFifty), newNumberCollector(wgEvents, positiveResult))
+	pipeline.WithFilter(p, pipeline.OnPositiveDecision(lessThanFifty), collectNumbers(positiveResult))
 
-	negativeCollector := pipeline.WithFilter(pipeline.OnNegativeDecision(lessThanFifty), newNumberCollector(wgEvents, negativeResult))
+	pipeline.WithFilter(p, pipeline.OnNegativeDecision(lessThanFifty), collectNumbers(negativeResult))
 
-	positiveCollector.Run()
-	negativeCollector.Run()
+	p.SyncRun()
 
-	wgEvents.Wait()
-
-	if len(positiveResult.numbers)+len(negativeResult.numbers) != 100 {
-		t.Fatal("Pipeline must produce 100 numbers")
+	if len(positiveResult.numbers)+len(negativeResult.numbers) != 1000 {
+		t.Fatal("Pipeline must produce 1000 numbers")
 	}
 
 	for i := range positiveResult.numbers {

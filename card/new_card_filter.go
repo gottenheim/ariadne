@@ -8,14 +8,11 @@ type KeyWithActivities struct {
 }
 
 type newCardFilter struct {
-	events   pipeline.FilterEvents
 	cardRepo CardRepository
 }
 
-func NewCardFilter(events pipeline.FilterEvents, cardRepo CardRepository) pipeline.Filter[*KeyWithActivities, *Card] {
-	events.OnStart()
+func NewCardFilter(cardRepo CardRepository) pipeline.Filter[*KeyWithActivities, *Card] {
 	return &newCardFilter{
-		events:   events,
 		cardRepo: cardRepo,
 	}
 }
@@ -23,7 +20,6 @@ func NewCardFilter(events pipeline.FilterEvents, cardRepo CardRepository) pipeli
 func (f *newCardFilter) Run(input <-chan *KeyWithActivities, output chan<- *Card) {
 	defer func() {
 		close(output)
-		f.events.OnFinish()
 	}()
 
 	for {
@@ -36,14 +32,14 @@ func (f *newCardFilter) Run(input <-chan *KeyWithActivities, output chan<- *Card
 		isNewCard, err := IsNewCard(keyWithActivities.Activities)
 
 		if err != nil {
-			f.events.OnError(err)
+			// f.events.OnError(err)
 			break
 		}
 
 		if isNewCard {
 			card, err := f.cardRepo.Get(keyWithActivities.Key)
 			if err != nil {
-				f.events.OnError(err)
+				// f.events.OnError(err)
 				break
 			}
 

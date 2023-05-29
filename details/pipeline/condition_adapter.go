@@ -5,14 +5,16 @@ type conditionAdapter[T interface{}, K interface{}] struct {
 	positiveDecision chan<- K
 	negativeDecision chan<- K
 	condition        Condition[T, K]
-	producer         producerAdapter[T]
-	running          bool
 }
 
-func newConditionAdapter[T interface{}, K interface{}](condition Condition[T, K]) *conditionAdapter[T, K] {
-	return &conditionAdapter[T, K]{
+func newConditionAdapter[T interface{}, K interface{}](pipeline *Pipeline, condition Condition[T, K]) *conditionAdapter[T, K] {
+	adapter := &conditionAdapter[T, K]{
 		condition: condition,
 	}
+
+	pipeline.attach(adapter)
+
+	return adapter
 }
 
 func (f *conditionAdapter[T, K]) SetInputChannel(input <-chan T) {
@@ -27,18 +29,6 @@ func (f *conditionAdapter[T, K]) SetNegativeDecisionChannel(negativeDecision cha
 	f.negativeDecision = negativeDecision
 }
 
-func (f *conditionAdapter[T, K]) SetProducerFilter(producer producerAdapter[T]) {
-	f.producer = producer
-}
-
 func (f *conditionAdapter[T, K]) Run() {
-	if !f.running {
-		go f.condition.Run(f.input, f.positiveDecision, f.negativeDecision)
-
-		if f.producer != nil {
-			f.producer.Run()
-		}
-
-		f.running = true
-	}
+	f.condition.Run(f.input, f.positiveDecision, f.negativeDecision)
 }

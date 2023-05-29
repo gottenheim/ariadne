@@ -1,31 +1,35 @@
 package pipeline
 
-func NewGenerator[T interface{}](generator Generator[T]) *generatorAdapter[T] {
-	return newGeneratorAdapter(generator)
+import "sync"
+
+type Pipeline struct {
+	waitGroup    sync.WaitGroup
+	eventHandler *pipelineEventHandler
+	elements     []elementAdapter
 }
 
-func WithFilter[T interface{}, K interface{}](leftAdapter producerAdapter[T], rightFilter Filter[T, K]) *filterAdapter[T, K] {
-	rightAdapter := newFilterAdapter(rightFilter)
-	ch := make(chan T)
-	leftAdapter.SetOutputChannel(ch)
-	rightAdapter.SetInputChannel(ch)
-	rightAdapter.SetProducerFilter(leftAdapter)
-	return rightAdapter
+func New() *Pipeline {
+	return &Pipeline{}
 }
 
-func WithCondition[T interface{}, K interface{}](leftAdapter producerAdapter[T], rightCondition Condition[T, K]) *conditionAdapter[T, K] {
-	rightAdapter := newConditionAdapter(rightCondition)
-	ch := make(chan T)
-	leftAdapter.SetOutputChannel(ch)
-	rightAdapter.SetInputChannel(ch)
-	rightAdapter.SetProducerFilter(leftAdapter)
-	return rightAdapter
+func (p *Pipeline) SyncRun() {
+	for i := len(p.elements) - 1; i >= 0; i-- {
+		element := p.elements[i]
+		p.waitGroup.Add(1)
+		go p.runElement(element)
+	}
+	p.wait()
 }
 
-func OnPositiveDecision[T interface{}, K interface{}](condition *conditionAdapter[T, K]) producerAdapter[K] {
-	return newPositiveDecisionAdapter(condition)
+func (p *Pipeline) attach(element elementAdapter) {
+	p.elements = append(p.elements, element)
 }
 
-func OnNegativeDecision[T interface{}, K interface{}](condition *conditionAdapter[T, K]) producerAdapter[K] {
-	return newNegativeDecisionAdapter(condition)
+func (p *Pipeline) runElement(element elementAdapter) {
+	element.Run()
+	p.waitGroup.Done()
+}
+
+func (p *Pipeline) wait() {
+	p.waitGroup.Wait()
 }
