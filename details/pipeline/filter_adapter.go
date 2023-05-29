@@ -25,5 +25,21 @@ func (f *filterAdapter[T, K]) SetOutputChannel(output chan<- K) {
 }
 
 func (f *filterAdapter[T, K]) Run() error {
+	defer func() {
+		f.closeOutputChannel()
+	}()
+
 	return f.filter.Run(f.input, f.output)
+}
+
+func (f *filterAdapter[T, K]) Cancel() {
+	f.closeOutputChannel()
+}
+
+func (f *filterAdapter[T, K]) closeOutputChannel() {
+	if f.output != nil {
+		output := f.output
+		f.output = nil
+		close(output)
+	}
 }

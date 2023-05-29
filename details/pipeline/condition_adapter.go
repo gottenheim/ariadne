@@ -30,5 +30,26 @@ func (f *conditionAdapter[T, K, L]) SetNegativeDecisionChannel(negativeDecision 
 }
 
 func (f *conditionAdapter[T, K, L]) Run() error {
+	defer func() {
+		f.closeOutputChannels()
+	}()
+
 	return f.condition.Run(f.input, f.positiveDecision, f.negativeDecision)
+}
+
+func (f *conditionAdapter[T, L, K]) Cancel() {
+	f.closeOutputChannels()
+}
+
+func (f *conditionAdapter[T, L, K]) closeOutputChannels() {
+	if f.positiveDecision != nil {
+		positiveDecision := f.positiveDecision
+		f.positiveDecision = nil
+		close(positiveDecision)
+	}
+	if f.negativeDecision != nil {
+		negativeDecision := f.negativeDecision
+		f.negativeDecision = nil
+		close(negativeDecision)
+	}
 }

@@ -12,10 +12,6 @@ type cardEmitter struct {
 }
 
 func (g *cardEmitter) Run(output chan<- card.BriefCard) error {
-	defer func() {
-		close(output)
-	}()
-
 	for _, card := range g.cards {
 		output <- card
 	}

@@ -22,6 +22,11 @@ func (p *Pipeline) SyncRun() error {
 	return p.getTaskError()
 }
 
+func (p *Pipeline) Cancel() {
+	// It's enough to cancel emitter
+	p.tasks[0].Cancel()
+}
+
 func (p *Pipeline) attach(task task) {
 	p.tasks = append(p.tasks, task)
 }

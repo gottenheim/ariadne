@@ -21,5 +21,21 @@ func (a *emitterAdapter[K]) SetOutputChannel(output chan<- K) {
 }
 
 func (a *emitterAdapter[K]) Run() error {
+	defer func() {
+		a.closeOutputChannel()
+	}()
+
 	return a.emitter.Run(a.output)
+}
+
+func (a *emitterAdapter[K]) Cancel() {
+	a.closeOutputChannel()
+}
+
+func (a *emitterAdapter[K]) closeOutputChannel() {
+	if a.output != nil {
+		output := a.output
+		a.output = nil
+		close(output)
+	}
 }

@@ -18,11 +18,6 @@ func ScheduledCardCondition(timeSource datetime.TimeSource, cardRepo CardReposit
 }
 
 func (f *scheduledCardCondition) Run(input <-chan BriefCard, positiveDecision chan<- *Card, negativeDecision chan<- BriefCard) error {
-	defer func() {
-		close(positiveDecision)
-		close(negativeDecision)
-	}()
-
 	for {
 		briefCard, ok := <-input
 

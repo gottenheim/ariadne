@@ -22,7 +22,6 @@ func (f *serialNumbers) Run(output chan<- int) error {
 	for i := 0; i < f.count; i++ {
 		output <- i
 	}
-	close(output)
 	return nil
 }
 
@@ -40,7 +39,6 @@ func (f *randomNumberGenerator) Run(output chan<- int) error {
 	for i := 0; i < f.count; i++ {
 		output <- rand.Int() % 100
 	}
-	close(output)
 	return nil
 }
 
@@ -62,7 +60,6 @@ func (f *lessThanFiftyFilter) Run(input <-chan int, output chan<- int) error {
 			output <- val
 		}
 	}
-	close(output)
 	return nil
 }
 
@@ -85,8 +82,6 @@ func (f *lessThanFiftyCondition) Run(input <-chan int, positiveDecision chan<- i
 			negativeDecision <- val
 		}
 	}
-	close(positiveDecision)
-	close(negativeDecision)
 	return nil
 }
 

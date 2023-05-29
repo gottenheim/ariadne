@@ -22,3 +22,6 @@ func (f *acceptorAdapter[T]) SetInputChannel(input <-chan T) {
 func (f *acceptorAdapter[T]) Run() error {
 	return f.acceptor.Run(f.input)
 }
+
+func (f *acceptorAdapter[T]) Cancel() {
+}

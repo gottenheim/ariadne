@@ -13,11 +13,6 @@ func NewCardCondition(cardRepo CardRepository) pipeline.Condition[BriefCard, *Ca
 }
 
 func (f *newCardCondition) Run(input <-chan BriefCard, positiveDecision chan<- *Card, negativeDecision chan<- BriefCard) error {
-	defer func() {
-		close(positiveDecision)
-		close(negativeDecision)
-	}()
-
 	for {
 		briefCard, ok := <-input
 

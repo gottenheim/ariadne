@@ -18,11 +18,6 @@ func LearnedCardCondition(timeSource datetime.TimeSource, cardRepo CardRepositor
 }
 
 func (f *learnedCardCondition) Run(input <-chan BriefCard, positiveDecision chan<- *Card, negativeDecision chan<- BriefCard) error {
-	defer func() {
-		close(positiveDecision)
-		close(negativeDecision)
-	}()
-
 	for {
 		briefCard, ok := <-input
 
