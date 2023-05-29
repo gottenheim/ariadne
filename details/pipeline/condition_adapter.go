@@ -6,6 +6,7 @@ type conditionAdapter[T interface{}, K interface{}] struct {
 	negativeDecision chan<- K
 	condition        Condition[T, K]
 	producer         producerAdapter[T]
+	running          bool
 }
 
 func newConditionAdapter[T interface{}, K interface{}](condition Condition[T, K]) *conditionAdapter[T, K] {
@@ -31,9 +32,13 @@ func (f *conditionAdapter[T, K]) SetProducerFilter(producer producerAdapter[T]) 
 }
 
 func (f *conditionAdapter[T, K]) Run() {
-	go f.condition.Run(f.input, f.positiveDecision, f.negativeDecision)
+	if !f.running {
+		go f.condition.Run(f.input, f.positiveDecision, f.negativeDecision)
 
-	if f.producer != nil {
-		f.producer.Run()
+		if f.producer != nil {
+			f.producer.Run()
+		}
+
+		f.running = true
 	}
 }

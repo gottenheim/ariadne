@@ -77,9 +77,9 @@ func TestNewCardFilter(t *testing.T) {
 
 	filteringResult := &cardFilteringResult{}
 
-	cardPipeline := pipeline.Join[*card.Card, interface{}](
-		pipeline.Join[*card.KeyWithActivities](
-			pipeline.New[*card.KeyWithActivities](
+	cardPipeline := pipeline.WithFilter[*card.Card, interface{}](
+		pipeline.WithFilter[*card.KeyWithActivities](
+			pipeline.NewGenerator[*card.KeyWithActivities](
 				newCardGenerator(events, keysWithActivities...)),
 			card.NewCardFilter(events, cardRepo)),
 		newCardAccumulator(events, filteringResult))
