@@ -1,10 +1,10 @@
 package pipeline
 
-func New[T interface{}](filter Filter[interface{}, T]) *filterAdapter[interface{}, T] {
-	return newFilterAdapter(filter)
+func New[T interface{}](generator Generator[T]) *generatorAdapter[T] {
+	return newGeneratorAdapter(generator)
 }
 
-func Join[T interface{}, K interface{}](leftAdapter producerFilterAdapter[T], rightFilter Filter[T, K]) *filterAdapter[T, K] {
+func Join[T interface{}, K interface{}](leftAdapter producerAdapter[T], rightFilter Filter[T, K]) *filterAdapter[T, K] {
 	rightAdapter := newFilterAdapter(rightFilter)
 	ch := make(chan T)
 	leftAdapter.SetOutputChannel(ch)

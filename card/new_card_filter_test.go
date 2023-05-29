@@ -20,7 +20,7 @@ func newCardGenerator(events pipeline.FilterEvents, cards ...*card.KeyWithActivi
 	}
 }
 
-func (g *cardGenerator) Run(input <-chan interface{}, output chan<- *card.KeyWithActivities) {
+func (g *cardGenerator) Run(output chan<- *card.KeyWithActivities) {
 	defer func() {
 		close(output)
 		g.events.OnFinish()

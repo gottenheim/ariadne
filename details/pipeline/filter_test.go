@@ -10,7 +10,7 @@ type serialNumbers struct {
 	events pipeline.FilterEvents
 }
 
-func newSerialNumbers(events pipeline.FilterEvents) pipeline.Filter[interface{}, int] {
+func newSerialNumbers(events pipeline.FilterEvents) pipeline.Generator[int] {
 	events.OnStart()
 
 	return &serialNumbers{
@@ -18,7 +18,7 @@ func newSerialNumbers(events pipeline.FilterEvents) pipeline.Filter[interface{},
 	}
 }
 
-func (f *serialNumbers) Run(input <-chan interface{}, output chan<- int) {
+func (f *serialNumbers) Run(output chan<- int) {
 	for i := 0; i < 100; i++ {
 		output <- i
 	}
