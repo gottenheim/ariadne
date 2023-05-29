@@ -28,8 +28,7 @@ func TestNewCardFilter(t *testing.T) {
 
 	cards := card.NewBatchCardGenerator().
 		WithNewCards(80).
-		WithLearnedCards(90).
-		WithRemindedCards(100).
+		WithCardsScheduledToRemind(90).
 		Generate()
 
 	briefCards := card.ExtractBriefCards(cards)
@@ -55,7 +54,7 @@ func TestNewCardFilter(t *testing.T) {
 		t.Fatal("Filter should find 80 new cards")
 	}
 
-	if len(existingCardCollector.Items) != 190 {
-		t.Fatal("Filter should find 190 existing cards")
+	if len(existingCardCollector.Items) != 90 {
+		t.Fatal("Filter should find 90 existing cards")
 	}
 }

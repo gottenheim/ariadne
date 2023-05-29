@@ -10,7 +10,7 @@ type FakeTimeSource struct {
 
 func NewFakeTimeSource() *FakeTimeSource {
 	return &FakeTimeSource{
-		now: GetLocalTestTime(),
+		now: FakeNow(),
 	}
 }
 

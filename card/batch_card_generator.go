@@ -3,9 +3,8 @@ package card
 import "math/rand"
 
 type BatchCardGenerator struct {
-	newCards      int
-	learnedCards  int
-	remindedCards int
+	newCards               int
+	cardsScheduledToRemind int
 }
 
 func NewBatchCardGenerator() *BatchCardGenerator {
@@ -17,36 +16,28 @@ func (g *BatchCardGenerator) WithNewCards(newCards int) *BatchCardGenerator {
 	return g
 }
 
-func (g *BatchCardGenerator) WithLearnedCards(learnedCards int) *BatchCardGenerator {
-	g.learnedCards = learnedCards
-	return g
-}
-
-func (g *BatchCardGenerator) WithRemindedCards(remindedCards int) *BatchCardGenerator {
-	g.remindedCards = remindedCards
+func (g *BatchCardGenerator) WithCardsScheduledToRemind(cardsScheduledToRemind int) *BatchCardGenerator {
+	g.cardsScheduledToRemind = cardsScheduledToRemind
 	return g
 }
 
 func (g *BatchCardGenerator) Generate() []*Card {
 	var cards []*Card
 
-	newCards, learnedCards, remindedCards := g.newCards, g.learnedCards, g.remindedCards
-	cardsTotal := newCards + learnedCards + remindedCards
+	newCards, cardsScheduledToRemind := g.newCards, g.cardsScheduledToRemind
+	cardsTotal := newCards + cardsScheduledToRemind
 
 	for i := 0; i < cardsTotal; i++ {
-		index := rand.Int() % 3
+		index := rand.Int() % 2
 
 		var activities []GenerateActivity
 
 		if index == 0 && newCards > 0 {
 			activities = []GenerateActivity{LearnCard}
 			newCards--
-		} else if index == 1 && learnedCards > 0 {
-			activities = []GenerateActivity{LearnCard | CardExecutedYesterday, RemindCard | RemindCardScheduledToTomorrow}
-			learnedCards--
-		} else if index == 2 && remindedCards > 0 {
-			activities = []GenerateActivity{LearnCard | CardExecutedMonthAgo, RemindCard | RemindCardScheduledToYesterday | CardExecutedToday, RemindCard | RemindCardScheduledToMonthAhead}
-			remindedCards--
+		} else if index == 1 && cardsScheduledToRemind > 0 {
+			activities = []GenerateActivity{LearnCard | CardExecutedMonthAgo, RemindCard | RemindCardScheduledToToday}
+			cardsScheduledToRemind--
 		}
 
 		if activities != nil {

@@ -22,7 +22,7 @@ const (
 func GenerateActivityChain(activities ...GenerateActivity) CardActivity {
 	var currentActivity CardActivity
 
-	today := datetime.GetLocalTestTime()
+	today := datetime.FakeNow()
 
 	for _, activity := range activities {
 		if (activity & LearnCard) == LearnCard {

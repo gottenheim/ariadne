@@ -47,7 +47,7 @@ func TestSerializeCardActivityChain(t *testing.T) {
 		t.Error("Remind activity is expected to be executed")
 	}
 
-	today := datetime.GetLocalTestTime()
+	today := datetime.FakeNow()
 
 	if remind.ExecutionTime != today.Format(time.DateTime) {
 		t.Error("Remind activity execution time must be today")
@@ -106,7 +106,7 @@ func (v *testCardActivityVisitor) OnRemindCard(remind *card.RemindCardActivity) 
 }
 
 func TestDeserializeCardActivityChain(t *testing.T) {
-	today := datetime.GetLocalTestTime()
+	today := datetime.FakeNow()
 	monthAgo := today.AddDate(0, -1, 0)
 	yesterday := today.AddDate(0, 0, -1)
 

@@ -2,11 +2,6 @@ package card
 
 import "github.com/gottenheim/ariadne/details/pipeline"
 
-type BriefCard struct {
-	Key        Key
-	Activities CardActivity
-}
-
 type newCardCondition struct {
 	cardRepo CardRepository
 }
