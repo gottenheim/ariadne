@@ -17,7 +17,7 @@ func newCardGenerator(cards ...*card.KeyWithActivities) *cardGenerator {
 	}
 }
 
-func (g *cardGenerator) Run(output chan<- *card.KeyWithActivities) {
+func (g *cardGenerator) Run(output chan<- *card.KeyWithActivities) error {
 	defer func() {
 		close(output)
 	}()
@@ -25,6 +25,8 @@ func (g *cardGenerator) Run(output chan<- *card.KeyWithActivities) {
 	for _, card := range g.cards {
 		output <- card
 	}
+
+	return nil
 }
 
 type cardFilteringResult struct {
@@ -41,7 +43,7 @@ func newCardAccumulator(result *cardFilteringResult) *cardAccumulator {
 	}
 }
 
-func (g *cardAccumulator) Run(input <-chan *card.Card, output chan<- interface{}) {
+func (g *cardAccumulator) Run(input <-chan *card.Card, output chan<- interface{}) error {
 	for {
 		card, ok := <-input
 		if !ok {
@@ -49,6 +51,8 @@ func (g *cardAccumulator) Run(input <-chan *card.Card, output chan<- interface{}
 		}
 		g.result.cards = append(g.result.cards, card)
 	}
+
+	return nil
 }
 
 func TestNewCardFilter(t *testing.T) {
@@ -70,7 +74,10 @@ func TestNewCardFilter(t *testing.T) {
 	filter := pipeline.WithFilter[*card.KeyWithActivities](p, generator, card.NewCardFilter(cardRepo))
 	pipeline.WithFilter[*card.Card, interface{}](p, filter, newCardAccumulator(filteringResult))
 
-	p.SyncRun()
+	err := p.SyncRun()
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	if len(filteringResult.cards) != 80 {
 		t.Fatal("Filter should find ten cards")

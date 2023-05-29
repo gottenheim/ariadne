@@ -2,7 +2,7 @@ package pipeline
 
 type producer[K interface{}] interface {
 	SetOutputChannel(output chan<- K)
-	Run()
+	Run() error
 }
 
 type consumer[T interface{}] interface {

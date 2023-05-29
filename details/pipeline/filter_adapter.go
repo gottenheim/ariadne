@@ -24,6 +24,6 @@ func (f *filterAdapter[T, K]) SetOutputChannel(output chan<- K) {
 	f.output = output
 }
 
-func (f *filterAdapter[T, K]) Run() {
-	f.filter.Run(f.input, f.output)
+func (f *filterAdapter[T, K]) Run() error {
+	return f.filter.Run(f.input, f.output)
 }

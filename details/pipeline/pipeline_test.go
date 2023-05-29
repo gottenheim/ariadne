@@ -1,6 +1,7 @@
 package pipeline_test
 
 import (
+	"errors"
 	"math/rand"
 	"testing"
 
@@ -17,11 +18,12 @@ func generateNSerialNumbers(count int) pipeline.Generator[int] {
 	}
 }
 
-func (f *serialNumbers) Run(output chan<- int) {
+func (f *serialNumbers) Run(output chan<- int) error {
 	for i := 0; i < f.count; i++ {
 		output <- i
 	}
 	close(output)
+	return nil
 }
 
 type randomNumberGenerator struct {
@@ -34,11 +36,12 @@ func generateNRandomNumbers(count int) pipeline.Generator[int] {
 	}
 }
 
-func (f *randomNumberGenerator) Run(output chan<- int) {
+func (f *randomNumberGenerator) Run(output chan<- int) error {
 	for i := 0; i < f.count; i++ {
 		output <- rand.Int() % 100
 	}
 	close(output)
+	return nil
 }
 
 type lessThanFiftyFilter struct {
@@ -48,7 +51,7 @@ func filterLessThanFifty() pipeline.Filter[int, int] {
 	return &lessThanFiftyFilter{}
 }
 
-func (f *lessThanFiftyFilter) Run(input <-chan int, output chan<- int) {
+func (f *lessThanFiftyFilter) Run(input <-chan int, output chan<- int) error {
 	for {
 		val, ok := <-input
 		if !ok {
@@ -60,6 +63,7 @@ func (f *lessThanFiftyFilter) Run(input <-chan int, output chan<- int) {
 		}
 	}
 	close(output)
+	return nil
 }
 
 type lessThanFiftyCondition struct{}
@@ -68,7 +72,7 @@ func ifLessThanFifty() pipeline.Condition[int, int] {
 	return &lessThanFiftyCondition{}
 }
 
-func (f *lessThanFiftyCondition) Run(input <-chan int, positiveDecision chan<- int, negativeDecision chan<- int) {
+func (f *lessThanFiftyCondition) Run(input <-chan int, positiveDecision chan<- int, negativeDecision chan<- int) error {
 	for {
 		val, ok := <-input
 		if !ok {
@@ -83,6 +87,18 @@ func (f *lessThanFiftyCondition) Run(input <-chan int, positiveDecision chan<- i
 	}
 	close(positiveDecision)
 	close(negativeDecision)
+	return nil
+}
+
+type failureGenerator struct {
+}
+
+func generateFailure() pipeline.Generator[int] {
+	return &failureGenerator{}
+}
+
+func (f *failureGenerator) Run(output chan<- int) error {
+	return errors.New("Failed to generate numbers")
 }
 
 type pipelineResult struct {
@@ -99,7 +115,7 @@ func collectNumbers(result *pipelineResult) pipeline.Filter[int, int] {
 	}
 }
 
-func (f *numberCollector) Run(input <-chan int, output chan<- int) {
+func (f *numberCollector) Run(input <-chan int, output chan<- int) error {
 	for {
 		val, ok := <-input
 		if !ok {
@@ -108,6 +124,7 @@ func (f *numberCollector) Run(input <-chan int, output chan<- int) {
 
 		f.result.numbers = append(f.result.numbers, val)
 	}
+	return nil
 }
 
 func TestGeneratorsAndFilters(t *testing.T) {
@@ -161,5 +178,21 @@ func TestApplyingConditions(t *testing.T) {
 		if negativeResult.numbers[i] < 50 {
 			t.Fatal("Number must be more than fifty")
 		}
+	}
+}
+
+func TestPipelineFailure(t *testing.T) {
+	p := pipeline.New()
+
+	pipeline.NewGenerator(p, generateFailure())
+
+	err := p.SyncRun()
+
+	if err == nil {
+		t.Fatal("Pipeline should return error")
+	}
+
+	if err.Error() != "Failed to generate numbers" {
+		t.Fatal("Unexpected error")
 	}
 }

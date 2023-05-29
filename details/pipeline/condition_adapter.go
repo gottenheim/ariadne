@@ -29,6 +29,6 @@ func (f *conditionAdapter[T, K]) SetNegativeDecisionChannel(negativeDecision cha
 	f.negativeDecision = negativeDecision
 }
 
-func (f *conditionAdapter[T, K]) Run() {
-	f.condition.Run(f.input, f.positiveDecision, f.negativeDecision)
+func (f *conditionAdapter[T, K]) Run() error {
+	return f.condition.Run(f.input, f.positiveDecision, f.negativeDecision)
 }

@@ -20,6 +20,6 @@ func (a *generatorAdapter[K]) SetOutputChannel(output chan<- K) {
 	a.output = output
 }
 
-func (a *generatorAdapter[K]) Run() {
-	a.generator.Run(a.output)
+func (a *generatorAdapter[K]) Run() error {
+	return a.generator.Run(a.output)
 }

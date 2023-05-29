@@ -17,7 +17,7 @@ func NewCardFilter(cardRepo CardRepository) pipeline.Filter[*KeyWithActivities, 
 	}
 }
 
-func (f *newCardFilter) Run(input <-chan *KeyWithActivities, output chan<- *Card) {
+func (f *newCardFilter) Run(input <-chan *KeyWithActivities, output chan<- *Card) error {
 	defer func() {
 		close(output)
 	}()
@@ -32,18 +32,18 @@ func (f *newCardFilter) Run(input <-chan *KeyWithActivities, output chan<- *Card
 		isNewCard, err := IsNewCard(keyWithActivities.Activities)
 
 		if err != nil {
-			// f.events.OnError(err)
-			break
+			return err
 		}
 
 		if isNewCard {
 			card, err := f.cardRepo.Get(keyWithActivities.Key)
 			if err != nil {
-				// f.events.OnError(err)
-				break
+				return err
 			}
 
 			output <- card
 		}
 	}
+
+	return nil
 }

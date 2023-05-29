@@ -14,8 +14,8 @@ func (f *positiveDecisionAdapter[T, K]) SetOutputChannel(output chan<- K) {
 	f.conditionAdapter.SetPositiveDecisionChannel(output)
 }
 
-func (f *positiveDecisionAdapter[T, K]) Run() {
-	f.conditionAdapter.Run()
+func (f *positiveDecisionAdapter[T, K]) Run() error {
+	return f.conditionAdapter.Run()
 }
 
 type negativeDecisionAdapter[T interface{}, K interface{}] struct {
@@ -32,6 +32,6 @@ func (f *negativeDecisionAdapter[T, K]) SetOutputChannel(output chan<- K) {
 	f.conditionAdapter.SetNegativeDecisionChannel(output)
 }
 
-func (f *negativeDecisionAdapter[T, K]) Run() {
-	f.conditionAdapter.Run()
+func (f *negativeDecisionAdapter[T, K]) Run() error {
+	return f.conditionAdapter.Run()
 }
