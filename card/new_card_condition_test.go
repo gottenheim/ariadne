@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/gottenheim/ariadne/card"
+	"github.com/gottenheim/ariadne/details/datetime"
 	"github.com/gottenheim/ariadne/details/pipeline"
 )
 
@@ -25,18 +26,20 @@ func TestNewCardFilter(t *testing.T) {
 
 	cards := card.NewBatchCardGenerator().
 		WithCards(card.NewCardGenerationSpec("New cards", 80, card.LearnCard)).
-		WithCards(card.NewCardGenerationSpec("Learned cards", 90, card.LearnCard|card.CardExecutedYesterday, card.RemindCard|card.RemindCardScheduledToTomorrow)).
+		WithCards(card.NewCardGenerationSpec("Cards learned today", 90, card.LearnCard|card.CardExecutedToday, card.RemindCard|card.RemindCardScheduledToTomorrow)).
+		WithCards(card.NewCardGenerationSpec("Cards learned yesterday", 100, card.LearnCard|card.CardExecutedYesterday, card.RemindCard|card.RemindCardScheduledToTomorrow)).
 		Generate()
 
 	briefCards := card.ExtractBriefCards(cards)
 
+	timeSource := datetime.NewFakeTimeSource()
 	cardRepo := card.NewFakeCardRepository(cards...)
 
 	newCardCollector := pipeline.NewItemCollector[*card.Card]()
 	existingCardCollector := pipeline.NewItemCollector[card.BriefCard]()
 
 	cardEmitter := pipeline.NewEmitter[card.BriefCard](p, &cardEmitter{cards: briefCards})
-	newCardCondition := pipeline.WithCondition[card.BriefCard](p, cardEmitter, card.NewCardCondition(cardRepo))
+	newCardCondition := pipeline.WithCondition[card.BriefCard](p, cardEmitter, card.NewCardCondition(timeSource, cardRepo))
 
 	pipeline.WithAcceptor[*card.Card](p, pipeline.OnPositiveDecision(newCardCondition), newCardCollector)
 	pipeline.WithAcceptor[card.BriefCard](p, pipeline.OnNegativeDecision(newCardCondition), existingCardCollector)
@@ -47,11 +50,11 @@ func TestNewCardFilter(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if len(newCardCollector.Items) != 80 {
-		t.Fatal("Filter should find 80 new cards")
+	if len(newCardCollector.Items) != 170 {
+		t.Fatal("Filter should find 170 new cards and cards learned today")
 	}
 
-	if len(existingCardCollector.Items) != 90 {
-		t.Fatal("Filter should find 90 existing cards")
+	if len(existingCardCollector.Items) != 100 {
+		t.Fatal("Filter should find 100 cards learned earlier")
 	}
 }

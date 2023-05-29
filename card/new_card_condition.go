@@ -3,16 +3,19 @@ package card
 import (
 	"context"
 
+	"github.com/gottenheim/ariadne/details/datetime"
 	"github.com/gottenheim/ariadne/details/pipeline"
 )
 
 type newCardCondition struct {
-	cardRepo CardRepository
+	timeSource datetime.TimeSource
+	cardRepo   CardRepository
 }
 
-func NewCardCondition(cardRepo CardRepository) pipeline.Condition[BriefCard, *Card, BriefCard] {
+func NewCardCondition(timeSource datetime.TimeSource, cardRepo CardRepository) pipeline.Condition[BriefCard, *Card, BriefCard] {
 	return &newCardCondition{
-		cardRepo: cardRepo,
+		timeSource: timeSource,
+		cardRepo:   cardRepo,
 	}
 }
 
@@ -30,7 +33,13 @@ func (f *newCardCondition) Run(ctx context.Context, input <-chan BriefCard, posi
 			return err
 		}
 
-		if isNewCard {
+		isCardLearnedToday, err := IsCardLearnedToday(f.timeSource, briefCard.Activities)
+
+		if err != nil {
+			return err
+		}
+
+		if isNewCard || isCardLearnedToday {
 			card, err := f.cardRepo.Get(briefCard.Key)
 			if err != nil {
 				return err
