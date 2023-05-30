@@ -10,7 +10,7 @@ import (
 
 const ActivitiesFileName = ".activities"
 
-func (r *FileCardRepository) ReadCardActivities(cardPath string) (card.CardActivity, error) {
+func (r *fileCardRepository) ReadCardActivities(cardPath string) (card.CardActivity, error) {
 	activitiesFilePath := r.getActivitiesFilePath(cardPath)
 
 	fileExists, activitiesBinary, err := r.readActivitiesFromFile(activitiesFilePath)
@@ -25,7 +25,7 @@ func (r *FileCardRepository) ReadCardActivities(cardPath string) (card.CardActiv
 	return card.DeserializeCardActivityChain(activitiesBinary)
 }
 
-func (r *FileCardRepository) SaveCardActivities(cardActivities card.CardActivity, cardPath string) error {
+func (r *fileCardRepository) SaveCardActivities(cardActivities card.CardActivity, cardPath string) error {
 	activitiesFilePath := r.getActivitiesFilePath(cardPath)
 
 	r.removeActivitiesFileIfExists(activitiesFilePath)
@@ -48,11 +48,11 @@ func (r *FileCardRepository) SaveCardActivities(cardActivities card.CardActivity
 	return r.writeActivitiesToFile(activitiesFilePath, activitiesBinary)
 }
 
-func (r *FileCardRepository) getActivitiesFilePath(cardPath string) string {
+func (r *fileCardRepository) getActivitiesFilePath(cardPath string) string {
 	return filepath.Join(cardPath, ActivitiesFileName)
 }
 
-func (r *FileCardRepository) readActivitiesFromFile(activitiesFilePath string) (bool, []byte, error) {
+func (r *fileCardRepository) readActivitiesFromFile(activitiesFilePath string) (bool, []byte, error) {
 	exists, err := afero.Exists(r.fs, activitiesFilePath)
 	if err != nil {
 		return false, nil, err
@@ -70,7 +70,7 @@ func (r *FileCardRepository) readActivitiesFromFile(activitiesFilePath string) (
 	return true, activitiesBinary, nil
 }
 
-func (r *FileCardRepository) removeActivitiesFileIfExists(activitiesFilePath string) error {
+func (r *fileCardRepository) removeActivitiesFileIfExists(activitiesFilePath string) error {
 	exists, err := afero.Exists(r.fs, activitiesFilePath)
 	if err != nil {
 		return err
@@ -88,6 +88,6 @@ func (r *FileCardRepository) removeActivitiesFileIfExists(activitiesFilePath str
 	return nil
 }
 
-func (r *FileCardRepository) writeActivitiesToFile(activitiesFilePath string, progress []byte) error {
+func (r *fileCardRepository) writeActivitiesToFile(activitiesFilePath string, progress []byte) error {
 	return afero.WriteFile(r.fs, activitiesFilePath, progress, os.ModePerm)
 }

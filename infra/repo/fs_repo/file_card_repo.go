@@ -12,19 +12,26 @@ import (
 	"github.com/spf13/afero"
 )
 
-type FileCardRepository struct {
+type fileCardRepository struct {
 	fs       afero.Fs
 	cardsDir string
 }
 
 func NewFileCardRepository(fs afero.Fs, cardsDir string) card.CardRepository {
-	return &FileCardRepository{
+	return &fileCardRepository{
 		fs:       fs,
 		cardsDir: cardsDir,
 	}
 }
 
-func (r *FileCardRepository) Get(cardKey card.Key) (*card.Card, error) {
+func newFileCardRepository(fs afero.Fs, cardsDir string) *fileCardRepository {
+	return &fileCardRepository{
+		fs:       fs,
+		cardsDir: cardsDir,
+	}
+}
+
+func (r *fileCardRepository) Get(cardKey card.Key) (*card.Card, error) {
 	card, err := r.createCard(cardKey)
 	if err != nil {
 		return nil, err
@@ -53,7 +60,7 @@ func (r *FileCardRepository) Get(cardKey card.Key) (*card.Card, error) {
 	return card, nil
 }
 
-func (r *FileCardRepository) Save(card *card.Card) error {
+func (r *fileCardRepository) Save(card *card.Card) error {
 	err := r.generateKeyIfNeeded(card)
 	if err != nil {
 		return err
@@ -72,7 +79,7 @@ func (r *FileCardRepository) Save(card *card.Card) error {
 	return r.SaveCardActivities(card.Activities(), r.getCardPath(card))
 }
 
-func (r *FileCardRepository) generateKeyIfNeeded(card *card.Card) error {
+func (r *fileCardRepository) generateKeyIfNeeded(card *card.Card) error {
 	if card.Key() == 0 {
 		cardKey, err := r.getNextFreeCardKey()
 
@@ -86,7 +93,7 @@ func (r *FileCardRepository) generateKeyIfNeeded(card *card.Card) error {
 	return nil
 }
 
-func (r *FileCardRepository) getNextFreeCardKey() (card.Key, error) {
+func (r *fileCardRepository) getNextFreeCardKey() (card.Key, error) {
 	maxCardKey := 0
 
 	err := afero.Walk(r.fs, r.cardsDir, func(filePath string, info os.FileInfo, err error) error {
@@ -113,40 +120,11 @@ func (r *FileCardRepository) getNextFreeCardKey() (card.Key, error) {
 	return card.Key(maxCardKey + 1), nil
 }
 
-func (r *FileCardRepository) isCardDir(dirPath string) (bool, error) {
-	answerFileExists, err := afero.Exists(r.fs, filepath.Join(dirPath, card.AnswerArtifactName))
-	if err != nil {
-		return false, err
-	}
-
-	if answerFileExists {
-		return true, nil
-	}
-
-	activitiesFileExists, err := afero.Exists(r.fs, filepath.Join(dirPath, ActivitiesFileName))
-	if err != nil {
-		return false, err
-	}
-
-	if activitiesFileExists {
-		return true, nil
-	}
-
-	dirName := path.Base(dirPath)
-
-	orderNumber, err := strconv.Atoi(dirName)
-	if err != nil {
-		return false, err
-	}
-
-	return orderNumber > 0, nil
-}
-
-func (r *FileCardRepository) getCardPath(card *card.Card) string {
+func (r *fileCardRepository) getCardPath(card *card.Card) string {
 	return filepath.Join(r.cardsDir, strconv.Itoa(int(card.Key())))
 }
 
-func (r *FileCardRepository) clearCardDirectory(card *card.Card) error {
+func (r *fileCardRepository) clearCardDirectory(card *card.Card) error {
 	cardPath := r.getCardPath(card)
 
 	cardDirExists, err := afero.Exists(r.fs, cardPath)
@@ -162,7 +140,7 @@ func (r *FileCardRepository) clearCardDirectory(card *card.Card) error {
 	return nil
 }
 
-func (r *FileCardRepository) saveArtifactFiles(card *card.Card) error {
+func (r *fileCardRepository) saveArtifactFiles(card *card.Card) error {
 	cardPath := r.getCardPath(card)
 
 	err := r.fs.MkdirAll(cardPath, os.ModePerm)
@@ -182,11 +160,11 @@ func (r *FileCardRepository) saveArtifactFiles(card *card.Card) error {
 	return nil
 }
 
-func (r *FileCardRepository) createCard(cardKey card.Key) (*card.Card, error) {
+func (r *fileCardRepository) createCard(cardKey card.Key) (*card.Card, error) {
 	return card.NewCard(cardKey, []card.CardArtifact{}), nil
 }
 
-func (r *FileCardRepository) readCardArtifacts(cardPath string) ([]card.CardArtifact, error) {
+func (r *fileCardRepository) readCardArtifacts(cardPath string) ([]card.CardArtifact, error) {
 	var artifacts []card.CardArtifact
 
 	err := afero.Walk(r.fs, cardPath, func(filePath string, info os.FileInfo, err error) error {
@@ -208,6 +186,6 @@ func (r *FileCardRepository) readCardArtifacts(cardPath string) ([]card.CardArti
 	return artifacts, nil
 }
 
-func (r *FileCardRepository) isServiceFile(fileName string) bool {
+func (r *fileCardRepository) isServiceFile(fileName string) bool {
 	return fileName[0] == '.'
 }
