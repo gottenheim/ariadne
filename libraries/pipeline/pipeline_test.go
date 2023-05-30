@@ -42,7 +42,11 @@ func generateNRandomNumbers(count int) pipeline.Emitter[int] {
 
 func (f *randomNumberGenerator) Run(ctx context.Context, output chan<- int) error {
 	for i := 0; i < f.count; i++ {
-		output <- rand.Int() % 100
+		select {
+		case <-ctx.Done():
+			break
+		case output <- rand.Int() % 100:
+		}
 	}
 	return nil
 }
@@ -263,25 +267,26 @@ func TestSkippingLimitFilter(t *testing.T) {
 	}
 }
 
-func TestCancellingLimitFilter(t *testing.T) {
+func TestStopOnValueGreaterThanFilter(t *testing.T) {
 	p := pipeline.New()
 
-	complete := pipeline.NewPassingItemCollector[int]()
-	partial := pipeline.NewItemCollector[int]()
+	itemCollector := pipeline.NewPassingItemCollector[int]()
+	valueStore := pipeline.NewValueStore[int]()
 
-	generator := pipeline.NewEmitter(p, generateNSerialNumbers(100))
-	passingStep := pipeline.WithFilter[int, int](p, generator, complete)
-	cancellingStep := pipeline.WithFilter[int](p, passingStep, pipeline.CancellingLimit(p, 30))
-	pipeline.WithAcceptor[int](p, cancellingStep, partial)
+	generator := pipeline.NewEmitter(p, generateNRandomNumbers(100))
+	collectingStep := pipeline.WithFilter[int, int](p, generator, itemCollector)
+	countingStep := pipeline.WithFilter[int, int](p, collectingStep, pipeline.NewCounter[int]())
+	stopOnValueStep := pipeline.WithFilter[int](p, countingStep, pipeline.StopOnValueGreaterThan(p, 30))
+	pipeline.WithAcceptor[int](p, stopOnValueStep, valueStore)
 
 	p.SyncRun()
 
-	if len(partial.Items) != 30 {
-		t.Fatal("Cancelling limit filter must pass only 30 records")
+	if valueStore.Value() != 30 {
+		t.Fatal("Counter must count up to 30 numbers")
 	}
 
-	if len(complete.Items) == 100 {
-		t.Fatal("Generator should be stopped by cancelling limit filter ahead of time")
+	if len(itemCollector.Items) < 30 || len(itemCollector.Items) > 40 {
+		t.Fatal("Process must be stopped on 30 generated numbers")
 	}
 }
 
