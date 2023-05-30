@@ -21,13 +21,13 @@ var newCmd = &cobra.Command{
 
 		cardsDir, templateDir := dirs[0], dirs[1]
 
-		action := &use_cases.NewCardAction{}
+		useCase := &use_cases.NewCard{}
 
 		templateRepo := fs_repo.NewFileTemplateRepository(osFs, templateDir)
 
 		cardRepo := fs_repo.NewFileCardRepository(osFs, cardsDir)
 
-		return action.Run(templateRepo, cardRepo)
+		return useCase.Run(templateRepo, cardRepo)
 	},
 }
 

@@ -28,7 +28,7 @@ var extractAnswerCmd = &cobra.Command{
 
 		cardRepo := fs_repo.NewFileCardRepository(osFs, cardDir)
 
-		action := &use_cases.ExtractCardAction{}
+		useCase := &use_cases.ExtractCard{}
 
 		cardKey, err := strconv.Atoi(filepath.Base(dirs[0]))
 
@@ -36,7 +36,7 @@ var extractAnswerCmd = &cobra.Command{
 			return errors.New("Card directory should be a number")
 		}
 
-		return action.Run(cardRepo, card.Key(cardKey))
+		return useCase.Run(cardRepo, card.Key(cardKey))
 	},
 }
 

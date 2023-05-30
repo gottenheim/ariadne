@@ -29,7 +29,7 @@ var showAnswerCmd = &cobra.Command{
 
 		cardRepo := fs_repo.NewFileCardRepository(osFs, cardDir)
 
-		action := &use_cases.ShowAnswerAction{}
+		useCase := &use_cases.ShowAnswer{}
 
 		cardKey, err := strconv.Atoi(filepath.Base(dirs[0]))
 
@@ -37,7 +37,7 @@ var showAnswerCmd = &cobra.Command{
 			return errors.New("Card directory should be a number")
 		}
 
-		return action.Run(cardRepo, os.Stdout, card.Key(cardKey))
+		return useCase.Run(cardRepo, os.Stdout, card.Key(cardKey))
 	},
 }
 

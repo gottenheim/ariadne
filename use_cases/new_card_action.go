@@ -2,10 +2,10 @@ package use_cases
 
 import "github.com/gottenheim/ariadne/core/card"
 
-type NewCardAction struct {
+type NewCard struct {
 }
 
-func (a *NewCardAction) Run(templateRepo card.CardTemplateRepository, cardRepo card.CardRepository) error {
+func (a *NewCard) Run(templateRepo card.CardTemplateRepository, cardRepo card.CardRepository) error {
 	cardTemplate, err := templateRepo.GetTemplate()
 	if err != nil {
 		return err

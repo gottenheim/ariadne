@@ -6,10 +6,10 @@ import (
 	"github.com/gottenheim/ariadne/core/card"
 )
 
-type ShowAnswerAction struct {
+type ShowAnswer struct {
 }
 
-func (a *ShowAnswerAction) Run(cardRepo card.CardRepository, output io.Writer, cardKey card.Key) error {
+func (a *ShowAnswer) Run(cardRepo card.CardRepository, output io.Writer, cardKey card.Key) error {
 	c, err := cardRepo.Get(cardKey)
 
 	if err != nil {

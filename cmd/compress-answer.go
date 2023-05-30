@@ -28,7 +28,7 @@ var compressAnswerCmd = &cobra.Command{
 
 		repo := fs_repo.NewFileCardRepository(osFs, cardDir)
 
-		action := &use_cases.CompressAnswerAction{}
+		useCase := &use_cases.CompressAnswer{}
 
 		cardKey, err := strconv.Atoi(filepath.Base(dirs[0]))
 
@@ -36,7 +36,7 @@ var compressAnswerCmd = &cobra.Command{
 			return errors.New("Card directory should be a number")
 		}
 
-		return action.Run(repo, card.Key(cardKey))
+		return useCase.Run(repo, card.Key(cardKey))
 	},
 }
 

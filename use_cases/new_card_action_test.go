@@ -21,7 +21,7 @@ func TestCreateNewCardInEmptyDirectory(t *testing.T) {
 	templateRepo := fs_repo.NewFileTemplateRepository(fakeFs, "/config/template")
 	cardRepo := fs_repo.NewFileCardRepository(fakeFs, "/home/user/books")
 
-	newCardAction := &use_cases.NewCardAction{}
+	newCardAction := &use_cases.NewCard{}
 	err = newCardAction.Run(templateRepo, cardRepo)
 
 	if err != nil {
@@ -47,7 +47,7 @@ func TestCreateNewCardInDirectoryWithCards(t *testing.T) {
 	templateRepo := fs_repo.NewFileTemplateRepository(fakeFs, "/config/template")
 	cardRepo := fs_repo.NewFileCardRepository(fakeFs, "/home/user/books")
 
-	newCardAction := &use_cases.NewCardAction{}
+	newCardAction := &use_cases.NewCard{}
 	err = newCardAction.Run(templateRepo, cardRepo)
 
 	if err != nil {
