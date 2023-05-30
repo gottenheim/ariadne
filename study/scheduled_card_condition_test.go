@@ -1,4 +1,4 @@
-package card_test
+package study_test
 
 import (
 	"testing"
@@ -6,6 +6,7 @@ import (
 	"github.com/gottenheim/ariadne/card"
 	"github.com/gottenheim/ariadne/details/datetime"
 	"github.com/gottenheim/ariadne/details/pipeline"
+	"github.com/gottenheim/ariadne/study"
 )
 
 func TestCardScheduledToTodayFilter(t *testing.T) {
@@ -28,7 +29,7 @@ func TestCardScheduledToTodayFilter(t *testing.T) {
 	notScheduledCardCollector := pipeline.NewItemCollector[card.BriefCard]()
 
 	cardEmitter := pipeline.NewEmitter[card.BriefCard](p, &cardEmitter{cards: briefCards})
-	newCardCondition := pipeline.WithCondition[card.BriefCard](p, cardEmitter, card.ScheduledCardCondition(timeSource, cardRepo))
+	newCardCondition := pipeline.WithCondition[card.BriefCard](p, cardEmitter, study.ScheduledCardCondition(timeSource, cardRepo))
 
 	pipeline.WithAcceptor[*card.Card](p, pipeline.OnPositiveDecision(newCardCondition), scheduledCardCollector)
 	pipeline.WithAcceptor[card.BriefCard](p, pipeline.OnNegativeDecision(newCardCondition), notScheduledCardCollector)

@@ -1,25 +1,26 @@
-package card
+package study
 
 import (
 	"context"
 
+	"github.com/gottenheim/ariadne/card"
 	"github.com/gottenheim/ariadne/details/datetime"
 	"github.com/gottenheim/ariadne/details/pipeline"
 )
 
 type newCardCondition struct {
 	timeSource datetime.TimeSource
-	cardRepo   CardRepository
+	cardRepo   card.CardRepository
 }
 
-func NewCardCondition(timeSource datetime.TimeSource, cardRepo CardRepository) pipeline.Condition[BriefCard, *Card, BriefCard] {
+func NewCardCondition(timeSource datetime.TimeSource, cardRepo card.CardRepository) pipeline.Condition[card.BriefCard, *card.Card, card.BriefCard] {
 	return &newCardCondition{
 		timeSource: timeSource,
 		cardRepo:   cardRepo,
 	}
 }
 
-func (f *newCardCondition) Run(ctx context.Context, input <-chan BriefCard, positiveDecision chan<- *Card, negativeDecision chan<- BriefCard) error {
+func (f *newCardCondition) Run(ctx context.Context, input <-chan card.BriefCard, positiveDecision chan<- *card.Card, negativeDecision chan<- card.BriefCard) error {
 	for {
 		briefCard, ok := <-input
 
@@ -27,7 +28,7 @@ func (f *newCardCondition) Run(ctx context.Context, input <-chan BriefCard, posi
 			break
 		}
 
-		isNewCard, err := IsNewCardActivities(briefCard.Activities)
+		isNewCard, err := card.IsNewCardActivities(briefCard.Activities)
 
 		if err != nil {
 			return err

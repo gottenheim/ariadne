@@ -1,17 +1,18 @@
-package card_test
+package study_test
 
 import (
 	"testing"
 
 	"github.com/gottenheim/ariadne/card"
 	"github.com/gottenheim/ariadne/details/datetime"
+	"github.com/gottenheim/ariadne/study"
 )
 
 func TestIsCardLearnedToday_IfLearnActivityIsNotExecuted(t *testing.T) {
 	timeSource := datetime.NewFakeTimeSource()
 	activityChain := card.GenerateActivityChain(card.LearnCard)
 
-	isLearnedToday, err := card.IsCardLearnedToday(timeSource, activityChain)
+	isLearnedToday, err := study.IsCardLearnedToday(timeSource, activityChain)
 
 	if err != nil {
 		t.Fatal(err)
@@ -26,7 +27,7 @@ func TestIsCardLearnedToday_IfLearnActivityIsNotExecuted_AndRemindActivityInTheE
 	timeSource := datetime.NewFakeTimeSource()
 	activityChain := card.GenerateActivityChain(card.LearnCard, card.RemindCard)
 
-	isLearnedToday, err := card.IsCardLearnedToday(timeSource, activityChain)
+	isLearnedToday, err := study.IsCardLearnedToday(timeSource, activityChain)
 
 	if err != nil {
 		t.Fatal(err)
@@ -42,7 +43,7 @@ func TestIsCardLearnedToday_IfLearnActivityHasBeenExecutedYesterday(t *testing.T
 
 	activityChain := card.GenerateActivityChain(card.LearnCard | card.CardExecutedYesterday)
 
-	isLearnedToday, err := card.IsCardLearnedToday(timeSource, activityChain)
+	isLearnedToday, err := study.IsCardLearnedToday(timeSource, activityChain)
 
 	if err != nil {
 		t.Fatal(err)
@@ -58,7 +59,7 @@ func TestIsCardLearnedToday_IfLearnActivityHasBeenExecutedToday(t *testing.T) {
 
 	activityChain := card.GenerateActivityChain(card.LearnCard | card.CardExecutedToday)
 
-	isLearnedToday, err := card.IsCardLearnedToday(timeSource, activityChain)
+	isLearnedToday, err := study.IsCardLearnedToday(timeSource, activityChain)
 
 	if err != nil {
 		t.Fatal(err)
@@ -74,7 +75,7 @@ func TestIsCardLearnedToday_IfLearnActivityHasBeenExecutedToday_AndSomeRemindAct
 
 	activityChain := card.GenerateActivityChain(card.LearnCard|card.CardExecutedToday, card.RemindCard|card.RemindCardScheduledToToday, card.RemindCard|card.RemindCardScheduledToTomorrow)
 
-	isLearnedToday, err := card.IsCardLearnedToday(timeSource, activityChain)
+	isLearnedToday, err := study.IsCardLearnedToday(timeSource, activityChain)
 
 	if err != nil {
 		t.Fatal(err)

@@ -1,4 +1,4 @@
-package card_test
+package study_test
 
 import (
 	"context"
@@ -7,6 +7,7 @@ import (
 	"github.com/gottenheim/ariadne/card"
 	"github.com/gottenheim/ariadne/details/datetime"
 	"github.com/gottenheim/ariadne/details/pipeline"
+	"github.com/gottenheim/ariadne/study"
 )
 
 type cardEmitter struct {
@@ -39,7 +40,7 @@ func TestNewCardFilter(t *testing.T) {
 	existingCardCollector := pipeline.NewItemCollector[card.BriefCard]()
 
 	cardEmitter := pipeline.NewEmitter[card.BriefCard](p, &cardEmitter{cards: briefCards})
-	newCardCondition := pipeline.WithCondition[card.BriefCard](p, cardEmitter, card.NewCardCondition(timeSource, cardRepo))
+	newCardCondition := pipeline.WithCondition[card.BriefCard](p, cardEmitter, study.NewCardCondition(timeSource, cardRepo))
 
 	pipeline.WithAcceptor[*card.Card](p, pipeline.OnPositiveDecision(newCardCondition), newCardCollector)
 	pipeline.WithAcceptor[card.BriefCard](p, pipeline.OnNegativeDecision(newCardCondition), existingCardCollector)
