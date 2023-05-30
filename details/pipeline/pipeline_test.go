@@ -93,12 +93,24 @@ func (f *lessThanFiftyCondition) Run(ctx context.Context, input <-chan int, posi
 type failureGenerator struct {
 }
 
-func generateFailure() pipeline.Emitter[int] {
+func generateFailure() pipeline.Filter[int, int] {
 	return &failureGenerator{}
 }
 
-func (f *failureGenerator) Run(ctx context.Context, output chan<- int) error {
-	return errors.New("Failed to generate numbers")
+func (f *failureGenerator) Run(ctx context.Context, input <-chan int, output chan<- int) error {
+	for {
+		val, ok := <-input
+		if !ok {
+			break
+		}
+
+		if val > 30 {
+			return errors.New("Number processing failure")
+		}
+
+		output <- val
+	}
+	return nil
 }
 
 type limitNumberCountCondition struct {
@@ -198,9 +210,9 @@ func TestPipelineFailure(t *testing.T) {
 
 	collector := pipeline.NewItemCollector[int]()
 
-	emitter := pipeline.NewEmitter(p, generateFailure())
-
-	pipeline.WithAcceptor[int](p, emitter, collector)
+	emitter := pipeline.NewEmitter(p, generateNSerialNumbers(100))
+	filter := pipeline.WithFilter[int](p, emitter, generateFailure())
+	pipeline.WithAcceptor[int](p, filter, collector)
 
 	err := p.SyncRun()
 
@@ -208,12 +220,12 @@ func TestPipelineFailure(t *testing.T) {
 		t.Fatal("Pipeline should return error")
 	}
 
-	if err.Error() != "Failed to generate numbers" {
+	if err.Error() != "Number processing failure" {
 		t.Fatal("Unexpected error")
 	}
 }
 
-func TestPipelineCancelling(t *testing.T) {
+func TestPipelineCancellation(t *testing.T) {
 	p := pipeline.New()
 
 	collector := pipeline.NewItemCollector[int]()

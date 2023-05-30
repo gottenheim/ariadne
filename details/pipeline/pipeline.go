@@ -41,6 +41,9 @@ func (p *Pipeline) runTask(ctx context.Context, taskIndex int) {
 	task := p.tasks[taskIndex]
 	err := task.Run(ctx)
 	p.taskErrors[taskIndex] = err
+	if err != nil {
+		p.cancelFunc()
+	}
 	p.waitGroup.Done()
 }
 
