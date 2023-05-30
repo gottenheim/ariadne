@@ -1,0 +1,86 @@
+package archive
+
+import (
+	"bytes"
+	"testing"
+
+	"github.com/gottenheim/ariadne/libraries/fs"
+	"github.com/spf13/afero"
+)
+
+func TestCompressingAndDecompressingArchive(t *testing.T) {
+	fakeFs, err := fs.NewFakeFs([]fs.FakeFileEntry{
+		fs.NewFakeFileEntry("/dev/frontend", "deploy.yaml", `first: firstValue`),
+		fs.NewFakeFileEntry("/dev/frontend", "app.yaml", `second: secondValue`),
+		fs.NewFakeFileEntry("/dev/backend", "deploy.yaml", `third: thirdValue`),
+		fs.NewFakeFileEntry("/dev/backend", "app.yaml", `fourth: fourthValue`),
+	})
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	writer := NewWriter()
+
+	err = writer.AddDir(fakeFs, "/dev")
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	buffer, err := writer.Buffer()
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	reader := bytes.NewReader(buffer.Bytes())
+
+	targetFs := afero.NewMemMapFs()
+
+	err = Uncompress(reader, targetFs, "/layers")
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	first, err := afero.ReadFile(targetFs, "/layers/frontend/deploy.yaml")
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if string(first) != "first: firstValue" {
+		t.Fatal("Wrong first file contents")
+	}
+
+	second, err := afero.ReadFile(targetFs, "/layers/frontend/app.yaml")
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if string(second) != "second: secondValue" {
+		t.Fatal("Wrong second file contents")
+	}
+
+	third, err := afero.ReadFile(targetFs, "/layers/backend/deploy.yaml")
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if string(third) != "third: thirdValue" {
+		t.Fatal("Wrong third file contents")
+	}
+
+	fourth, err := afero.ReadFile(targetFs, "/layers/backend/app.yaml")
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if string(fourth) != "fourth: fourthValue" {
+		t.Fatal("Wrong fourth file contents")
+	}
+}
