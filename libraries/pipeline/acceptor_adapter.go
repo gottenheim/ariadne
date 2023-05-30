@@ -17,6 +17,10 @@ func newAcceptorAdapter[T interface{}](p *Pipeline, acceptor Acceptor[T]) *accep
 	return adapter
 }
 
+func (f *acceptorAdapter[T]) Name() string {
+	return "Acceptor"
+}
+
 func (f *acceptorAdapter[T]) SetInputChannel(input <-chan T) {
 	f.input = input
 }

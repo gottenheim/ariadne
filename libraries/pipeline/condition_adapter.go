@@ -19,6 +19,10 @@ func newConditionAdapter[T interface{}, K interface{}, L interface{}](pipeline *
 	return adapter
 }
 
+func (f *conditionAdapter[T, K, L]) Name() string {
+	return "Condition"
+}
+
 func (f *conditionAdapter[T, K, L]) SetInputChannel(input <-chan T) {
 	f.input = input
 }

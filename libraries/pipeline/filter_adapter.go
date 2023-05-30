@@ -18,6 +18,10 @@ func newFilterAdapter[T interface{}, K interface{}](p *Pipeline, filter Filter[T
 	return adapter
 }
 
+func (f *filterAdapter[T, K]) Name() string {
+	return "Filter"
+}
+
 func (f *filterAdapter[T, K]) SetInputChannel(input <-chan T) {
 	f.input = input
 }

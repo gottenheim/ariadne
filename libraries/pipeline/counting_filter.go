@@ -3,7 +3,6 @@ package pipeline
 import "context"
 
 type countingFilter[T interface{}] struct {
-	count int
 }
 
 func NewCounter[T interface{}]() *countingFilter[T] {
@@ -11,15 +10,17 @@ func NewCounter[T interface{}]() *countingFilter[T] {
 }
 
 func (f *countingFilter[T]) Run(ctx context.Context, input <-chan T, output chan<- int) error {
+	count := 0
+
 	for {
 		_, ok := <-input
 		if !ok {
 			break
 		}
 
-		f.count++
+		count++
 
-		output <- f.count
+		output <- count
 	}
 
 	return nil

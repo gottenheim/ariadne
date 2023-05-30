@@ -300,3 +300,25 @@ func TestCountingFilter(t *testing.T) {
 		t.Fatal("Counter must count 100 elements")
 	}
 }
+
+func TestSumCalculation(t *testing.T) {
+	p := pipeline.New()
+
+	valueStore := pipeline.NewValueStore[int]()
+
+	generator1 := pipeline.NewEmitter(p, generateNSerialNumbers(100))
+	counting1 := pipeline.WithFilter[int, int](p, generator1, pipeline.NewCounter[int]())
+
+	generator2 := pipeline.NewEmitter(p, generateNSerialNumbers(50))
+	counting2 := pipeline.WithFilter[int, int](p, generator2, pipeline.NewCounter[int]())
+
+	sumCalculator := pipeline.WithAggregator[int](p, counting1, counting2, pipeline.SumCalculator())
+
+	pipeline.WithAcceptor[int](p, sumCalculator, valueStore)
+
+	p.SyncRun()
+
+	if valueStore.Value() != 150 {
+		t.Fatalf("Wrong sum calculated. Expected 150, actual %d", valueStore.Value())
+	}
+}

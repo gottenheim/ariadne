@@ -18,6 +18,10 @@ func newEmitterAdapter[K interface{}](pipeline *Pipeline, emitter Emitter[K]) *e
 	return adapter
 }
 
+func (f *emitterAdapter[K]) Name() string {
+	return "Emitter"
+}
+
 func (a *emitterAdapter[K]) SetOutputChannel(output chan<- K) {
 	a.output = output
 }

@@ -46,3 +46,17 @@ func WithAcceptor[T interface{}](pipeline *Pipeline, producer producer[T], accep
 	acceptorAdapter.SetInputChannel(ch)
 	return acceptorAdapter
 }
+
+func WithAggregator[T interface{}, K interface{}](pipeline *Pipeline, leftProducer producer[T], rightProducer producer[T], aggregator Aggregator[T, K]) *aggregatorAdapter[T, K] {
+	aggregatorAdapter := newAggregatorAdapter(pipeline, aggregator)
+
+	leftChannel := make(chan T)
+	leftProducer.SetOutputChannel(leftChannel)
+	aggregatorAdapter.SetLeftArgChannel(leftChannel)
+
+	rightChannel := make(chan T)
+	rightProducer.SetOutputChannel(rightChannel)
+	aggregatorAdapter.SetRightArgChannel(rightChannel)
+
+	return aggregatorAdapter
+}
