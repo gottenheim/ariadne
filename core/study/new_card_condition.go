@@ -28,7 +28,7 @@ func (f *newCardCondition) Run(ctx context.Context, input <-chan card.BriefCard,
 			break
 		}
 
-		isNewCard, err := card.IsNewCardActivities(briefCard.Activities)
+		isNewCard, err := IsNewCardActivities(briefCard.Activities)
 
 		if err != nil {
 			return err
