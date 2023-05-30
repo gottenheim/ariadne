@@ -245,7 +245,7 @@ func TestPipelineCancellation(t *testing.T) {
 	}
 }
 
-func TestSkippingLimitFilter(t *testing.T) {
+func TestLimitFilter(t *testing.T) {
 	p := pipeline.New()
 
 	complete := pipeline.NewPassingItemCollector[int]()
@@ -253,7 +253,7 @@ func TestSkippingLimitFilter(t *testing.T) {
 
 	generator := pipeline.NewEmitter(p, generateNSerialNumbers(100))
 	passingStep := pipeline.WithFilter[int, int](p, generator, complete)
-	skippingStep := pipeline.WithFilter[int](p, passingStep, pipeline.SkippingLimit(30))
+	skippingStep := pipeline.WithFilter[int](p, passingStep, pipeline.Limit[int](30))
 	pipeline.WithAcceptor[int](p, skippingStep, partial)
 
 	p.SyncRun()
@@ -267,26 +267,39 @@ func TestSkippingLimitFilter(t *testing.T) {
 	}
 }
 
-func TestStopOnValueGreaterThanFilter(t *testing.T) {
+func TestPredicateCondition(t *testing.T) {
 	p := pipeline.New()
 
-	itemCollector := pipeline.NewPassingItemCollector[int]()
-	valueStore := pipeline.NewValueStore[int]()
+	positiveResult, negativeResult := pipeline.NewItemCollector[int](), pipeline.NewItemCollector[int]()
 
-	generator := pipeline.NewEmitter(p, generateNRandomNumbers(100))
-	collectingStep := pipeline.WithFilter[int, int](p, generator, itemCollector)
-	countingStep := pipeline.WithFilter[int, int](p, collectingStep, pipeline.NewCounter[int]())
-	stopOnValueStep := pipeline.WithFilter[int](p, countingStep, pipeline.StopOnValueGreaterThan(p, 30))
-	pipeline.WithAcceptor[int](p, stopOnValueStep, valueStore)
+	randomNumbers := pipeline.NewEmitter(p, generateNRandomNumbers(1000))
 
-	p.SyncRun()
+	lessThanFifty := pipeline.WithCondition[int](p, randomNumbers, pipeline.NewPredicateCondition(func(val int) bool { return val < 50 }))
 
-	if valueStore.Value() != 30 {
-		t.Fatal("Counter must count up to 30 numbers")
+	pipeline.WithAcceptor[int](p, pipeline.OnPositiveDecision(lessThanFifty), positiveResult)
+
+	pipeline.WithAcceptor[int](p, pipeline.OnNegativeDecision(lessThanFifty), negativeResult)
+
+	err := p.SyncRun()
+
+	if err != nil {
+		t.Fatal(err)
 	}
 
-	if len(itemCollector.Items) < 30 || len(itemCollector.Items) > 40 {
-		t.Fatal("Process must be stopped on 30 generated numbers")
+	if len(positiveResult.Items)+len(negativeResult.Items) != 1000 {
+		t.Fatal("Pipeline must produce 1000 numbers")
+	}
+
+	for i := range positiveResult.Items {
+		if positiveResult.Items[i] >= 50 {
+			t.Fatal("Number must be less than fifty")
+		}
+	}
+
+	for i := range negativeResult.Items {
+		if negativeResult.Items[i] < 50 {
+			t.Fatal("Number must be more than fifty")
+		}
 	}
 }
 
@@ -325,5 +338,19 @@ func TestSumCalculation(t *testing.T) {
 
 	if valueStore.Value() != 150 {
 		t.Fatalf("Wrong sum calculated. Expected 150, actual %d", valueStore.Value())
+	}
+}
+
+func TestDevNull(t *testing.T) {
+	p := pipeline.New()
+
+	generator := pipeline.NewEmitter(p, generateNSerialNumbers(100))
+
+	pipeline.WithAcceptor[int](p, generator, pipeline.DevNull[int]())
+
+	err := p.SyncRun()
+
+	if err != nil {
+		t.Fatal(err)
 	}
 }

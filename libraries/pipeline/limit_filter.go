@@ -2,18 +2,18 @@ package pipeline
 
 import "context"
 
-type skippingLimitFilter struct {
+type limitFilter[T interface{}] struct {
 	limit  int
 	actual int
 }
 
-func SkippingLimit(limit int) Filter[int, int] {
-	return &skippingLimitFilter{
+func Limit[T interface{}](limit int) Filter[T, T] {
+	return &limitFilter[T]{
 		limit: limit,
 	}
 }
 
-func (f *skippingLimitFilter) Run(ctx context.Context, input <-chan int, output chan<- int) error {
+func (f *limitFilter[T]) Run(ctx context.Context, input <-chan T, output chan<- T) error {
 	for {
 		val, ok := <-input
 		if !ok {
