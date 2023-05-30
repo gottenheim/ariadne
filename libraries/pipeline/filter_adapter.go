@@ -1,6 +1,9 @@
 package pipeline
 
-import "context"
+import (
+	"context"
+	"errors"
+)
 
 type filterAdapter[T interface{}, K interface{}] struct {
 	input  <-chan T
@@ -31,6 +34,10 @@ func (f *filterAdapter[T, K]) SetOutputChannel(output chan<- K) {
 }
 
 func (f *filterAdapter[T, K]) Run(ctx context.Context) error {
+	if f.input == nil || f.output == nil {
+		return errors.New("Filter channels are not set")
+	}
+
 	defer func() {
 		close(f.output)
 	}()

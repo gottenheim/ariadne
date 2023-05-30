@@ -1,6 +1,9 @@
 package pipeline
 
-import "context"
+import (
+	"context"
+	"errors"
+)
 
 type aggregatorAdapter[T interface{}, K interface{}] struct {
 	leftArg    <-chan T
@@ -36,6 +39,10 @@ func (f *aggregatorAdapter[T, K]) SetOutputChannel(output chan<- K) {
 }
 
 func (f *aggregatorAdapter[T, K]) Run(ctx context.Context) error {
+	if f.leftArg == nil || f.rightArg == nil || f.output == nil {
+		return errors.New("Aggregator channels are not set")
+	}
+
 	defer func() {
 		close(f.output)
 	}()

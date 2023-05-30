@@ -43,7 +43,6 @@ func (c *DailyCardsCollector) Collect() (*DailyCards, error) {
 	cardEmissionStep := pipeline.NewEmitter(p, c.cardEmitter)
 	isNewCardStep := pipeline.WithCondition[card.BriefCard](p, cardEmissionStep, NewCardCondition(c.timeSource, c.cardRepo))
 	limitNewCardsStep := pipeline.WithFilter(p, pipeline.OnPositiveDecision(isNewCardStep), pipeline.Limit[*card.Card](c.config.NewCardsCount))
-	pipeline.WithAcceptor(p, pipeline.OnNegativeDecision(isNewCardStep), pipeline.DevNull[card.BriefCard]())
 	collectNewCardsStep := pipeline.WithFilter[*card.Card, *card.Card](p, limitNewCardsStep, newCardsCollector)
 	countNewCardsStep := pipeline.WithFilter[*card.Card, int](p, collectNewCardsStep, pipeline.NewCounter[*card.Card]())
 

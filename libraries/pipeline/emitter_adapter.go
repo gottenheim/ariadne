@@ -1,6 +1,9 @@
 package pipeline
 
-import "context"
+import (
+	"context"
+	"errors"
+)
 
 type emitterAdapter[K interface{}] struct {
 	output   chan<- K
@@ -27,6 +30,10 @@ func (a *emitterAdapter[K]) SetOutputChannel(output chan<- K) {
 }
 
 func (a *emitterAdapter[K]) Run(ctx context.Context) error {
+	if a.output == nil {
+		return errors.New("Emitter channel is not set")
+	}
+
 	defer func() {
 		close(a.output)
 	}()

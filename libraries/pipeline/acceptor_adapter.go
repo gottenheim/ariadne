@@ -1,6 +1,9 @@
 package pipeline
 
-import "context"
+import (
+	"context"
+	"errors"
+)
 
 type acceptorAdapter[T interface{}] struct {
 	input    <-chan T
@@ -26,5 +29,9 @@ func (f *acceptorAdapter[T]) SetInputChannel(input <-chan T) {
 }
 
 func (f *acceptorAdapter[T]) Run(ctx context.Context) error {
+	if f.input == nil {
+		return errors.New("Acceptor input channel is not set")
+	}
+
 	return f.acceptor.Run(ctx, f.input)
 }
