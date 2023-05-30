@@ -1,7 +1,6 @@
-package study
+package card
 
 import (
-	"github.com/gottenheim/ariadne/core/card"
 	"github.com/gottenheim/ariadne/libraries/datetime"
 )
 
@@ -10,11 +9,11 @@ type isCardRemindedToday struct {
 	result     bool
 }
 
-func (s *isCardRemindedToday) OnLearnCard(learn *card.LearnCardActivity) error {
+func (s *isCardRemindedToday) OnLearnCard(learn *LearnCardActivity) error {
 	return nil
 }
 
-func (s *isCardRemindedToday) OnRemindCard(remind *card.RemindCardActivity) error {
+func (s *isCardRemindedToday) OnRemindCard(remind *RemindCardActivity) error {
 	s.result = remind.IsExecuted() &&
 		datetime.IsToday(s.timeSource, remind.ExecutionTime())
 
@@ -29,7 +28,7 @@ func (s *isCardRemindedToday) OnRemindCard(remind *card.RemindCardActivity) erro
 	return remind.PreviousActivity().Accept(s)
 }
 
-func IsCardRemindedToday(timeSource datetime.TimeSource, activity card.CardActivity) (bool, error) {
+func IsCardRemindedToday(timeSource datetime.TimeSource, activity CardActivity) (bool, error) {
 	isRemindedToday := &isCardRemindedToday{
 		timeSource: timeSource,
 		result:     false,

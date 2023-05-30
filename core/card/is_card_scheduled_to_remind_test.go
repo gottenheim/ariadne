@@ -1,10 +1,9 @@
-package study_test
+package card_test
 
 import (
 	"testing"
 
 	"github.com/gottenheim/ariadne/core/card"
-	"github.com/gottenheim/ariadne/core/study"
 	"github.com/gottenheim/ariadne/libraries/datetime"
 )
 
@@ -13,7 +12,7 @@ func TestIsCardScheduledToRemindToday_IfNoReminderActivitiesExist(t *testing.T) 
 
 	activityChain := card.GenerateActivityChain(card.LearnCard)
 
-	isScheduledToRemind, err := study.IsCardScheduledToRemindToday(timeSource, activityChain)
+	isScheduledToRemind, err := card.IsCardScheduledToRemindToday(timeSource, activityChain)
 
 	if err != nil {
 		t.Fatal(err)
@@ -29,7 +28,7 @@ func TestIsCardScheduledToRemindToday_IfReminderActivityExistsButScheduledToTomo
 
 	activityChain := card.GenerateActivityChain(card.LearnCard, card.RemindCard|card.RemindCardScheduledToTomorrow)
 
-	isScheduledToRemind, err := study.IsCardScheduledToRemindToday(timeSource, activityChain)
+	isScheduledToRemind, err := card.IsCardScheduledToRemindToday(timeSource, activityChain)
 
 	if err != nil {
 		t.Fatal(err)
@@ -45,7 +44,7 @@ func TestIsCardScheduledToRemindToday_IfReminderActivityExistsAndScheduledToToda
 
 	activityChain := card.GenerateActivityChain(card.LearnCard, card.RemindCard|card.RemindCardScheduledToToday)
 
-	isScheduledToRemind, err := study.IsCardScheduledToRemindToday(timeSource, activityChain)
+	isScheduledToRemind, err := card.IsCardScheduledToRemindToday(timeSource, activityChain)
 
 	if err != nil {
 		t.Fatal(err)
@@ -61,7 +60,7 @@ func TestIsCardScheduledToRemindToday_IfReminderActivityExistsAndScheduledToToda
 
 	activityChain := card.GenerateActivityChain(card.LearnCard, card.RemindCard|card.RemindCardScheduledToToday|card.CardExecutedToday)
 
-	isScheduledToRemind, err := study.IsCardScheduledToRemindToday(timeSource, activityChain)
+	isScheduledToRemind, err := card.IsCardScheduledToRemindToday(timeSource, activityChain)
 
 	if err != nil {
 		t.Fatal(err)
@@ -77,7 +76,7 @@ func TestIsCardScheduledToRemindToday_IfReminderActivityExistsAndScheduledToYest
 
 	activityChain := card.GenerateActivityChain(card.LearnCard, card.RemindCard|card.RemindCardScheduledToYesterday)
 
-	isScheduledToRemind, err := study.IsCardScheduledToRemindToday(timeSource, activityChain)
+	isScheduledToRemind, err := card.IsCardScheduledToRemindToday(timeSource, activityChain)
 
 	if err != nil {
 		t.Fatal(err)
@@ -93,7 +92,7 @@ func TestIsCardScheduledToRemindToday_IfReminderActivityExistsAndScheduledToYest
 
 	activityChain := card.GenerateActivityChain(card.LearnCard, card.RemindCard|card.RemindCardScheduledToYesterday|card.CardExecutedToday)
 
-	isScheduledToRemind, err := study.IsCardScheduledToRemindToday(timeSource, activityChain)
+	isScheduledToRemind, err := card.IsCardScheduledToRemindToday(timeSource, activityChain)
 
 	if err != nil {
 		t.Fatal(err)

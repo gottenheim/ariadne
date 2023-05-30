@@ -1,16 +1,15 @@
-package study_test
+package card_test
 
 import (
 	"testing"
 
 	"github.com/gottenheim/ariadne/core/card"
-	"github.com/gottenheim/ariadne/core/study"
 )
 
 func TestIsCardNew_IfLearnActivityIsNotExecuted(t *testing.T) {
 	activityChain := card.GenerateActivityChain(card.LearnCard)
 
-	isNew, err := study.IsNewCardActivities(activityChain)
+	isNew, err := card.IsNewCardActivities(activityChain)
 
 	if err != nil {
 		t.Fatal(err)
@@ -24,7 +23,7 @@ func TestIsCardNew_IfLearnActivityIsNotExecuted(t *testing.T) {
 func TestIsCardNew_IfLearnActivityIsNotExecuted_AndRemindActivityInTheEndOfChain(t *testing.T) {
 	activityChain := card.GenerateActivityChain(card.LearnCard, card.RemindCard)
 
-	isNew, err := study.IsNewCardActivities(activityChain)
+	isNew, err := card.IsNewCardActivities(activityChain)
 
 	if err != nil {
 		t.Fatal(err)
@@ -38,7 +37,7 @@ func TestIsCardNew_IfLearnActivityIsNotExecuted_AndRemindActivityInTheEndOfChain
 func TestIsCardNew_IfLearnActivityHasAlreadyBeenExecuted(t *testing.T) {
 	activityChain := card.GenerateActivityChain(card.LearnCard | card.CardExecutedToday)
 
-	isNew, err := study.IsNewCardActivities(activityChain)
+	isNew, err := card.IsNewCardActivities(activityChain)
 
 	if err != nil {
 		t.Fatal(err)
@@ -52,7 +51,7 @@ func TestIsCardNew_IfLearnActivityHasAlreadyBeenExecuted(t *testing.T) {
 func TestIsCardNew_IfLearnActivityHasAlreadyBeenExecuted_AndRemindActivityInTheEndOfChain(t *testing.T) {
 	activityChain := card.GenerateActivityChain(card.LearnCard|card.CardExecutedToday, card.RemindCard)
 
-	isNew, err := study.IsNewCardActivities(activityChain)
+	isNew, err := card.IsNewCardActivities(activityChain)
 
 	if err != nil {
 		t.Fatal(err)

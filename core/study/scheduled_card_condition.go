@@ -28,13 +28,13 @@ func (f *scheduledCardCondition) Run(ctx context.Context, input <-chan card.Brie
 			break
 		}
 
-		isCardScheduledToRemindToday, err := IsCardScheduledToRemindToday(f.timeSource, briefCard.Activities)
+		isCardScheduledToRemindToday, err := card.IsCardScheduledToRemindToday(f.timeSource, briefCard.Activities)
 
 		if err != nil {
 			return err
 		}
 
-		isCardRemindedToday, err := IsCardRemindedToday(f.timeSource, briefCard.Activities)
+		isCardRemindedToday, err := card.IsCardRemindedToday(f.timeSource, briefCard.Activities)
 
 		if err != nil {
 			return err

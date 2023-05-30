@@ -5,7 +5,6 @@ import (
 	"path/filepath"
 
 	"github.com/gottenheim/ariadne/core/card"
-	"github.com/gottenheim/ariadne/core/study"
 	"github.com/spf13/afero"
 )
 
@@ -31,7 +30,7 @@ func (r *FileCardRepository) SaveCardActivities(cardActivities card.CardActivity
 
 	r.removeActivitiesFileIfExists(activitiesFilePath)
 
-	isNewCard, err := study.IsNewCardActivities(cardActivities)
+	isNewCard, err := card.IsNewCardActivities(cardActivities)
 
 	if err != nil {
 		return err

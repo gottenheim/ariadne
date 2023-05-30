@@ -47,12 +47,12 @@ func CollectCards(t *testing.T, cards []*card.Card, config study.DailyCardsConfi
 	}
 
 	for _, newCard := range dailyCards.NewCards {
-		isNewCard, err := study.IsNewCardActivities(newCard.Activities())
+		isNewCard, err := card.IsNewCardActivities(newCard.Activities())
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		isCardLearnedToday, err := study.IsCardLearnedToday(timeSource, newCard.Activities())
+		isCardLearnedToday, err := card.IsCardLearnedToday(timeSource, newCard.Activities())
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -63,12 +63,12 @@ func CollectCards(t *testing.T, cards []*card.Card, config study.DailyCardsConfi
 	}
 
 	for _, scheduledCard := range dailyCards.ScheduledCards {
-		isScheduledToRemindToday, err := study.IsCardScheduledToRemindToday(timeSource, scheduledCard.Activities())
+		isScheduledToRemindToday, err := card.IsCardScheduledToRemindToday(timeSource, scheduledCard.Activities())
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		isRemindedToday, err := study.IsCardRemindedToday(timeSource, scheduledCard.Activities())
+		isRemindedToday, err := card.IsCardRemindedToday(timeSource, scheduledCard.Activities())
 		if err != nil {
 			t.Fatal(err)
 		}

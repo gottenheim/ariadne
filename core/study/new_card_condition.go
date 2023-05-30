@@ -28,13 +28,13 @@ func (f *newCardCondition) Run(ctx context.Context, input <-chan card.BriefCard,
 			break
 		}
 
-		isNewCard, err := IsNewCardActivities(briefCard.Activities)
+		isNewCard, err := card.IsNewCardActivities(briefCard.Activities)
 
 		if err != nil {
 			return err
 		}
 
-		isCardLearnedToday, err := IsCardLearnedToday(f.timeSource, briefCard.Activities)
+		isCardLearnedToday, err := card.IsCardLearnedToday(f.timeSource, briefCard.Activities)
 
 		if err != nil {
 			return err
