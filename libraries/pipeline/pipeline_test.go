@@ -284,3 +284,19 @@ func TestCancellingLimitFilter(t *testing.T) {
 		t.Fatal("Generator should be stopped by cancelling limit filter ahead of time")
 	}
 }
+
+func TestCountingFilter(t *testing.T) {
+	p := pipeline.New()
+
+	valueStore := pipeline.NewValueStore[int]()
+
+	generator := pipeline.NewEmitter(p, generateNSerialNumbers(100))
+	counting := pipeline.WithFilter[int, int](p, generator, pipeline.NewCounter[int]())
+	pipeline.WithAcceptor[int](p, counting, valueStore)
+
+	p.SyncRun()
+
+	if valueStore.Value() != 100 {
+		t.Fatal("Counter must count 100 elements")
+	}
+}
