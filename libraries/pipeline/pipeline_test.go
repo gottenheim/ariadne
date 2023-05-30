@@ -240,3 +240,47 @@ func TestPipelineCancellation(t *testing.T) {
 		t.Fatal("Pipeline must produce 30 numbers")
 	}
 }
+
+func TestSkippingLimitFilter(t *testing.T) {
+	p := pipeline.New()
+
+	complete := pipeline.NewPassingItemCollector[int]()
+	partial := pipeline.NewItemCollector[int]()
+
+	generator := pipeline.NewEmitter(p, generateNSerialNumbers(100))
+	passingStep := pipeline.WithFilter[int, int](p, generator, complete)
+	skippingStep := pipeline.WithFilter[int](p, passingStep, pipeline.SkippingLimit(30))
+	pipeline.WithAcceptor[int](p, skippingStep, partial)
+
+	p.SyncRun()
+
+	if len(partial.Items) != 30 {
+		t.Fatal("Skipping limit filter must pass only 30 records")
+	}
+
+	if len(complete.Items) != 100 {
+		t.Fatal("Generator must produce 100 records")
+	}
+}
+
+func TestCancellingLimitFilter(t *testing.T) {
+	p := pipeline.New()
+
+	complete := pipeline.NewPassingItemCollector[int]()
+	partial := pipeline.NewItemCollector[int]()
+
+	generator := pipeline.NewEmitter(p, generateNSerialNumbers(100))
+	passingStep := pipeline.WithFilter[int, int](p, generator, complete)
+	cancellingStep := pipeline.WithFilter[int](p, passingStep, pipeline.CancellingLimit(p, 30))
+	pipeline.WithAcceptor[int](p, cancellingStep, partial)
+
+	p.SyncRun()
+
+	if len(partial.Items) != 30 {
+		t.Fatal("Cancelling limit filter must pass only 30 records")
+	}
+
+	if len(complete.Items) == 100 {
+		t.Fatal("Generator should be stopped by cancelling limit filter ahead of time")
+	}
+}
