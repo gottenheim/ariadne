@@ -21,11 +21,11 @@ var compressAnswerCmd = &cobra.Command{
 			return err
 		}
 
-		cardDir := filepath.Dir(dirs[0])
-		section := filepath.Dir(cardDir)
-		entry := filepath.Base(cardDir)
-
 		repo := fs_repo.NewFileCardRepository(osFs)
+
+		cardDir := filepath.Dir(dirs[0])
+
+		section, entry := repo.GetCardPathSection(cardDir), repo.GetCardPathEntry(cardDir)
 
 		useCase := &use_cases.CompressAnswer{}
 

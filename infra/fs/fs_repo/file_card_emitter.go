@@ -14,19 +14,19 @@ import (
 
 type fileCardEmitter struct {
 	fs       afero.Fs
+	cardRepo *fileCardRepository
 	cardsDir string
 }
 
-func NewFileCardEmitter(fs afero.Fs, cardsDir string) pipeline.Emitter[card.BriefCard] {
+func NewFileCardEmitter(fs afero.Fs, cardRepo *fileCardRepository, cardsDir string) pipeline.Emitter[card.BriefCard] {
 	return &fileCardEmitter{
 		fs:       fs,
+		cardRepo: cardRepo,
 		cardsDir: cardsDir,
 	}
 }
 
 func (e *fileCardEmitter) Run(ctx context.Context, output chan<- card.BriefCard) error {
-	cardRepo := NewFileCardRepository(e.fs)
-
 	err := afero.Walk(e.fs, e.cardsDir, func(filePath string, info os.FileInfo, err error) error {
 		isDir, _ := afero.IsDir(e.fs, filePath)
 
@@ -46,13 +46,17 @@ func (e *fileCardEmitter) Run(ctx context.Context, output chan<- card.BriefCard)
 			return nil
 		}
 
-		cardActivities, err := cardRepo.ReadCardActivities(cardDir)
+		cardActivities, err := e.cardRepo.ReadCardActivities(cardDir)
 
 		if err != nil {
 			return err
 		}
 
+		section, entry := e.cardRepo.GetCardPathEntry(cardDir), e.cardRepo.GetCardPathSection(cardDir)
+
 		output <- card.BriefCard{
+			Section:    section,
+			Entry:      entry,
 			Activities: cardActivities,
 		}
 

@@ -23,7 +23,7 @@ func NewFileCardRepository(fs afero.Fs) *fileCardRepository {
 }
 
 func (r *fileCardRepository) Get(section string, entry string) (*card.Card, error) {
-	cardPath := r.getCardPath(section, entry)
+	cardPath := r.GetCardPath(section, entry)
 
 	artifacts, err := r.readCardArtifacts(cardPath)
 	if err != nil {
@@ -58,7 +58,7 @@ func (r *fileCardRepository) Save(card *card.Card) error {
 		return err
 	}
 
-	return r.SaveCardActivities(card.Activities(), r.getCardPath(card.Section(), card.Entry()))
+	return r.SaveCardActivities(card.Activities(), r.GetCardPath(card.Section(), card.Entry()))
 }
 
 func (r *fileCardRepository) generateKeyIfNeeded(card *card.Card) error {
@@ -102,12 +102,20 @@ func (r *fileCardRepository) getNextFreeSectionEntry(section string) (string, er
 	return strconv.Itoa(maxCardKey + 1), nil
 }
 
-func (r *fileCardRepository) getCardPath(section string, entry string) string {
+func (r *fileCardRepository) GetCardPath(section string, entry string) string {
 	return filepath.Join(section, entry)
 }
 
+func (r *fileCardRepository) GetCardPathSection(cardPath string) string {
+	return filepath.Dir(cardPath)
+}
+
+func (r *fileCardRepository) GetCardPathEntry(cardPath string) string {
+	return filepath.Base(cardPath)
+}
+
 func (r *fileCardRepository) clearCardDirectory(card *card.Card) error {
-	cardPath := r.getCardPath(card.Section(), card.Entry())
+	cardPath := r.GetCardPath(card.Section(), card.Entry())
 
 	cardDirExists, err := afero.Exists(r.fs, cardPath)
 
@@ -123,7 +131,7 @@ func (r *fileCardRepository) clearCardDirectory(card *card.Card) error {
 }
 
 func (r *fileCardRepository) saveArtifactFiles(card *card.Card) error {
-	cardPath := r.getCardPath(card.Section(), card.Entry())
+	cardPath := r.GetCardPath(card.Section(), card.Entry())
 
 	err := r.fs.MkdirAll(cardPath, os.ModePerm)
 

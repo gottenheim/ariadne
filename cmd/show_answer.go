@@ -24,14 +24,13 @@ var showAnswerCmd = &cobra.Command{
 
 		cardDir := filepath.Dir(dirs[0])
 
-		section := filepath.Dir(cardDir)
-		entry := filepath.Base(cardDir)
+		repo := fs_repo.NewFileCardRepository(osFs)
 
-		cardRepo := fs_repo.NewFileCardRepository(osFs)
+		section, entry := repo.GetCardPathSection(cardDir), repo.GetCardPathEntry(cardDir)
 
 		useCase := &use_cases.ShowAnswer{}
 
-		return useCase.Run(cardRepo, os.Stdout, section, entry)
+		return useCase.Run(repo, os.Stdout, section, entry)
 	},
 }
 

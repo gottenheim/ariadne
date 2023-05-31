@@ -22,14 +22,14 @@ var extractAnswerCmd = &cobra.Command{
 		}
 
 		cardDir := filepath.Dir(dirs[0])
-		section := filepath.Dir(cardDir)
-		entry := filepath.Base(cardDir)
 
-		cardRepo := fs_repo.NewFileCardRepository(osFs)
+		repo := fs_repo.NewFileCardRepository(osFs)
+
+		section, entry := repo.GetCardPathSection(cardDir), repo.GetCardPathEntry(cardDir)
 
 		useCase := &use_cases.ExtractCard{}
 
-		return useCase.Run(cardRepo, section, entry)
+		return useCase.Run(repo, section, entry)
 	},
 }
 
