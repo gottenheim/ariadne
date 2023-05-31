@@ -41,7 +41,7 @@ func (f *scheduledCardCondition) Run(ctx context.Context, input <-chan card.Brie
 		}
 
 		if isCardScheduledToRemindToday || isCardRemindedToday {
-			card, err := f.cardRepo.Get(briefCard.Key)
+			card, err := f.cardRepo.Get(briefCard.Section, briefCard.Entry)
 			if err != nil {
 				return err
 			}

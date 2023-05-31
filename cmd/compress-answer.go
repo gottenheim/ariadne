@@ -1,11 +1,8 @@
 package cmd
 
 import (
-	"errors"
 	"path/filepath"
-	"strconv"
 
-	"github.com/gottenheim/ariadne/core/card"
 	"github.com/gottenheim/ariadne/infra/repo/fs_repo"
 	"github.com/gottenheim/ariadne/use_cases"
 	"github.com/spf13/afero"
@@ -25,18 +22,14 @@ var compressAnswerCmd = &cobra.Command{
 		}
 
 		cardDir := filepath.Dir(dirs[0])
+		section := filepath.Dir(cardDir)
+		entry := filepath.Base(cardDir)
 
-		repo := fs_repo.NewFileCardRepository(osFs, cardDir)
+		repo := fs_repo.NewFileCardRepository(osFs)
 
 		useCase := &use_cases.CompressAnswer{}
 
-		cardKey, err := strconv.Atoi(filepath.Base(dirs[0]))
-
-		if err != nil {
-			return errors.New("Card directory should be a number")
-		}
-
-		return useCase.Run(repo, card.Key(cardKey))
+		return useCase.Run(repo, section, entry)
 	},
 }
 

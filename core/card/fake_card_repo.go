@@ -1,27 +1,36 @@
 package card
 
+import "fmt"
+
 type FakeCardRepository struct {
-	cards map[Key]*Card
+	cards map[string]*Card
 }
 
 func NewFakeCardRepository(cards ...*Card) CardRepository {
 	repo := &FakeCardRepository{
-		cards: map[Key]*Card{},
+		cards: map[string]*Card{},
 	}
 
 	for _, card := range cards {
-		repo.cards[card.Key()] = card
+		cardKey := repo.getFullCardKey(card.Section(), card.Entry())
+		repo.cards[cardKey] = card
 	}
 
 	return repo
 }
 
-func (r *FakeCardRepository) Get(key Key) (*Card, error) {
+func (r *FakeCardRepository) Get(section string, entry string) (*Card, error) {
+	key := r.getFullCardKey(section, entry)
 	card, _ := r.cards[key]
 	return card, nil
 }
 
 func (r *FakeCardRepository) Save(card *Card) error {
-	r.cards[card.Key()] = card
+	key := r.getFullCardKey(card.Section(), card.Entry())
+	r.cards[key] = card
 	return nil
+}
+
+func (r *FakeCardRepository) getFullCardKey(section string, entry string) string {
+	return fmt.Sprintf("%s/%s", section, entry)
 }

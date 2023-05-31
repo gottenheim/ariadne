@@ -9,28 +9,40 @@ import (
 
 const AnswerArtifactName = "answer.tgz"
 
-type Key int
-
 type Card struct {
-	key        Key
+	section    string
+	entry      string
 	artifacts  []CardArtifact
 	activities CardActivity
 }
 
-func NewCard(key Key, artifacts []CardArtifact) *Card {
+func CreateNew(section string, artifacts []CardArtifact) *Card {
 	return &Card{
-		key:        key,
+		section:    section,
 		artifacts:  artifacts,
 		activities: CreateLearnCardActivity(),
 	}
 }
 
-func (c *Card) Key() Key {
-	return c.key
+func RestoreExisting(section string, entry string, artifacts []CardArtifact, activities CardActivity) *Card {
+	return &Card{
+		section:    section,
+		entry:      entry,
+		artifacts:  artifacts,
+		activities: activities,
+	}
 }
 
-func (c *Card) SetKey(key Key) {
-	c.key = key
+func (c *Card) Section() string {
+	return c.section
+}
+
+func (c *Card) Entry() string {
+	return c.entry
+}
+
+func (c *Card) SetEntry(entry string) {
+	c.entry = entry
 }
 
 func (c *Card) Artifacts() []CardArtifact {

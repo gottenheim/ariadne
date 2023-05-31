@@ -1,6 +1,7 @@
 package card
 
 type BriefCard struct {
-	Key        Key
+	Section    string
+	Entry      string
 	Activities CardActivity
 }

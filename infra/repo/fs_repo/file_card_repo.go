@@ -13,31 +13,17 @@ import (
 )
 
 type fileCardRepository struct {
-	fs       afero.Fs
-	cardsDir string
+	fs afero.Fs
 }
 
-func NewFileCardRepository(fs afero.Fs, cardsDir string) card.CardRepository {
+func NewFileCardRepository(fs afero.Fs) *fileCardRepository {
 	return &fileCardRepository{
-		fs:       fs,
-		cardsDir: cardsDir,
+		fs: fs,
 	}
 }
 
-func newFileCardRepository(fs afero.Fs, cardsDir string) *fileCardRepository {
-	return &fileCardRepository{
-		fs:       fs,
-		cardsDir: cardsDir,
-	}
-}
-
-func (r *fileCardRepository) Get(cardKey card.Key) (*card.Card, error) {
-	card, err := r.createCard(cardKey)
-	if err != nil {
-		return nil, err
-	}
-
-	cardPath := r.getCardPath(card)
+func (r *fileCardRepository) Get(section string, entry string) (*card.Card, error) {
+	cardPath := r.getCardPath(section, entry)
 
 	artifacts, err := r.readCardArtifacts(cardPath)
 	if err != nil {
@@ -48,16 +34,12 @@ func (r *fileCardRepository) Get(cardKey card.Key) (*card.Card, error) {
 		return nil, errors.New("Path %s doesn't contain card artifacts")
 	}
 
-	card.SetArtifacts(artifacts)
-
 	activities, err := r.ReadCardActivities(cardPath)
 	if err != nil {
 		return nil, err
 	}
 
-	card.SetActivities(activities)
-
-	return card, nil
+	return card.RestoreExisting(section, entry, artifacts, activities), nil
 }
 
 func (r *fileCardRepository) Save(card *card.Card) error {
@@ -76,27 +58,27 @@ func (r *fileCardRepository) Save(card *card.Card) error {
 		return err
 	}
 
-	return r.SaveCardActivities(card.Activities(), r.getCardPath(card))
+	return r.SaveCardActivities(card.Activities(), r.getCardPath(card.Section(), card.Entry()))
 }
 
 func (r *fileCardRepository) generateKeyIfNeeded(card *card.Card) error {
-	if card.Key() == 0 {
-		cardKey, err := r.getNextFreeCardKey()
+	if len(card.Entry()) == 0 {
+		freeEntry, err := r.getNextFreeSectionEntry(card.Section())
 
 		if err != nil {
 			return err
 		}
 
-		card.SetKey(cardKey)
+		card.SetEntry(freeEntry)
 	}
 
 	return nil
 }
 
-func (r *fileCardRepository) getNextFreeCardKey() (card.Key, error) {
+func (r *fileCardRepository) getNextFreeSectionEntry(section string) (string, error) {
 	maxCardKey := 0
 
-	err := afero.Walk(r.fs, r.cardsDir, func(filePath string, info os.FileInfo, err error) error {
+	err := afero.Walk(r.fs, section, func(filePath string, info os.FileInfo, err error) error {
 		isDir, _ := afero.IsDir(r.fs, filePath)
 
 		if isDir {
@@ -114,18 +96,18 @@ func (r *fileCardRepository) getNextFreeCardKey() (card.Key, error) {
 	})
 
 	if err != nil {
-		return 0, err
+		return "", err
 	}
 
-	return card.Key(maxCardKey + 1), nil
+	return strconv.Itoa(maxCardKey + 1), nil
 }
 
-func (r *fileCardRepository) getCardPath(card *card.Card) string {
-	return filepath.Join(r.cardsDir, strconv.Itoa(int(card.Key())))
+func (r *fileCardRepository) getCardPath(section string, entry string) string {
+	return filepath.Join(section, entry)
 }
 
 func (r *fileCardRepository) clearCardDirectory(card *card.Card) error {
-	cardPath := r.getCardPath(card)
+	cardPath := r.getCardPath(card.Section(), card.Entry())
 
 	cardDirExists, err := afero.Exists(r.fs, cardPath)
 
@@ -141,7 +123,7 @@ func (r *fileCardRepository) clearCardDirectory(card *card.Card) error {
 }
 
 func (r *fileCardRepository) saveArtifactFiles(card *card.Card) error {
-	cardPath := r.getCardPath(card)
+	cardPath := r.getCardPath(card.Section(), card.Entry())
 
 	err := r.fs.MkdirAll(cardPath, os.ModePerm)
 
@@ -158,10 +140,6 @@ func (r *fileCardRepository) saveArtifactFiles(card *card.Card) error {
 	}
 
 	return nil
-}
-
-func (r *fileCardRepository) createCard(cardKey card.Key) (*card.Card, error) {
-	return card.NewCard(cardKey, []card.CardArtifact{}), nil
 }
 
 func (r *fileCardRepository) readCardArtifacts(cardPath string) ([]card.CardArtifact, error) {

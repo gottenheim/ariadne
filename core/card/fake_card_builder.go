@@ -1,7 +1,8 @@
 package card
 
 type FakeCardBuilder struct {
-	key        Key
+	section    string
+	entry      string
 	artifacts  []CardArtifact
 	activities CardActivity
 }
@@ -10,8 +11,13 @@ func NewFakeCard() *FakeCardBuilder {
 	return &FakeCardBuilder{}
 }
 
-func (b *FakeCardBuilder) WithKey(key Key) *FakeCardBuilder {
-	b.key = key
+func (b *FakeCardBuilder) WithSection(section string) *FakeCardBuilder {
+	b.section = section
+	return b
+}
+
+func (b *FakeCardBuilder) WithEntry(entry string) *FakeCardBuilder {
+	b.entry = entry
 	return b
 }
 
@@ -31,17 +37,15 @@ func (b *FakeCardBuilder) WithActivityChain(activities CardActivity) *FakeCardBu
 }
 
 func (b *FakeCardBuilder) Build() *Card {
-	card := NewCard(b.key, b.artifacts)
-	card.SetArtifacts(b.artifacts)
-	card.SetActivities(b.activities)
-	return card
+	return RestoreExisting(b.section, b.entry, b.artifacts, b.activities)
 }
 
 func ExtractBriefCards(cards []*Card) []BriefCard {
 	var result []BriefCard
 	for _, card := range cards {
 		result = append(result, BriefCard{
-			Key:        card.Key(),
+			Section:    card.Section(),
+			Entry:      card.Entry(),
 			Activities: card.Activities(),
 		})
 	}

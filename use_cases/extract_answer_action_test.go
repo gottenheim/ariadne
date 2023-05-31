@@ -20,9 +20,9 @@ func TestExtractAnswerAction(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	cardRepo := fs_repo.NewFileCardRepository(fakeFs, "/home/user/books/cpp")
+	cardRepo := fs_repo.NewFileCardRepository(fakeFs)
 
-	c, err := cardRepo.Get(1)
+	c, err := cardRepo.Get("/home/user/books/cpp", "1")
 
 	if err != nil {
 		t.Fatal(err)
@@ -36,7 +36,7 @@ func TestExtractAnswerAction(t *testing.T) {
 	afero.WriteFile(fakeFs, "/home/user/books/cpp/1/header.h", []byte("new header artifact"), os.ModePerm)
 
 	extractAnswerAction := &use_cases.ExtractCard{}
-	err = extractAnswerAction.Run(cardRepo, 1)
+	err = extractAnswerAction.Run(cardRepo, "/home/user/books/cpp", "1")
 
 	if err != nil {
 		t.Fatal(err)

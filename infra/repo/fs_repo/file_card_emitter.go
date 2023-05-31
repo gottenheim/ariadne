@@ -25,7 +25,7 @@ func NewFileCardEmitter(fs afero.Fs, cardsDir string) pipeline.Emitter[card.Brie
 }
 
 func (e *fileCardEmitter) Run(ctx context.Context, output chan<- card.BriefCard) error {
-	cardRepo := newFileCardRepository(e.fs, e.cardsDir)
+	cardRepo := NewFileCardRepository(e.fs)
 
 	err := afero.Walk(e.fs, e.cardsDir, func(filePath string, info os.FileInfo, err error) error {
 		isDir, _ := afero.IsDir(e.fs, filePath)

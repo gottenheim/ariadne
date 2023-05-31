@@ -1,6 +1,9 @@
 package card
 
-import "math/rand"
+import (
+	"fmt"
+	"math/rand"
+)
 
 type CardGenerationSpec struct {
 	name       string
@@ -40,7 +43,7 @@ func (g *BatchCardGenerator) Generate() []*Card {
 		spec := &g.specs[index]
 
 		if spec.count > 0 {
-			card := NewFakeCard().WithKey(Key(i + 1)).WithActivities(spec.activities...).Build()
+			card := NewFakeCard().WithSection(spec.name).WithEntry(fmt.Sprintf("%d", i+1)).WithActivities(spec.activities...).Build()
 			cards = append(cards, card)
 			spec.count--
 		} else {

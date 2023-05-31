@@ -18,14 +18,14 @@ func TestSavingFirstCardInEmptyRepository(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	c := card.NewCard(0,
+	c := card.CreateNew("/home/user/books/cpp",
 		[]card.CardArtifact{
 			card.NewCardArtifact("source.cpp", []byte("source code artifact")),
 			card.NewCardArtifact("header.h", []byte("header artifact")),
 			card.NewCardArtifact("config.yml", []byte("config file artifact")),
 		})
 
-	repo := fs_repo.NewFileCardRepository(fakeFs, "/home/user/books/cpp")
+	repo := fs_repo.NewFileCardRepository(fakeFs)
 
 	err = repo.Save(c)
 
@@ -49,14 +49,14 @@ func TestSavingNewCardInExistingRepository(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	c := card.NewCard(0,
+	c := card.CreateNew("/home/user/books/cpp",
 		[]card.CardArtifact{
 			card.NewCardArtifact("source.cpp", []byte("2nd source code artifact")),
 			card.NewCardArtifact("header.h", []byte("2nd header artifact")),
 			card.NewCardArtifact("config.yml", []byte("2nd config file artifact")),
 		})
 
-	repo := fs_repo.NewFileCardRepository(fakeFs, "/home/user/books/cpp")
+	repo := fs_repo.NewFileCardRepository(fakeFs)
 
 	err = repo.Save(c)
 
@@ -80,13 +80,13 @@ func TestOverwritingCardInExistingRepository(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	c := card.NewCard(1,
+	c := card.RestoreExisting("/home/user/books/cpp", "1",
 		[]card.CardArtifact{
 			card.NewCardArtifact("source.cpp", []byte("new source code artifact")),
 			card.NewCardArtifact("header.h", []byte("new header artifact")),
-		})
+		}, card.CreateLearnCardActivity())
 
-	repo := fs_repo.NewFileCardRepository(fakeFs, "/home/user/books/cpp")
+	repo := fs_repo.NewFileCardRepository(fakeFs)
 
 	err = repo.Save(c)
 
@@ -109,16 +109,20 @@ func TestGetCardFromRepository(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	repo := fs_repo.NewFileCardRepository(fakeFs, "/home/user/books/cpp")
+	repo := fs_repo.NewFileCardRepository(fakeFs)
 
-	c, err := repo.Get(2)
+	c, err := repo.Get("/home/user/books/cpp", "2")
 
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if c.Key() != 2 {
-		t.Error("Loaded card has unexpected order number")
+	if c.Section() != "/home/user/books/cpp" {
+		t.Error("Loaded card has unexpected section")
+	}
+
+	if c.Entry() != "2" {
+		t.Error("Loaded card has unexpected entry")
 	}
 
 	sourceCode := c.FindArtifactByName("source.cpp")
@@ -147,9 +151,9 @@ func TestSkipNewCardProgressDuringSaving(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	repo := fs_repo.NewFileCardRepository(fakeFs, "/home/user/books/cpp")
+	repo := fs_repo.NewFileCardRepository(fakeFs)
 
-	c := card.NewCard(0,
+	c := card.CreateNew("/home/user/books/cpp",
 		[]card.CardArtifact{
 			card.NewCardArtifact("source.cpp", []byte("source code artifact")),
 			card.NewCardArtifact("header.h", []byte("header artifact")),
@@ -174,9 +178,9 @@ func TestSaveCreatesCardActivitiesFileIfStatusIsNotNew(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	repo := fs_repo.NewFileCardRepository(fakeFs, "/home/user/books/cpp")
+	repo := fs_repo.NewFileCardRepository(fakeFs)
 
-	c := card.NewCard(0,
+	c := card.CreateNew("/home/user/books/cpp",
 		[]card.CardArtifact{
 			card.NewCardArtifact("source.cpp", []byte("source code artifact")),
 			card.NewCardArtifact("header.h", []byte("header artifact")),
@@ -220,9 +224,9 @@ func TestReadCardActivities(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	repo := fs_repo.NewFileCardRepository(fakeFs, "/home/user/books/cpp")
+	repo := fs_repo.NewFileCardRepository(fakeFs)
 
-	c, err := repo.Get(2)
+	c, err := repo.Get("/home/user/books/cpp", "2")
 
 	if err != nil {
 		t.Fatal(err)

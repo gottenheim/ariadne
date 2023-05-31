@@ -41,7 +41,7 @@ func (f *newCardCondition) Run(ctx context.Context, input <-chan card.BriefCard,
 		}
 
 		if isNewCard || isCardLearnedToday {
-			card, err := f.cardRepo.Get(briefCard.Key)
+			card, err := f.cardRepo.Get(briefCard.Section, briefCard.Entry)
 			if err != nil {
 				return err
 			}

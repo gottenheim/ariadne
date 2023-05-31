@@ -9,8 +9,8 @@ import (
 type ShowAnswer struct {
 }
 
-func (a *ShowAnswer) Run(cardRepo card.CardRepository, output io.Writer, cardKey card.Key) error {
-	c, err := cardRepo.Get(cardKey)
+func (a *ShowAnswer) Run(cardRepo card.CardRepository, output io.Writer, section string, entry string) error {
+	c, err := cardRepo.Get(section, entry)
 
 	if err != nil {
 		return err

@@ -8,8 +8,10 @@ import (
 	"github.com/gottenheim/ariadne/libraries/archive"
 )
 
+const SectionName = "languages/c++"
+
 func TestCompressAnswerArtifacts(t *testing.T) {
-	c := card.NewCard(0, []card.CardArtifact{
+	c := card.CreateNew(SectionName, []card.CardArtifact{
 		card.NewCardArtifact("source.cpp", []byte("source file contents")),
 		card.NewCardArtifact("header.h", []byte("header file contents")),
 	})
@@ -46,7 +48,7 @@ func TestCompressAnswerArtifacts(t *testing.T) {
 }
 
 func TestExtractAnswerArtifacts(t *testing.T) {
-	card1 := card.NewCard(0, []card.CardArtifact{
+	card1 := card.CreateNew(SectionName, []card.CardArtifact{
 		card.NewCardArtifact("source.cpp", []byte("old source file contents")),
 		card.NewCardArtifact("header.h", []byte("old header file contents")),
 	})
@@ -57,7 +59,7 @@ func TestExtractAnswerArtifacts(t *testing.T) {
 		t.Fatal("Failed to compress card artifacts")
 	}
 
-	card2 := card.NewCard(0, []card.CardArtifact{
+	card2 := card.CreateNew(SectionName, []card.CardArtifact{
 		card.NewCardArtifact(card.AnswerArtifactName, card1.FindAnswerArtifact().Content()),
 		card.NewCardArtifact("source.cpp", []byte("new source file contents")),
 		card.NewCardArtifact("header.h", []byte("new header file contents")),

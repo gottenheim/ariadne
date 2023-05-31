@@ -5,8 +5,8 @@ import "github.com/gottenheim/ariadne/core/card"
 type ExtractCard struct {
 }
 
-func (a *ExtractCard) Run(cardRepo card.CardRepository, cardKey card.Key) error {
-	card, err := cardRepo.Get(cardKey)
+func (a *ExtractCard) Run(cardRepo card.CardRepository, section string, entry string) error {
+	card, err := cardRepo.Get(section, entry)
 	if err != nil {
 		return err
 	}

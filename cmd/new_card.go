@@ -13,29 +13,29 @@ var newCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		osFs := afero.NewOsFs()
 
-		dirs, err := GetDirectoryFlags(cmd, osFs, []string{"cards-dir", "template-dir"})
+		dirs, err := GetDirectoryFlags(cmd, osFs, []string{"section-dir", "template-dir"})
 
 		if err != nil {
 			return err
 		}
 
-		cardsDir, templateDir := dirs[0], dirs[1]
+		sectionDir, templateDir := dirs[0], dirs[1]
 
 		useCase := &use_cases.NewCard{}
 
 		templateRepo := fs_repo.NewFileTemplateRepository(osFs, templateDir)
 
-		cardRepo := fs_repo.NewFileCardRepository(osFs, cardsDir)
+		cardRepo := fs_repo.NewFileCardRepository(osFs)
 
-		return useCase.Run(templateRepo, cardRepo)
+		return useCase.Run(templateRepo, cardRepo, sectionDir)
 	},
 }
 
 func init() {
 	cardCmd.AddCommand(newCmd)
 
-	newCmd.Flags().String("cards-dir", "", "Cards subdirectory relative to base")
-	newCmd.MarkFlagRequired("cards-dir")
+	newCmd.Flags().String("section-dir", "", "Cards section directory")
+	newCmd.MarkFlagRequired("section-dir")
 	newCmd.Flags().String("template-dir", "", "Template files directory")
 	newCmd.MarkFlagRequired("template-dir")
 }
