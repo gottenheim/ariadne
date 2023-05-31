@@ -54,6 +54,9 @@ func DeserializeCardActivityChain(activitiesBinary []byte) (CardActivity, error)
 				}
 				remind.scheduledTo = scheduledTo.Local()
 			}
+			remind.easinessFactor = activityModel.EasinessFactor
+			remind.repetitionNumber = activityModel.RepetitionNumber
+			remind.interval = activityModel.Interval
 			activity = remind
 		}
 	}

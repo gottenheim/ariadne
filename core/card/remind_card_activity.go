@@ -7,6 +7,9 @@ type RemindCardActivity struct {
 	scheduledTo      time.Time
 	executed         bool
 	executionTime    time.Time
+	easinessFactor   float32
+	repetitionNumber int
+	interval         int
 }
 
 func CreateRemindCardActivity(previousActivity CardActivity) *RemindCardActivity {
@@ -21,6 +24,18 @@ func (s *RemindCardActivity) Accept(visitor CardActivityVisitor) error {
 
 func (s *RemindCardActivity) ScheduleTo(scheduledTo time.Time) {
 	s.scheduledTo = scheduledTo
+}
+
+func (s *RemindCardActivity) SetEasinessFactor(easinessFactor float32) {
+	s.easinessFactor = easinessFactor
+}
+
+func (s *RemindCardActivity) SetRepetitionNumber(repetitionNumber int) {
+	s.repetitionNumber = repetitionNumber
+}
+
+func (s *RemindCardActivity) SetInterval(interval int) {
+	s.interval = interval
 }
 
 func (s *RemindCardActivity) MarkAsExecuted(executionTime time.Time) {

@@ -14,6 +14,11 @@ import (
 func TestSerializeCardActivityChain(t *testing.T) {
 	cardActivity := card.GenerateActivityChain(card.LearnCard|card.CardExecutedMonthAgo, card.RemindCard|card.RemindCardScheduledToYesterday|card.CardExecutedToday)
 
+	remindCard := cardActivity.(*card.RemindCardActivity)
+	remindCard.SetEasinessFactor(2.5)
+	remindCard.SetRepetitionNumber(4)
+	remindCard.SetInterval(12)
+
 	chainBinary, err := card.SerializeCardActivityChain(cardActivity)
 
 	if err != nil {
@@ -59,6 +64,18 @@ func TestSerializeCardActivityChain(t *testing.T) {
 		t.Error("Remind activity schedule time must be yesterday")
 	}
 
+	if remind.EasinessFactor != 2.5 {
+		t.Error("Remind activity should have easiness factor 2.5")
+	}
+
+	if remind.RepetitionNumber != 4 {
+		t.Error("Remind activity should have repetition number 4")
+	}
+
+	if remind.Interval != 12 {
+		t.Error("Remind activity should have interval 12")
+	}
+
 	learn := cardActivitiesModel.Activities[1]
 
 	if learn.ActivityType != "learn" {
@@ -94,10 +111,13 @@ func (v *testCardActivityVisitor) OnLearnCard(learn *card.LearnCardActivity) err
 
 func (v *testCardActivityVisitor) OnRemindCard(remind *card.RemindCardActivity) error {
 	remindModel := card.CardActivityModel{
-		ActivityType:  "remind",
-		Executed:      remind.IsExecuted(),
-		ExecutionTime: remind.ExecutionTime().Format(time.DateTime),
-		ScheduledTo:   remind.ScheduledTo().Format(time.DateTime),
+		ActivityType:     "remind",
+		Executed:         remind.IsExecuted(),
+		ExecutionTime:    remind.ExecutionTime().Format(time.DateTime),
+		ScheduledTo:      remind.ScheduledTo().Format(time.DateTime),
+		EasinessFactor:   2.5,
+		RepetitionNumber: 4,
+		Interval:         12,
 	}
 
 	v.activities = append(v.activities, remindModel)
@@ -113,10 +133,13 @@ func TestDeserializeCardActivityChain(t *testing.T) {
 	initialCardActivitiesModel := &card.CardActivitiesModel{
 		Activities: []card.CardActivityModel{
 			{
-				ActivityType:  "remind",
-				Executed:      true,
-				ExecutionTime: today.Format(time.DateTime),
-				ScheduledTo:   yesterday.Format(time.DateTime),
+				ActivityType:     "remind",
+				Executed:         true,
+				ExecutionTime:    today.Format(time.DateTime),
+				ScheduledTo:      yesterday.Format(time.DateTime),
+				EasinessFactor:   2.5,
+				RepetitionNumber: 4,
+				Interval:         12,
 			},
 			{
 				ActivityType:  "learn",
