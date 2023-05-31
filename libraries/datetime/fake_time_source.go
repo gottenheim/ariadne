@@ -17,3 +17,7 @@ func NewFakeTimeSource() *FakeTimeSource {
 func (s *FakeTimeSource) Today() time.Time {
 	return time.Date(s.now.Year(), s.now.Month(), s.now.Day(), 0, 0, 0, 0, time.Local)
 }
+
+func (s *FakeTimeSource) Now() time.Time {
+	return s.now
+}
