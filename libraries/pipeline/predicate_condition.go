@@ -5,10 +5,10 @@ import (
 )
 
 type predicateCondition[T interface{}] struct {
-	predicate func(T) bool
+	predicate func(T) (bool, error)
 }
 
-func NewPredicateCondition[T interface{}](predicate func(T) bool) Condition[T, T, T] {
+func NewPredicateCondition[T interface{}](predicate func(T) (bool, error)) Condition[T, T, T] {
 	return &predicateCondition[T]{
 		predicate: predicate,
 	}
@@ -22,7 +22,13 @@ func (c *predicateCondition[T]) Run(ctx context.Context, input <-chan T, positiv
 			break
 		}
 
-		if c.predicate(val) {
+		yes, err := c.predicate(val)
+
+		if err != nil {
+			return err
+		}
+
+		if yes {
 			if !WriteToChannel[T](ctx, positiveDecision, val) {
 				break
 			}

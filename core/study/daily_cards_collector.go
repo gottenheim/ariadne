@@ -36,38 +36,32 @@ func (c *DailyCardsCollector) SetConfig(config *DailyCardsConfig) {
 }
 
 func (c *DailyCardsCollector) Collect() (*DailyCards, error) {
-	newCardsCollector := pipeline.NewPassingItemCollector[*card.Card]()
-	scheduledCardsCollector := pipeline.NewPassingItemCollector[*card.Card]()
+	newCards, cardsScheduledToToday, err := c.collectAndFilterCards()
 
-	p := pipeline.New()
-	cardEmissionStep := pipeline.NewEmitter(p, c.cardEmitter)
-	isNewCardStep := pipeline.WithCondition[card.BriefCard](p, cardEmissionStep, NewCardCondition(c.timeSource, c.cardRepo))
-	limitNewCardsStep := pipeline.WithFilter(p, pipeline.OnPositiveDecision(isNewCardStep), pipeline.Limit[*card.Card](c.config.NewCardsCount))
-	collectNewCardsStep := pipeline.WithFilter[*card.Card, *card.Card](p, limitNewCardsStep, newCardsCollector)
-	countNewCardsStep := pipeline.WithFilter[*card.Card, int](p, collectNewCardsStep, pipeline.NewCounter[*card.Card]())
-
-	isScheduledCardStep := pipeline.WithCondition(p, pipeline.OnNegativeDecision(isNewCardStep), ScheduledCardCondition(c.timeSource, c.cardRepo))
-	limitScheduledCardsStep := pipeline.WithFilter(p, pipeline.OnPositiveDecision(isScheduledCardStep), pipeline.Limit[*card.Card](c.config.ScheduledCardsCount))
-	pipeline.WithAcceptor(p, pipeline.OnNegativeDecision(isScheduledCardStep), pipeline.DevNull[card.BriefCard]())
-	collectScheduledCardsStep := pipeline.WithFilter[*card.Card, *card.Card](p, limitScheduledCardsStep, scheduledCardsCollector)
-	countScheduledCardsStep := pipeline.WithFilter[*card.Card, int](p, collectScheduledCardsStep, pipeline.NewCounter[*card.Card]())
-
-	cardsCountCalculationStep := pipeline.WithAggregator[int](p, countNewCardsStep, countScheduledCardsStep, pipeline.SumCalculator())
-	isCardLimitExceededStep := pipeline.WithCondition[int](p, cardsCountCalculationStep, pipeline.NewPredicateCondition(c.isCardLimitExceeded))
-	pipeline.WithAcceptor(p, pipeline.OnPositiveDecision(isCardLimitExceededStep), pipeline.StopProcessing[int](p))
-	pipeline.WithAcceptor(p, pipeline.OnNegativeDecision(isCardLimitExceededStep), pipeline.DevNull[int]())
-
-	err := p.SyncRun()
 	if err != nil {
 		return nil, err
 	}
 
 	return &DailyCards{
-		NewCards:       newCardsCollector.Items,
-		ScheduledCards: scheduledCardsCollector.Items,
+		NewCards:       newCards,
+		ScheduledCards: cardsScheduledToToday,
 	}, nil
 }
 
-func (c *DailyCardsCollector) isCardLimitExceeded(count int) bool {
-	return count >= c.config.NewCardsCount+c.config.ScheduledCardsCount
+func (c *DailyCardsCollector) collectAndFilterCards() ([]*card.Card, []*card.Card, error) {
+	newCardsCollector := CollectNewCards(c.timeSource, c.cardRepo, c.config)
+	scheduledCardsCollector := CollectScheduledCards(c.timeSource, c.cardRepo, c.config)
+
+	p := pipeline.New()
+	cardEmissionStep := pipeline.NewEmitter(p, c.cardEmitter)
+	collectNewCardsStep := pipeline.WithFilter[card.BriefCard, card.BriefCard](p, cardEmissionStep, newCardsCollector)
+	collectScheduledCardsStep := pipeline.WithFilter[card.BriefCard, card.BriefCard](p, collectNewCardsStep, scheduledCardsCollector)
+	pipeline.WithAcceptor[card.BriefCard](p, collectScheduledCardsStep, pipeline.Skip[card.BriefCard]())
+
+	err := p.SyncRun()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return newCardsCollector.GetNewCards(), scheduledCardsCollector.GetScheduledCards(), nil
 }

@@ -281,7 +281,11 @@ func TestPredicateCondition(t *testing.T) {
 
 	randomNumbers := pipeline.NewEmitter(p, generateNRandomNumbers(1000))
 
-	lessThanFifty := pipeline.WithCondition[int](p, randomNumbers, pipeline.NewPredicateCondition(func(val int) bool { return val < 50 }))
+	predicate := func(val int) (bool, error) {
+		return val < 50, nil
+	}
+
+	lessThanFifty := pipeline.WithCondition[int](p, randomNumbers, pipeline.NewPredicateCondition(predicate))
 
 	pipeline.WithAcceptor[int](p, pipeline.OnPositiveDecision(lessThanFifty), positiveResult)
 
@@ -357,7 +361,7 @@ func TestDevNull(t *testing.T) {
 
 	generator := pipeline.NewEmitter(p, generateNSerialNumbers(100))
 
-	pipeline.WithAcceptor[int](p, generator, pipeline.DevNull[int]())
+	pipeline.WithAcceptor[int](p, generator, pipeline.Skip[int]())
 
 	err := p.SyncRun()
 
