@@ -8,7 +8,7 @@ import (
 type CardState struct {
 	Name             string
 	Grade            int
-	EasinessFactor   float32
+	EasinessFactor   float64
 	RepetitionNumber int
 	Interval         int
 }
@@ -68,14 +68,14 @@ func (w *CardWorkflow) GetNextStates() ([]*CardState, error) {
 			} else if repetitionParams.repetitionNumber == 1 {
 				nextState.Interval = 6
 			} else {
-				nextState.Interval = int(float32(repetitionParams.interval) * repetitionParams.easinessFactor)
+				nextState.Interval = int(float64(repetitionParams.interval) * repetitionParams.easinessFactor)
 			}
 		} else {
 			nextState.RepetitionNumber = 0
 			nextState.Interval = 1
 		}
 
-		nextState.EasinessFactor = repetitionParams.easinessFactor + (0.1 - float32(5-nextState.Grade)*(0.08+float32(5-nextState.Grade)*0.02))
+		nextState.EasinessFactor = repetitionParams.easinessFactor + (0.1 - float64(5-nextState.Grade)*(0.08+float64(5-nextState.Grade)*0.02))
 		if nextState.EasinessFactor < 1.3 {
 			nextState.EasinessFactor = 1.3
 		}

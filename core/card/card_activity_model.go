@@ -8,7 +8,7 @@ type CardActivityModel struct {
 	Executed         bool
 	ExecutionTime    string
 	ScheduledTo      string
-	EasinessFactor   float32
+	EasinessFactor   float64
 	RepetitionNumber int
 	Interval         int
 }

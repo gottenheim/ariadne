@@ -7,7 +7,7 @@ type RemindCardActivity struct {
 	scheduledTo      time.Time
 	executed         bool
 	executionTime    time.Time
-	easinessFactor   float32
+	easinessFactor   float64
 	repetitionNumber int
 	interval         int
 }
@@ -26,11 +26,11 @@ func (s *RemindCardActivity) ScheduleTo(scheduledTo time.Time) {
 	s.scheduledTo = scheduledTo
 }
 
-func (s *RemindCardActivity) EasinessFactor() float32 {
+func (s *RemindCardActivity) EasinessFactor() float64 {
 	return s.easinessFactor
 }
 
-func (s *RemindCardActivity) SetEasinessFactor(easinessFactor float32) {
+func (s *RemindCardActivity) SetEasinessFactor(easinessFactor float64) {
 	s.easinessFactor = easinessFactor
 }
 

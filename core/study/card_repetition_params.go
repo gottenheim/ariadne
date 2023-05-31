@@ -7,7 +7,7 @@ import (
 const initialEasinessFactor = 2.5
 
 type cardRepetitionParams struct {
-	easinessFactor   float32
+	easinessFactor   float64
 	repetitionNumber int
 	interval         int
 }
