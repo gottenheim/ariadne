@@ -26,12 +26,24 @@ func (s *RemindCardActivity) ScheduleTo(scheduledTo time.Time) {
 	s.scheduledTo = scheduledTo
 }
 
+func (s *RemindCardActivity) EasinessFactor() float32 {
+	return s.easinessFactor
+}
+
 func (s *RemindCardActivity) SetEasinessFactor(easinessFactor float32) {
 	s.easinessFactor = easinessFactor
 }
 
+func (s *RemindCardActivity) RepetitionNumber() int {
+	return s.repetitionNumber
+}
+
 func (s *RemindCardActivity) SetRepetitionNumber(repetitionNumber int) {
 	s.repetitionNumber = repetitionNumber
+}
+
+func (s *RemindCardActivity) Interval() int {
+	return s.interval
 }
 
 func (s *RemindCardActivity) SetInterval(interval int) {
