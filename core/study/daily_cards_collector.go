@@ -12,8 +12,9 @@ type DailyCardsConfig struct {
 }
 
 type DailyCards struct {
-	NewCards       []*card.Card
-	ScheduledCards []*card.Card
+	NewCards         []*card.Card
+	ScheduledCards   []*card.Card
+	HotCardsToRevise []*card.Card
 }
 
 type DailyCardsCollector struct {
@@ -36,19 +37,6 @@ func (c *DailyCardsCollector) SetConfig(config *DailyCardsConfig) {
 }
 
 func (c *DailyCardsCollector) Collect() (*DailyCards, error) {
-	newCards, cardsScheduledToToday, err := c.collectAndFilterCards()
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &DailyCards{
-		NewCards:       newCards,
-		ScheduledCards: cardsScheduledToToday,
-	}, nil
-}
-
-func (c *DailyCardsCollector) collectAndFilterCards() ([]*card.Card, []*card.Card, error) {
 	newCardsCollector := CollectNewCards(c.timeSource, c.cardRepo, c.config)
 	scheduledCardsCollector := CollectScheduledCards(c.timeSource, c.cardRepo, c.config)
 
@@ -60,8 +48,12 @@ func (c *DailyCardsCollector) collectAndFilterCards() ([]*card.Card, []*card.Car
 
 	err := p.SyncRun()
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	return newCardsCollector.GetNewCards(), scheduledCardsCollector.GetScheduledCards(), nil
+	return &DailyCards{
+		NewCards:         newCardsCollector.newCards,
+		ScheduledCards:   scheduledCardsCollector.scheduledCards,
+		HotCardsToRevise: append(newCardsCollector.hotCardsToRevise, scheduledCardsCollector.hotCardsToRevise...),
+	}, nil
 }

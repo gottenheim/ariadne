@@ -71,6 +71,18 @@ func CollectCards(t *testing.T, cards []*card.Card, config study.DailyCardsConfi
 	return dailyCards
 }
 
+func TestDailyCardsCollector_ShouldNotFindNewCards_IfNoNewCardsExist(t *testing.T) {
+	cards := card.NewBatchCardGenerator().
+		WithCards(card.NewCardGenerationSpec("Cards scheduled to today", 100, card.LearnCard|card.CardExecutedMonthAgo, card.RemindCard|card.RemindCardScheduledToToday)).
+		Generate()
+
+	result := CollectCards(t, cards, study.DailyCardsConfig{NewCardsCount: 10, ScheduledCardsCount: 0})
+
+	if len(result.NewCards) != 0 {
+		t.Errorf("Wrong count of new cards collected. Expected: 0, actual: %d", len(result.NewCards))
+	}
+}
+
 func TestDailyCardsCollector_ShouldRecognizeNewCards(t *testing.T) {
 	cards := card.NewBatchCardGenerator().
 		WithCards(card.NewCardGenerationSpec("New cards", 100, card.LearnCard)).
@@ -83,16 +95,69 @@ func TestDailyCardsCollector_ShouldRecognizeNewCards(t *testing.T) {
 	}
 }
 
-func TestDailyCardsCollector_ShouldSkipLearnedCards(t *testing.T) {
+func TestDailyCardsCollector_ShouldCollectAsMuchNewCardsAsPossible_AccordingToConfig(t *testing.T) {
 	cards := card.NewBatchCardGenerator().
 		WithCards(card.NewCardGenerationSpec("New cards", 5, card.LearnCard)).
-		WithCards(card.NewCardGenerationSpec("New cards learned today", 5, card.LearnCard|card.CardExecutedToday)).
 		Generate()
 
 	result := CollectCards(t, cards, study.DailyCardsConfig{NewCardsCount: 10, ScheduledCardsCount: 0})
 
 	if len(result.NewCards) != 5 {
 		t.Errorf("Wrong count of new cards collected. Expected: 5, actual: %d", len(result.NewCards))
+	}
+}
+
+func TestDailyCardsCollector_ShouldNotTreatCardsAsScheduledToToday_IfTheyAreLearnedToday(t *testing.T) {
+	cards := card.NewBatchCardGenerator().
+		WithCards(card.NewCardGenerationSpec("New cards learned today", 100, card.LearnCard|card.CardExecutedToday, card.RemindCard|card.RemindCardScheduledToToday)).
+		Generate()
+
+	result := CollectCards(t, cards, study.DailyCardsConfig{NewCardsCount: 0, ScheduledCardsCount: 10})
+
+	if len(result.ScheduledCards) != 0 {
+		t.Errorf("Wrong count of scheduled cards collected. Expected: 0, actual: %d", len(result.ScheduledCards))
+	}
+}
+
+func TestDailyCardsCollector_ShouldRecognizeCardsLearnedTodayAsHotCardsToRevise_IfTheyAreLearnedTodayAndScheduledToRemindToday(t *testing.T) {
+	cards := card.NewBatchCardGenerator().
+		WithCards(card.NewCardGenerationSpec("New cards learned today and scheduled to remind today", 10, card.LearnCard|card.CardExecutedToday, card.RemindCard|card.RemindCardScheduledToToday)).
+		Generate()
+
+	result := CollectCards(t, cards, study.DailyCardsConfig{NewCardsCount: 10, ScheduledCardsCount: 0})
+
+	if len(result.HotCardsToRevise) != 10 {
+		t.Errorf("Wrong count of learned cards to remind collected. Expected: 10, actual: %d", len(result.HotCardsToRevise))
+	}
+
+	if len(result.NewCards) != 0 {
+		t.Errorf("Wrong count of new cards collected. Expected: 0, actual: %d", len(result.NewCards))
+	}
+}
+
+func TestDailyCardsCollector_ShouldSubtractLearnedCardsFromDailyNewCards(t *testing.T) {
+	cards := card.NewBatchCardGenerator().
+		WithCards(card.NewCardGenerationSpec("New cards", 100, card.LearnCard)).
+		WithCards(card.NewCardGenerationSpec("New cards learned today", 4, card.LearnCard|card.CardExecutedToday, card.RemindCard|card.RemindCardScheduledToTomorrow)).
+		Generate()
+
+	result := CollectCards(t, cards, study.DailyCardsConfig{NewCardsCount: 10, ScheduledCardsCount: 0})
+
+	if len(result.NewCards) != 6 {
+		t.Errorf("Wrong count of new cards collected. Expected: 6, actual: %d", len(result.NewCards))
+	}
+}
+
+func TestDailyCardsCollector_ShouldSubtractHotCardsToReviseFromDailyNewCards(t *testing.T) {
+	cards := card.NewBatchCardGenerator().
+		WithCards(card.NewCardGenerationSpec("New cards", 100, card.LearnCard)).
+		WithCards(card.NewCardGenerationSpec("New cards learned today and scheduled to remind today", 4, card.LearnCard|card.CardExecutedToday, card.RemindCard|card.RemindCardScheduledToToday)).
+		Generate()
+
+	result := CollectCards(t, cards, study.DailyCardsConfig{NewCardsCount: 10, ScheduledCardsCount: 0})
+
+	if len(result.NewCards) != 6 {
+		t.Errorf("Wrong count of new cards collected. Expected: 6, actual: %d", len(result.NewCards))
 	}
 }
 
@@ -146,18 +211,6 @@ func TestDailyCardsCollector_ShouldSkipCardsScheduledToTheFuture(t *testing.T) {
 	}
 }
 
-func TestDailyCardsCollector_ShouldNotFindNewCards_IfNoNewCardsExist(t *testing.T) {
-	cards := card.NewBatchCardGenerator().
-		WithCards(card.NewCardGenerationSpec("Cards scheduled to today", 100, card.LearnCard|card.CardExecutedMonthAgo, card.RemindCard|card.RemindCardScheduledToToday)).
-		Generate()
-
-	result := CollectCards(t, cards, study.DailyCardsConfig{NewCardsCount: 10, ScheduledCardsCount: 0})
-
-	if len(result.NewCards) != 0 {
-		t.Errorf("Wrong count of new cards collected. Expected: 0, actual: %d", len(result.NewCards))
-	}
-}
-
 func TestDailyCardsCollector_ShouldNotFindScheduledCards_IfNoScheduledCardsExist(t *testing.T) {
 	cards := card.NewBatchCardGenerator().
 		WithCards(card.NewCardGenerationSpec("New cards", 100, card.LearnCard)).
@@ -187,110 +240,60 @@ func TestDailyCardsCollector_ShouldFindNewAndScheduledCards(t *testing.T) {
 	}
 }
 
-func TestDailyCardsCollector_ShouldNotFindNewCards_IfEnoughCardsLearnedToday(t *testing.T) {
-	cards := card.NewBatchCardGenerator().
-		WithCards(card.NewCardGenerationSpec("New cards", 10, card.LearnCard)).
-		WithCards(card.NewCardGenerationSpec("Cards learned today", 9, card.LearnCard|card.CardExecutedToday)).
-		Generate()
-
-	result := CollectCards(t, cards, study.DailyCardsConfig{NewCardsCount: 10, ScheduledCardsCount: 0})
-
-	if len(result.NewCards) != 1 {
-		t.Errorf("Wrong count of new cards collected. Expected: 1, actual: %d", len(result.NewCards))
-	}
-}
-
-func TestDailyCardsCollector_ShouldNotFindScheduledCards_IfEnoughCardsRemindedToday(t *testing.T) {
+func TestDailyCardsCollector_ShouldSubtractCardsRemindedTodayFromDailyScheduledCards(t *testing.T) {
 	cards := card.NewBatchCardGenerator().
 		WithCards(card.NewCardGenerationSpec("Cards scheduled to today", 10, card.LearnCard|card.CardExecutedMonthAgo, card.RemindCard|card.RemindCardScheduledToToday)).
-		WithCards(card.NewCardGenerationSpec("Cards reminded today", 9, card.LearnCard|card.CardExecutedMonthAgo, card.RemindCard|card.RemindCardScheduledToToday|card.CardExecutedToday)).
+		WithCards(card.NewCardGenerationSpec("Cards reminded today and scheduled to tomorrow", 4,
+			card.LearnCard|card.CardExecutedMonthAgo, card.RemindCard|card.RemindCardScheduledToToday|card.CardExecutedToday, card.RemindCard|card.RemindCardScheduledToTomorrow)).
 		Generate()
 
 	result := CollectCards(t, cards, study.DailyCardsConfig{NewCardsCount: 0, ScheduledCardsCount: 10})
 
-	if len(result.ScheduledCards) != 1 {
-		t.Errorf("Wrong count of scheduled cards collected. Expected: 1, actual: %d", len(result.ScheduledCards))
+	if len(result.ScheduledCards) != 6 {
+		t.Errorf("Wrong count of scheduled cards collected. Expected: 6, actual: %d", len(result.ScheduledCards))
 	}
 }
 
-// func TestCollectingDailyCardsLearnedTodayAndScheduledToToday(t *testing.T) {
-// 	cards := card.NewBatchCardGenerator().
-// 		WithCards(card.NewCardGenerationSpec("New cards learned today", 100, card.LearnCard|card.CardExecutedToday, card.RemindCard|card.RemindCardScheduledToToday)).
-// 		Generate()
+func TestDailyCardsCollector_ShouldRecognizeCardsRemindedTodayAsHotCardsToRevise_IfTheyAreScheduledToToday(t *testing.T) {
+	cards := card.NewBatchCardGenerator().
+		WithCards(card.NewCardGenerationSpec("Cards reminded today and scheduled to today", 10,
+			card.LearnCard|card.CardExecutedMonthAgo, card.RemindCard|card.RemindCardScheduledToToday|card.CardExecutedToday, card.RemindCard|card.RemindCardScheduledToToday)).
+		Generate()
 
-// 	result, cancelled := CollectCards(t, cards, study.DailyCardsConfig{NewCardsCount: 10, ScheduledCardsCount: 10})
+	result := CollectCards(t, cards, study.DailyCardsConfig{NewCardsCount: 0, ScheduledCardsCount: 10})
 
-// 	if len(result.NewCards) != 10 {
-// 		t.Errorf("Wrong count of new cards collected. Expected: 10, actual: %d", len(result.NewCards))
-// 	}
+	if len(result.HotCardsToRevise) != 10 {
+		t.Errorf("Wrong count of hot cards to revise collected. Expected: 10, actual: %d", len(result.ScheduledCards))
+	}
 
-// 	if len(result.ScheduledCards) != 0 {
-// 		t.Errorf("Wrong count of scheduled cards collected. Expected: 0, actual: %d", len(result.ScheduledCards))
-// 	}
+	if len(result.ScheduledCards) != 0 {
+		t.Errorf("Wrong count of scheduled cards collected. Expected: 0, actual: %d", len(result.ScheduledCards))
+	}
+}
 
-// 	if cancelled {
-// 		t.Errorf("Cards less than required, process should not be cancelled")
-// 	}
-// }
+func TestDailyCardsCollector_ShouldSubtractCardsHotCardsToReviseFromDailyScheduledCards(t *testing.T) {
+	cards := card.NewBatchCardGenerator().
+		WithCards(card.NewCardGenerationSpec("Cards scheduled to today", 10, card.LearnCard|card.CardExecutedMonthAgo, card.RemindCard|card.RemindCardScheduledToToday)).
+		WithCards(card.NewCardGenerationSpec("Cards reminded today and scheduled to today", 4,
+			card.LearnCard|card.CardExecutedMonthAgo, card.RemindCard|card.RemindCardScheduledToToday|card.CardExecutedToday, card.RemindCard|card.RemindCardScheduledToToday)).
+		Generate()
 
-// func TestCollectingForgottenDailyCards(t *testing.T) {
-// 	cards := card.NewBatchCardGenerator().
-// 		WithCards(card.NewCardGenerationSpec("Forgotten cards", 100,
-// 			card.LearnCard|card.CardExecutedMonthAgo, card.RemindCard|card.RemindCardScheduledToToday|card.CardExecutedToday, card.RemindCard|card.RemindCardScheduledToToday)).
-// 		Generate()
+	result := CollectCards(t, cards, study.DailyCardsConfig{NewCardsCount: 0, ScheduledCardsCount: 10})
 
-// 	result, cancelled := CollectCards(t, cards, study.DailyCardsConfig{NewCardsCount: 0, ScheduledCardsCount: 10})
+	if len(result.ScheduledCards) != 6 {
+		t.Errorf("Wrong count of scheduled cards collected. Expected: 6, actual: %d", len(result.ScheduledCards))
+	}
+}
 
-// 	if len(result.NewCards) != 0 {
-// 		t.Errorf("Wrong count of new cards collected. Expected: 0, actual: %d", len(result.NewCards))
-// 	}
+func TestDailyCardsCollector_ShouldSkipCardsScheduledToYesterdayAndRemindedYesterday(t *testing.T) {
+	cards := card.NewBatchCardGenerator().
+		WithCards(card.NewCardGenerationSpec("Cards scheduled to yesterday and reminded yesterday", 100,
+			card.LearnCard|card.CardExecutedMonthAgo, card.RemindCard|card.RemindCardScheduledToYesterday|card.CardExecutedYesterday)).
+		Generate()
 
-// 	if len(result.ScheduledCards) != 10 {
-// 		t.Errorf("Wrong count of scheduled cards collected. Expected: 10, actual: %d", len(result.ScheduledCards))
-// 	}
+	result := CollectCards(t, cards, study.DailyCardsConfig{NewCardsCount: 0, ScheduledCardsCount: 10})
 
-// 	if !cancelled {
-// 		t.Errorf("Cards more than required, process should be cancelled")
-// 	}
-// }
-
-// func TestCollectingDailyCardsLearnedYesterdayAndScheduledToFuture(t *testing.T) {
-// 	cards := card.NewBatchCardGenerator().
-// 		WithCards(card.NewCardGenerationSpec("New cards learned tomorrow", 100, card.LearnCard|card.CardExecutedYesterday, card.RemindCard|card.RemindCardScheduledToMonthAhead)).
-// 		Generate()
-
-// 	result, cancelled := CollectCards(t, cards, study.DailyCardsConfig{NewCardsCount: 10, ScheduledCardsCount: 10})
-
-// 	if len(result.NewCards) != 0 {
-// 		t.Errorf("Wrong count of new cards collected. Expected: 0, actual: %d", len(result.NewCards))
-// 	}
-
-// 	if len(result.ScheduledCards) != 0 {
-// 		t.Errorf("Wrong count of scheduled cards collected. Expected: 0, actual: %d", len(result.ScheduledCards))
-// 	}
-
-// 	if cancelled {
-// 		t.Errorf("Cards less than required, process should not be cancelled")
-// 	}
-// }
-
-// func TestCollectingDailyCardsScheduledToYesterdayAndRemindedYesterday(t *testing.T) {
-// 	cards := card.NewBatchCardGenerator().
-// 		WithCards(card.NewCardGenerationSpec("Cards scheduled to yesterday and reminded yesterday", 100,
-// 			card.LearnCard|card.CardExecutedMonthAgo, card.RemindCard|card.RemindCardScheduledToYesterday|card.CardExecutedYesterday)).
-// 		Generate()
-
-// 	result, cancelled := CollectCards(t, cards, study.DailyCardsConfig{NewCardsCount: 10, ScheduledCardsCount: 10})
-
-// 	if len(result.NewCards) != 0 {
-// 		t.Errorf("Wrong count of new cards collected. Expected: 0, actual: %d", len(result.NewCards))
-// 	}
-
-// 	if len(result.ScheduledCards) != 0 {
-// 		t.Errorf("Wrong count of scheduled cards collected. Expected: 0, actual: %d", len(result.ScheduledCards))
-// 	}
-
-// 	if cancelled {
-// 		t.Errorf("Cards less than required, process should not be cancelled")
-// 	}
-// }
+	if len(result.ScheduledCards) != 0 {
+		t.Errorf("Wrong count of scheduled cards collected. Expected: 0, actual: %d", len(result.ScheduledCards))
+	}
+}

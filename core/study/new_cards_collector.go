@@ -9,10 +9,11 @@ import (
 )
 
 type newCardsCollector struct {
-	timeSource datetime.TimeSource
-	cardRepo   card.CardRepository
-	config     *DailyCardsConfig
-	newCards   []*card.Card
+	timeSource       datetime.TimeSource
+	cardRepo         card.CardRepository
+	config           *DailyCardsConfig
+	newCards         []*card.Card
+	hotCardsToRevise []*card.Card
 }
 
 func CollectNewCards(timeSource datetime.TimeSource, cardRepo card.CardRepository, config *DailyCardsConfig) *newCardsCollector {
@@ -24,7 +25,7 @@ func CollectNewCards(timeSource datetime.TimeSource, cardRepo card.CardRepositor
 }
 
 func (f *newCardsCollector) Run(ctx context.Context, input <-chan card.BriefCard, output chan<- card.BriefCard) error {
-	var newCards, cardsLearnedToday []*card.Card
+	var newCards, cardsLearnedToday, hotCardsToRevise []*card.Card
 
 	for {
 		briefCard, ok := <-input
@@ -55,13 +56,25 @@ func (f *newCardsCollector) Run(ctx context.Context, input <-chan card.BriefCard
 		}
 
 		if isNewCard {
-			newCards = append(newCards, crd)
+			if len(newCards) < f.config.NewCardsCount {
+				newCards = append(newCards, crd)
+			}
 		} else {
-			cardsLearnedToday = append(cardsLearnedToday, crd)
+			isScheduledToRemindToday, err := card.IsCardScheduledToRemindToday(f.timeSource, crd.Activities())
+
+			if err != nil {
+				return err
+			}
+
+			if !isScheduledToRemindToday {
+				cardsLearnedToday = append(cardsLearnedToday, crd)
+			} else {
+				hotCardsToRevise = append(hotCardsToRevise, crd)
+			}
 		}
 	}
 
-	newCardsRemaining := f.config.NewCardsCount - len(cardsLearnedToday)
+	newCardsRemaining := f.config.NewCardsCount - len(cardsLearnedToday) - len(hotCardsToRevise)
 	if newCardsRemaining < 0 {
 		newCardsRemaining = 0
 	}
@@ -71,12 +84,9 @@ func (f *newCardsCollector) Run(ctx context.Context, input <-chan card.BriefCard
 	}
 
 	f.newCards = newCards[0:newCardsRemaining]
+	f.hotCardsToRevise = hotCardsToRevise
 
 	return nil
-}
-
-func (f *newCardsCollector) GetNewCards() []*card.Card {
-	return f.newCards
 }
 
 func (f *newCardsCollector) isCardNewOrLearnedToday(briefCard card.BriefCard) (bool, error) {

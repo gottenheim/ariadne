@@ -17,6 +17,10 @@ func (s *isCardScheduledToRemindToday) OnRemindCard(remind *RemindCardActivity) 
 	s.result = !remind.IsExecuted() &&
 		datetime.IsBeforeTomorrow(s.timeSource, remind.ScheduledTo())
 
+	if s.result {
+		return nil
+	}
+
 	if remind.PreviousActivity() == nil {
 		return nil
 	}
