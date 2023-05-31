@@ -1,6 +1,8 @@
 package pipeline
 
-import "context"
+import (
+	"context"
+)
 
 type countingFilter[T interface{}] struct {
 }
@@ -20,7 +22,9 @@ func (f *countingFilter[T]) Run(ctx context.Context, input <-chan T, output chan
 
 		count++
 
-		output <- count
+		if !WriteToChannel[int](ctx, output, count) {
+			break
+		}
 	}
 
 	return nil

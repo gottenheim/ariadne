@@ -21,10 +21,8 @@ func generateNSerialNumbers(count int) pipeline.Emitter[int] {
 
 func (f *serialNumbers) Run(ctx context.Context, output chan<- int) error {
 	for i := 0; i < f.count; i++ {
-		select {
-		case <-ctx.Done():
+		if !pipeline.WriteToChannel[int](ctx, output, i) {
 			break
-		case output <- i:
 		}
 	}
 	return nil
@@ -42,10 +40,8 @@ func generateNRandomNumbers(count int) pipeline.Emitter[int] {
 
 func (f *randomNumberGenerator) Run(ctx context.Context, output chan<- int) error {
 	for i := 0; i < f.count; i++ {
-		select {
-		case <-ctx.Done():
+		if !pipeline.WriteToChannel[int](ctx, output, rand.Int()%100) {
 			break
-		case output <- rand.Int() % 100:
 		}
 	}
 	return nil
@@ -66,7 +62,9 @@ func (f *lessThanFiftyFilter) Run(ctx context.Context, input <-chan int, output 
 		}
 
 		if val < 50 {
-			output <- val
+			if !pipeline.WriteToChannel[int](ctx, output, val) {
+				break
+			}
 		}
 	}
 	return nil
@@ -86,9 +84,13 @@ func (f *lessThanFiftyCondition) Run(ctx context.Context, input <-chan int, posi
 		}
 
 		if val < 50 {
-			positiveDecision <- val
+			if !pipeline.WriteToChannel[int](ctx, positiveDecision, val) {
+				break
+			}
 		} else {
-			negativeDecision <- val
+			if !pipeline.WriteToChannel[int](ctx, negativeDecision, val) {
+				break
+			}
 		}
 	}
 	return nil
@@ -112,7 +114,9 @@ func (f *failureGenerator) Run(ctx context.Context, input <-chan int, output cha
 			return errors.New("Number processing failure")
 		}
 
-		output <- val
+		if !pipeline.WriteToChannel[int](ctx, output, val) {
+			break
+		}
 	}
 	return nil
 }
@@ -137,7 +141,10 @@ func (f *limitNumberCountCondition) Run(ctx context.Context, input <-chan int, o
 			break
 		}
 
-		output <- val
+		if !pipeline.WriteToChannel[int](ctx, output, val) {
+			break
+		}
+
 		f.actual++
 
 		if f.actual >= f.limit {
@@ -334,7 +341,11 @@ func TestSumCalculation(t *testing.T) {
 
 	pipeline.WithAcceptor[int](p, sumCalculator, valueStore)
 
-	p.SyncRun()
+	err := p.SyncRun()
+
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	if valueStore.Value() != 150 {
 		t.Fatalf("Wrong sum calculated. Expected 150, actual %d", valueStore.Value())

@@ -23,9 +23,13 @@ func (c *predicateCondition[T]) Run(ctx context.Context, input <-chan T, positiv
 		}
 
 		if c.predicate(val) {
-			positiveDecision <- val
+			if !WriteToChannel[T](ctx, positiveDecision, val) {
+				break
+			}
 		} else {
-			negativeDecision <- val
+			if !WriteToChannel[T](ctx, negativeDecision, val) {
+				break
+			}
 		}
 	}
 

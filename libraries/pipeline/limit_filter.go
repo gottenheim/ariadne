@@ -21,7 +21,10 @@ func (f *limitFilter[T]) Run(ctx context.Context, input <-chan T, output chan<- 
 		}
 
 		if f.actual < f.limit {
-			output <- val
+			if !WriteToChannel[T](ctx, output, val) {
+				break
+			}
+
 			f.actual++
 		}
 	}

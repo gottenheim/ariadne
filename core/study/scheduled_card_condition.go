@@ -41,14 +41,18 @@ func (f *scheduledCardCondition) Run(ctx context.Context, input <-chan card.Brie
 		}
 
 		if isCardScheduledToRemindToday || isCardRemindedToday {
-			card, err := f.cardRepo.Get(briefCard.Section, briefCard.Entry)
+			c, err := f.cardRepo.Get(briefCard.Section, briefCard.Entry)
 			if err != nil {
 				return err
 			}
 
-			positiveDecision <- card
+			if !pipeline.WriteToChannel[*card.Card](ctx, positiveDecision, c) {
+				break
+			}
 		} else {
-			negativeDecision <- briefCard
+			if !pipeline.WriteToChannel[card.BriefCard](ctx, negativeDecision, briefCard) {
+				break
+			}
 		}
 	}
 

@@ -18,7 +18,9 @@ func (c *passingItemCollector[T]) Run(ctx context.Context, input <-chan T, outpu
 		}
 		c.Items = append(c.Items, item)
 
-		output <- item
+		if !WriteToChannel[T](ctx, output, item) {
+			break
+		}
 	}
 
 	return nil

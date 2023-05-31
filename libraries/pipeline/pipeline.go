@@ -40,12 +40,18 @@ func (p *Pipeline) attach(task task) {
 func (p *Pipeline) runTask(ctx context.Context, taskIndex int) {
 	task := p.tasks[taskIndex]
 
+	// fmt.Printf("Task started: %s\n", task.Name())
+
 	err := task.Run(ctx)
 	p.taskErrors[taskIndex] = err
+
 	if err != nil {
+		// fmt.Printf("Task cancels pipeline: %s\n", task.Name())
 		p.cancelFunc()
 	}
 	p.waitGroup.Done()
+
+	// fmt.Printf("Task finished: %s\n", task.Name())
 }
 
 func (p *Pipeline) wait() {

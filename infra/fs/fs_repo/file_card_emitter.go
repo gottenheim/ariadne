@@ -2,6 +2,7 @@ package fs_repo
 
 import (
 	"context"
+	"io"
 	"os"
 	"path"
 	"path/filepath"
@@ -54,16 +55,20 @@ func (e *fileCardEmitter) Run(ctx context.Context, output chan<- card.BriefCard)
 
 		section, entry := e.cardRepo.GetCardPathEntry(cardDir), e.cardRepo.GetCardPathSection(cardDir)
 
-		output <- card.BriefCard{
+		briefCard := card.BriefCard{
 			Section:    section,
 			Entry:      entry,
 			Activities: cardActivities,
 		}
 
+		if !pipeline.WriteToChannel[card.BriefCard](ctx, output, briefCard) {
+			return io.EOF
+		}
+
 		return nil
 	})
 
-	if err != nil {
+	if err != nil && err != io.EOF {
 		return err
 	}
 

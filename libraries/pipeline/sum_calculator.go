@@ -36,7 +36,11 @@ func (f *sumCalculator) Run(ctx context.Context, leftArg <-chan int, rightArg <-
 			break
 		}
 
-		output <- leftVal + rightVal
+		sum := leftVal + rightVal
+
+		if !WriteToChannel[int](ctx, output, sum) {
+			break
+		}
 	}
 
 	return nil
