@@ -4,7 +4,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/gottenheim/ariadne/infra/repo/fs_repo"
+	"github.com/gottenheim/ariadne/infra/fs/fs_repo"
 	"github.com/gottenheim/ariadne/use_cases"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
