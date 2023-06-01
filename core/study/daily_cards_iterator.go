@@ -64,6 +64,10 @@ func (i *DailyCardsIterator) Next() (*card.Card, error) {
 	}
 }
 
+func (i *DailyCardsIterator) AddHotCardToRevise(crd *card.Card) {
+	i.hotCardsToRevise = append(i.hotCardsToRevise, crd)
+}
+
 func sortCardsByTime(timeSource datetime.TimeSource, hotCards []*card.Card) []*card.Card {
 	sort.Slice(hotCards, func(i, j int) bool {
 		leftTime, _ := card.GetTimeToRemindToday(timeSource, hotCards[i].Activities())

@@ -21,3 +21,7 @@ func (s *FakeTimeSource) Today() time.Time {
 func (s *FakeTimeSource) Now() time.Time {
 	return s.now
 }
+
+func (s *FakeTimeSource) MoveNow(d time.Duration) {
+	s.now.Add(d)
+}
