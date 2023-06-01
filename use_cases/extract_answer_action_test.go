@@ -28,7 +28,7 @@ func TestExtractAnswerAction(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	c.CompressAnswer()
+	c.StoreAnswer()
 
 	err = cardRepo.Save(c)
 

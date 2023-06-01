@@ -16,7 +16,7 @@ func TestCompressAnswerArtifacts(t *testing.T) {
 		card.NewCardArtifact("header.h", []byte("header file contents")),
 	})
 
-	err := c.CompressAnswer()
+	err := c.StoreAnswer()
 
 	if err != nil {
 		t.Fatal("Failed to compress card artifacts")
@@ -53,7 +53,7 @@ func TestExtractAnswerArtifacts(t *testing.T) {
 		card.NewCardArtifact("header.h", []byte("old header file contents")),
 	})
 
-	err := card1.CompressAnswer()
+	err := card1.StoreAnswer()
 
 	if err != nil {
 		t.Fatal("Failed to compress card artifacts")

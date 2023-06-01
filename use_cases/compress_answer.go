@@ -11,7 +11,7 @@ func (a *CompressAnswer) Run(cardRepo card.CardRepository, section string, entry
 		return err
 	}
 
-	err = card.CompressAnswer()
+	err = card.StoreAnswer()
 	if err != nil {
 		return err
 	}

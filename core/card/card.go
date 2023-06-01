@@ -74,7 +74,7 @@ func (c *Card) FindAnswerArtifact() *CardArtifact {
 	return c.FindArtifactByName(AnswerArtifactName)
 }
 
-func (c *Card) CompressAnswer() error {
+func (c *Card) StoreAnswer() error {
 	c.removeAnswerArtifact()
 
 	compressedAnswer, err := c.compressArtifacts()
