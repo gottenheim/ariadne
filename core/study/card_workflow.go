@@ -1,17 +1,24 @@
 package study
 
 import (
+	"time"
+
 	"github.com/gottenheim/ariadne/core/card"
 	"github.com/gottenheim/ariadne/libraries/datetime"
 )
 
 type CardState struct {
 	Name             string
+	Description      string
 	Grade            int
 	EasinessFactor   float64
 	RepetitionNumber int
-	Interval         int
+	Interval         time.Duration
 }
+
+const (
+	Day time.Duration = 24 * time.Hour
+)
 
 type CardWorkflow struct {
 	timeSource datetime.TimeSource
@@ -34,48 +41,47 @@ func (w *CardWorkflow) GetNextStates() ([]*CardState, error) {
 
 	nextStates := []*CardState{
 		{
-			Name:  "Complete failure to recall the information",
-			Grade: 0,
+			Name:        "Again",
+			Description: "Complete failure to recall the information",
+			Grade:       0,
 		},
 		{
-			Name:  "Incorrect response, but upon seeing the correct answer it felt familiar",
-			Grade: 1,
+			Name:        "Hard",
+			Description: "Correct response, but required significant effort to recall",
+			Grade:       3,
 		},
 		{
-			Name:  "Incorrect response, but upon seeing the correct answer it seemed easy to remember",
-			Grade: 2,
+			Name:        "Good",
+			Description: "Correct response, after some hesitation",
+			Grade:       4,
 		},
 		{
-			Name:  "Correct response, but required significant effort to recall",
-			Grade: 3,
-		},
-		{
-			Name:  "Correct response, after some hesitation",
-			Grade: 4,
-		},
-		{
-			Name:  "Correct response with perfect recall",
-			Grade: 5,
+			Name:        "Easy",
+			Description: "Correct response with perfect recall",
+			Grade:       5,
 		},
 	}
 
 	for _, nextState := range nextStates {
-		nextState.RepetitionNumber = repetitionParams.repetitionNumber + 1
+		nextState.RepetitionNumber = repetitionParams.RepetitionNumber + 1
 
 		if nextState.Grade >= 3 {
-			if repetitionParams.repetitionNumber == 0 {
-				nextState.Interval = 1
-			} else if repetitionParams.repetitionNumber == 1 {
-				nextState.Interval = 6
+			if repetitionParams.RepetitionNumber == 0 {
+				nextState.Interval = 10 * time.Minute
+			} else if repetitionParams.RepetitionNumber == 1 {
+				nextState.Interval = 1 * Day
+			} else if repetitionParams.RepetitionNumber == 2 {
+				nextState.Interval = 6 * Day
 			} else {
-				nextState.Interval = int(float64(repetitionParams.interval) * repetitionParams.easinessFactor)
+				intervalInDays := repetitionParams.Interval.Hours() / 24
+				nextState.Interval = time.Duration(int(intervalInDays*repetitionParams.EasinessFactor)) * Day
 			}
 		} else {
-			nextState.RepetitionNumber = 0
-			nextState.Interval = 1
+			nextState.RepetitionNumber = 1
+			nextState.Interval = 10 * time.Minute
 		}
 
-		nextState.EasinessFactor = repetitionParams.easinessFactor + (0.1 - float64(5-nextState.Grade)*(0.08+float64(5-nextState.Grade)*0.02))
+		nextState.EasinessFactor = repetitionParams.EasinessFactor + (0.1 - float64(5-nextState.Grade)*(0.08+float64(5-nextState.Grade)*0.02))
 		if nextState.EasinessFactor < 1.3 {
 			nextState.EasinessFactor = 1.3
 		}
@@ -95,7 +101,7 @@ func (w *CardWorkflow) TransitTo(state *CardState) error {
 	nextReminder.SetEasinessFactor(state.EasinessFactor)
 	nextReminder.SetRepetitionNumber(state.RepetitionNumber)
 	nextReminder.SetInterval(state.Interval)
-	nextReminder.ScheduleTo(now.AddDate(0, 0, state.Interval))
+	nextReminder.ScheduleTo(now.Add(state.Interval))
 
 	w.card.SetActivities(nextReminder)
 

@@ -17,7 +17,7 @@ func TestSerializeCardActivityChain(t *testing.T) {
 	remindCard := cardActivity.(*card.RemindCardActivity)
 	remindCard.SetEasinessFactor(2.5)
 	remindCard.SetRepetitionNumber(4)
-	remindCard.SetInterval(12)
+	remindCard.SetInterval(time.Hour * 2)
 
 	chainBinary, err := card.SerializeCardActivityChain(cardActivity)
 
@@ -72,7 +72,7 @@ func TestSerializeCardActivityChain(t *testing.T) {
 		t.Error("Remind activity should have repetition number 4")
 	}
 
-	if remind.Interval != 12 {
+	if remind.Interval != "2h0m0s" {
 		t.Error("Remind activity should have interval 12")
 	}
 
@@ -117,7 +117,7 @@ func (v *testCardActivityVisitor) OnRemindCard(remind *card.RemindCardActivity) 
 		ScheduledTo:      remind.ScheduledTo().Format(time.DateTime),
 		EasinessFactor:   2.5,
 		RepetitionNumber: 4,
-		Interval:         12,
+		Interval:         "2h0m0s",
 	}
 
 	v.activities = append(v.activities, remindModel)
@@ -139,7 +139,7 @@ func TestDeserializeCardActivityChain(t *testing.T) {
 				ScheduledTo:      yesterday.Format(time.DateTime),
 				EasinessFactor:   2.5,
 				RepetitionNumber: 4,
-				Interval:         12,
+				Interval:         "2h0m0s",
 			},
 			{
 				ActivityType:  "learn",

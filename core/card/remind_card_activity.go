@@ -9,7 +9,7 @@ type RemindCardActivity struct {
 	executionTime    time.Time
 	easinessFactor   float64
 	repetitionNumber int
-	interval         int
+	interval         time.Duration
 }
 
 func CreateRemindCardActivity(previousActivity CardActivity) *RemindCardActivity {
@@ -42,11 +42,11 @@ func (s *RemindCardActivity) SetRepetitionNumber(repetitionNumber int) {
 	s.repetitionNumber = repetitionNumber
 }
 
-func (s *RemindCardActivity) Interval() int {
+func (s *RemindCardActivity) Interval() time.Duration {
 	return s.interval
 }
 
-func (s *RemindCardActivity) SetInterval(interval int) {
+func (s *RemindCardActivity) SetInterval(interval time.Duration) {
 	s.interval = interval
 }
 

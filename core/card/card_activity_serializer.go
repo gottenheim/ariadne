@@ -36,7 +36,7 @@ func (s *cardActivitySerializer) OnRemindCard(remind *RemindCardActivity) error 
 	activityModel.ScheduledTo = remind.scheduledTo.Format(time.DateTime)
 	activityModel.EasinessFactor = remind.easinessFactor
 	activityModel.RepetitionNumber = remind.repetitionNumber
-	activityModel.Interval = remind.interval
+	activityModel.Interval = remind.interval.String()
 
 	s.activities = append(s.activities, activityModel)
 

@@ -10,7 +10,7 @@ type CardActivityModel struct {
 	ScheduledTo      string
 	EasinessFactor   float64
 	RepetitionNumber int
-	Interval         int
+	Interval         string
 }
 
 type CardActivitiesModel struct {

@@ -56,7 +56,13 @@ func DeserializeCardActivityChain(activitiesBinary []byte) (CardActivity, error)
 			}
 			remind.easinessFactor = activityModel.EasinessFactor
 			remind.repetitionNumber = activityModel.RepetitionNumber
-			remind.interval = activityModel.Interval
+			if len(activityModel.Interval) > 0 {
+				interval, err := time.ParseDuration(activityModel.Interval)
+				if err != nil {
+					return nil, err
+				}
+				remind.interval = interval
+			}
 			activity = remind
 		}
 	}
