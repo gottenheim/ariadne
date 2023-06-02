@@ -11,9 +11,9 @@ import (
 
 const (
 	Again int = 0
-	Hard      = 3
-	Good      = 4
-	Easy      = 5
+	Hard  int = 3
+	Good  int = 4
+	Easy  int = 5
 )
 
 func TestCardWorkflow_ShouldAssignTenMinutesInterval_ForNewCard_IfAnyButtonIsPressed(t *testing.T) {
@@ -165,16 +165,8 @@ func pressAgain(t *testing.T, c *card.Card) *study.CardRepetitionParams {
 	return pressButtonByGrade(t, c, Again)
 }
 
-func pressHard(t *testing.T, c *card.Card) *study.CardRepetitionParams {
-	return pressButtonByGrade(t, c, Hard)
-}
-
 func pressGood(t *testing.T, c *card.Card) *study.CardRepetitionParams {
 	return pressButtonByGrade(t, c, Good)
-}
-
-func pressEasy(t *testing.T, c *card.Card) *study.CardRepetitionParams {
-	return pressButtonByGrade(t, c, Easy)
 }
 
 func pressButtonByGrade(t *testing.T, c *card.Card, grade int) *study.CardRepetitionParams {

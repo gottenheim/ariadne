@@ -20,11 +20,11 @@ func (e *fakeCardEmitter) Run(ctx context.Context, output chan<- card.BriefCard)
 		select {
 		case <-ctx.Done():
 			e.cancelled = true
-			break
+			return nil
 		case output <- card:
 		}
-
 	}
+
 	return nil
 }
 
