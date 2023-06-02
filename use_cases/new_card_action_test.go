@@ -28,16 +28,16 @@ func TestCreateNewCardInEmptyDirectory(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	fs.AssertFileExistsAndHasContent(t, fakeFs, "/home/user/books/1/source.cpp", "template source code file")
-	fs.AssertFileExistsAndHasContent(t, fakeFs, "/home/user/books/1/header.h", "template header file")
+	fs.AssertFileExistsAndHasContent(t, fakeFs, "/home/user/books/01/source.cpp", "template source code file")
+	fs.AssertFileExistsAndHasContent(t, fakeFs, "/home/user/books/01/header.h", "template header file")
 }
 
 func TestCreateNewCardInDirectoryWithCards(t *testing.T) {
 	fakeFs, err := fs.NewFakeFs([]fs.FakeFileEntry{
 		fs.NewFakeFileEntry("/config/template", "source.cpp", `template source code file`),
 		fs.NewFakeFileEntry("/config/template", "header.h", `template header file`),
-		fs.NewFakeFileEntry("/home/user/books/cpp/1", "source.cpp", `source code artifact`),
-		fs.NewFakeFileEntry("/home/user/books/cpp/1", "header.h", `header artifact`),
+		fs.NewFakeFileEntry("/home/user/books/cpp/01", "source.cpp", `source code artifact`),
+		fs.NewFakeFileEntry("/home/user/books/cpp/01", "header.h", `header artifact`),
 	})
 
 	if err != nil {
@@ -54,6 +54,6 @@ func TestCreateNewCardInDirectoryWithCards(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	fs.AssertFileExistsAndHasContent(t, fakeFs, "/home/user/books/2/source.cpp", "template source code file")
-	fs.AssertFileExistsAndHasContent(t, fakeFs, "/home/user/books/2/header.h", "template header file")
+	fs.AssertFileExistsAndHasContent(t, fakeFs, "/home/user/books/02/source.cpp", "template source code file")
+	fs.AssertFileExistsAndHasContent(t, fakeFs, "/home/user/books/02/header.h", "template header file")
 }

@@ -33,16 +33,16 @@ func TestSavingFirstCardInEmptyRepository(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	fs.AssertFileExistsAndHasContent(t, fakeFs, "/home/user/books/cpp/1/source.cpp", "source code artifact")
-	fs.AssertFileExistsAndHasContent(t, fakeFs, "/home/user/books/cpp/1/header.h", "header artifact")
-	fs.AssertFileExistsAndHasContent(t, fakeFs, "/home/user/books/cpp/1/config.yml", "config file artifact")
+	fs.AssertFileExistsAndHasContent(t, fakeFs, "/home/user/books/cpp/01/source.cpp", "source code artifact")
+	fs.AssertFileExistsAndHasContent(t, fakeFs, "/home/user/books/cpp/01/header.h", "header artifact")
+	fs.AssertFileExistsAndHasContent(t, fakeFs, "/home/user/books/cpp/01/config.yml", "config file artifact")
 }
 
 func TestSavingNewCardInExistingRepository(t *testing.T) {
 	fakeFs, err := fs.NewFakeFs([]fs.FakeFileEntry{
-		fs.NewFakeFileEntry("/home/user/books/cpp/1", "source.cpp", `1st source code artifact`),
-		fs.NewFakeFileEntry("/home/user/books/cpp/1", "header.h", `1st header artifact`),
-		fs.NewFakeFileEntry("/home/user/books/cpp/1", "config.yml", `1st config file`),
+		fs.NewFakeFileEntry("/home/user/books/cpp/01", "source.cpp", `1st source code artifact`),
+		fs.NewFakeFileEntry("/home/user/books/cpp/01", "header.h", `1st header artifact`),
+		fs.NewFakeFileEntry("/home/user/books/cpp/01", "config.yml", `1st config file`),
 	})
 
 	if err != nil {
@@ -64,23 +64,23 @@ func TestSavingNewCardInExistingRepository(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	fs.AssertFileExistsAndHasContent(t, fakeFs, "/home/user/books/cpp/2/source.cpp", "2nd source code artifact")
-	fs.AssertFileExistsAndHasContent(t, fakeFs, "/home/user/books/cpp/2/header.h", "2nd header artifact")
-	fs.AssertFileExistsAndHasContent(t, fakeFs, "/home/user/books/cpp/2/config.yml", "2nd config file artifact")
+	fs.AssertFileExistsAndHasContent(t, fakeFs, "/home/user/books/cpp/02/source.cpp", "2nd source code artifact")
+	fs.AssertFileExistsAndHasContent(t, fakeFs, "/home/user/books/cpp/02/header.h", "2nd header artifact")
+	fs.AssertFileExistsAndHasContent(t, fakeFs, "/home/user/books/cpp/02/config.yml", "2nd config file artifact")
 }
 
 func TestOverwritingCardInExistingRepository(t *testing.T) {
 	fakeFs, err := fs.NewFakeFs([]fs.FakeFileEntry{
-		fs.NewFakeFileEntry("/home/user/books/cpp/1", "source.cpp", `old source code artifact`),
-		fs.NewFakeFileEntry("/home/user/books/cpp/1", "header.h", `old header artifact`),
-		fs.NewFakeFileEntry("/home/user/books/cpp/1", "config.yml", `old config file`),
+		fs.NewFakeFileEntry("/home/user/books/cpp/01", "source.cpp", `old source code artifact`),
+		fs.NewFakeFileEntry("/home/user/books/cpp/01", "header.h", `old header artifact`),
+		fs.NewFakeFileEntry("/home/user/books/cpp/01", "config.yml", `old config file`),
 	})
 
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	c := card.RestoreExisting("/home/user/books/cpp", "1",
+	c := card.RestoreExisting("/home/user/books/cpp", "01",
 		[]card.CardArtifact{
 			card.NewCardArtifact("source.cpp", []byte("new source code artifact")),
 			card.NewCardArtifact("header.h", []byte("new header artifact")),
@@ -94,15 +94,15 @@ func TestOverwritingCardInExistingRepository(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	fs.AssertFileExistsAndHasContent(t, fakeFs, "/home/user/books/cpp/1/source.cpp", "new source code artifact")
-	fs.AssertFileExistsAndHasContent(t, fakeFs, "/home/user/books/cpp/1/header.h", "new header artifact")
-	fs.AssertFileDoesNotExists(t, fakeFs, "/home/user/books/cpp/1/config.yml")
+	fs.AssertFileExistsAndHasContent(t, fakeFs, "/home/user/books/cpp/01/source.cpp", "new source code artifact")
+	fs.AssertFileExistsAndHasContent(t, fakeFs, "/home/user/books/cpp/01/header.h", "new header artifact")
+	fs.AssertFileDoesNotExists(t, fakeFs, "/home/user/books/cpp/01/config.yml")
 }
 
 func TestGetCardFromRepository(t *testing.T) {
 	fakeFs, err := fs.NewFakeFs([]fs.FakeFileEntry{
-		fs.NewFakeFileEntry("/home/user/books/cpp/2", "source.cpp", `source code artifact`),
-		fs.NewFakeFileEntry("/home/user/books/cpp/2", "header.h", `header artifact`),
+		fs.NewFakeFileEntry("/home/user/books/cpp/02", "source.cpp", `source code artifact`),
+		fs.NewFakeFileEntry("/home/user/books/cpp/02", "header.h", `header artifact`),
 	})
 
 	if err != nil {
@@ -111,7 +111,7 @@ func TestGetCardFromRepository(t *testing.T) {
 
 	repo := fs_repo.NewFileCardRepository(fakeFs)
 
-	c, err := repo.Get("/home/user/books/cpp", "2")
+	c, err := repo.Get("/home/user/books/cpp", "02")
 
 	if err != nil {
 		t.Fatal(err)
@@ -121,7 +121,7 @@ func TestGetCardFromRepository(t *testing.T) {
 		t.Error("Loaded card has unexpected section")
 	}
 
-	if c.Entry() != "2" {
+	if c.Entry() != "02" {
 		t.Error("Loaded card has unexpected entry")
 	}
 
@@ -165,7 +165,7 @@ func TestSkipNewCardProgressDuringSaving(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	progressFilePath := fmt.Sprintf("/home/user/books/cpp/1/%s", fs_repo.ActivitiesFileName)
+	progressFilePath := fmt.Sprintf("/home/user/books/cpp/01/%s", fs_repo.ActivitiesFileName)
 
 	fs.AssertFileDoesNotExists(t, fakeFs, progressFilePath)
 	fs.AssertDirectoryFilesCount(t, fakeFs, filepath.Dir(progressFilePath), 2)
@@ -201,7 +201,7 @@ func TestSaveCreatesCardActivitiesFileIfStatusIsNotNew(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	activitiesFilePath := fmt.Sprintf("/home/user/books/cpp/1/%s", fs_repo.ActivitiesFileName)
+	activitiesFilePath := fmt.Sprintf("/home/user/books/cpp/01/%s", fs_repo.ActivitiesFileName)
 
 	fs.AssertFileExistsAndHasYamlContent(t, fakeFs, activitiesFilePath, string(activitiesBinary))
 }
@@ -215,9 +215,9 @@ func TestReadCardActivities(t *testing.T) {
 	}
 
 	fakeFs, err := fs.NewFakeFs([]fs.FakeFileEntry{
-		fs.NewFakeFileEntry("/home/user/books/cpp/2", "source.cpp", `source code artifact`),
-		fs.NewFakeFileEntry("/home/user/books/cpp/2", "header.h", `header artifact`),
-		fs.NewFakeFileEntry("/home/user/books/cpp/2", fs_repo.ActivitiesFileName, string(initialActivitiesBinary)),
+		fs.NewFakeFileEntry("/home/user/books/cpp/02", "source.cpp", `source code artifact`),
+		fs.NewFakeFileEntry("/home/user/books/cpp/02", "header.h", `header artifact`),
+		fs.NewFakeFileEntry("/home/user/books/cpp/02", fs_repo.ActivitiesFileName, string(initialActivitiesBinary)),
 	})
 
 	if err != nil {
@@ -226,7 +226,7 @@ func TestReadCardActivities(t *testing.T) {
 
 	repo := fs_repo.NewFileCardRepository(fakeFs)
 
-	c, err := repo.Get("/home/user/books/cpp", "2")
+	c, err := repo.Get("/home/user/books/cpp", "02")
 
 	if err != nil {
 		t.Fatal(err)

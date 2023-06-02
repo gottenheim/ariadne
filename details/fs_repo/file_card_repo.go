@@ -2,6 +2,7 @@ package fs_repo
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"path"
 	"path/filepath"
@@ -99,7 +100,7 @@ func (r *fileCardRepository) getNextFreeSectionEntry(section string) (string, er
 		return "", err
 	}
 
-	return strconv.Itoa(maxCardKey + 1), nil
+	return fmt.Sprintf("%02d", maxCardKey+1), nil
 }
 
 func (r *fileCardRepository) GetCardPath(section string, entry string) string {
