@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"path/filepath"
 
 	"github.com/gottenheim/ariadne/core/study"
 	"github.com/gottenheim/ariadne/details/fs_repo"
@@ -29,16 +28,16 @@ var studyCardsCmd = &cobra.Command{
 			return err
 		}
 
-		cardDir := filepath.Dir(dirs[0])
+		cardsDir := dirs[0]
 
-		fmt.Printf("Directory used to discover cards: %s\n", cardDir)
+		fmt.Printf("Directory used to discover cards: %s\n", cardsDir)
 
 		cardRepo := fs_repo.NewFileCardRepository(osFs)
 		timeSource := datetime.NewOsTimeSource()
 
 		useCase := use_cases.NewStudyCardsSession(timeSource, cardRepo, interactor.NewCommandLineInteractor())
 
-		cardEmitter := fs_repo.NewAnsweredCardEmitter(osFs, cardRepo, cardDir)
+		cardEmitter := fs_repo.NewAnsweredCardEmitter(osFs, cardRepo, cardsDir)
 		newCards, _ := cmd.Flags().GetInt(newCardsFlag)
 		cardsToRemind, _ := cmd.Flags().GetInt(cardsToRemindFlag)
 

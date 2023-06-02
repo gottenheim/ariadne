@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"path/filepath"
-
 	"github.com/gottenheim/ariadne/details/fs_repo"
 	"github.com/gottenheim/ariadne/use_cases"
 	"github.com/spf13/afero"
@@ -23,7 +21,7 @@ var compressAnswerCmd = &cobra.Command{
 
 		repo := fs_repo.NewFileCardRepository(osFs)
 
-		cardDir := filepath.Dir(dirs[0])
+		cardDir := dirs[0]
 
 		section, entry := repo.GetCardPathSection(cardDir), repo.GetCardPathEntry(cardDir)
 

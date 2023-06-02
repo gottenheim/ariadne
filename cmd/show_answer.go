@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"path/filepath"
-
 	"github.com/gottenheim/ariadne/details/fs_repo"
 	"github.com/gottenheim/ariadne/details/interactor"
 	"github.com/gottenheim/ariadne/use_cases"
@@ -24,7 +22,7 @@ var showAnswerCmd = &cobra.Command{
 			return err
 		}
 
-		cardDir := filepath.Dir(dirs[0])
+		cardDir := dirs[0]
 
 		repo := fs_repo.NewFileCardRepository(osFs)
 
