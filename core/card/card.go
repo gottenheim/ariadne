@@ -102,6 +102,15 @@ func (c *Card) ExtractAnswer() error {
 	return nil
 }
 
+func (c *Card) Answer() (map[string][]byte, error) {
+	files, err := c.getAnswerFiles()
+	if err != nil {
+		return nil, err
+	}
+
+	return files, nil
+}
+
 func (c *Card) removeAnswerArtifact() {
 	c.removeArtifact(AnswerArtifactName)
 }

@@ -53,8 +53,8 @@ func (i *DailyCardsIterator) Next() (*card.Card, error) {
 	randomIndex := rand.Int() % randomCardsTotal
 
 	if randomIndex < len(i.newCards) {
-		selectedCard := i.newCards[randomIndex]
-		i.newCards = append(i.newCards[0:randomIndex], i.newCards[randomIndex+1:]...)
+		selectedCard := i.newCards[0]
+		i.newCards = i.newCards[1:]
 		return selectedCard, nil
 	} else {
 		randomIndex -= len(i.newCards)
