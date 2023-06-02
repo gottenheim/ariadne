@@ -10,14 +10,16 @@ import (
 type ChooseStateFunc func(*card.Card, []*CardState) (*CardState, error)
 
 type Session struct {
-	timeSource datetime.TimeSource
-	cardRepo   card.CardRepository
+	timeSource     datetime.TimeSource
+	cardRepo       card.CardRepository
+	userInteractor UserInteractor
 }
 
-func NewSession(timeSource datetime.TimeSource, cardRepo card.CardRepository) *Session {
+func NewSession(timeSource datetime.TimeSource, cardRepo card.CardRepository, userInteractor UserInteractor) *Session {
 	return &Session{
-		timeSource: timeSource,
-		cardRepo:   cardRepo,
+		timeSource:     timeSource,
+		cardRepo:       cardRepo,
+		userInteractor: userInteractor,
 	}
 }
 
@@ -27,6 +29,8 @@ func (s *Session) Run(dailyCardsConfig *DailyCardsConfig, cardEmitter pipeline.E
 	if err != nil {
 		return err
 	}
+
+	s.userInteractor.ShowDiscoveredDailyCards(dailyCards)
 
 	return s.studyDailyCards(dailyCards, chooseState)
 }

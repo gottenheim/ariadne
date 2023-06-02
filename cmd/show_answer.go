@@ -10,13 +10,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const cardDirFlag = "card-dir"
+
 var showAnswerCmd = &cobra.Command{
 	Use:   "show-answer",
 	Short: "Shows card answer",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		osFs := afero.NewOsFs()
 
-		dirs, err := GetDirectoryFlags(cmd, osFs, []string{"card-dir"})
+		dirs, err := GetDirectoryFlags(cmd, osFs, []string{cardDirFlag})
 
 		if err != nil {
 			return err
@@ -37,6 +39,6 @@ var showAnswerCmd = &cobra.Command{
 func init() {
 	cardCmd.AddCommand(showAnswerCmd)
 
-	showAnswerCmd.Flags().String("card-dir", "", "Card directory")
-	showAnswerCmd.MarkFlagRequired("card-dir")
+	showAnswerCmd.Flags().String(cardDirFlag, "", "Card directory")
+	showAnswerCmd.MarkFlagRequired(cardDirFlag)
 }

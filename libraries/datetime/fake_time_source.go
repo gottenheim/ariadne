@@ -8,7 +8,7 @@ type FakeTimeSource struct {
 	now time.Time
 }
 
-func NewFakeTimeSource() TimeSource {
+func NewFakeTimeSource() *FakeTimeSource {
 	return &FakeTimeSource{
 		now: FakeNow(),
 	}

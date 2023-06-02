@@ -6,6 +6,7 @@ import (
 
 	"github.com/gottenheim/ariadne/core/card"
 	"github.com/gottenheim/ariadne/core/study"
+	"github.com/gottenheim/ariadne/infra/interactor"
 	"github.com/gottenheim/ariadne/libraries/datetime"
 )
 
@@ -70,7 +71,7 @@ func studyCards(t *testing.T, timeSource datetime.TimeSource, config *study.Dail
 		briefCards: card.ExtractBriefCards(cards),
 	}
 
-	session := study.NewSession(timeSource, cardRepo)
+	session := study.NewSession(timeSource, cardRepo, interactor.NewFakeUserInteractor())
 
 	err := session.Run(config, cardEmitter, chooseState)
 

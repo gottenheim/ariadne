@@ -15,7 +15,7 @@ var extractAnswerCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		osFs := afero.NewOsFs()
 
-		dirs, err := GetDirectoryFlags(cmd, osFs, []string{"card-dir"})
+		dirs, err := GetDirectoryFlags(cmd, osFs, []string{cardDirFlag})
 
 		if err != nil {
 			return err
@@ -36,6 +36,6 @@ var extractAnswerCmd = &cobra.Command{
 func init() {
 	cardCmd.AddCommand(extractAnswerCmd)
 
-	extractAnswerCmd.Flags().String("card-dir", "", "Card directory")
-	extractAnswerCmd.MarkFlagRequired("card-dir")
+	extractAnswerCmd.Flags().String(cardDirFlag, "", "Card directory")
+	extractAnswerCmd.MarkFlagRequired(cardDirFlag)
 }

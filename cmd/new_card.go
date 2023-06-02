@@ -7,13 +7,16 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const sectionDirFlag = "section-dir"
+const templateDirFlag = "template-dir"
+
 var newCmd = &cobra.Command{
 	Use:   "new",
 	Short: "Creates a new card",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		osFs := afero.NewOsFs()
 
-		dirs, err := GetDirectoryFlags(cmd, osFs, []string{"section-dir", "template-dir"})
+		dirs, err := GetDirectoryFlags(cmd, osFs, []string{sectionDirFlag, templateDirFlag})
 
 		if err != nil {
 			return err
@@ -34,8 +37,8 @@ var newCmd = &cobra.Command{
 func init() {
 	cardCmd.AddCommand(newCmd)
 
-	newCmd.Flags().String("section-dir", "", "Cards section directory")
-	newCmd.MarkFlagRequired("section-dir")
-	newCmd.Flags().String("template-dir", "", "Template files directory")
-	newCmd.MarkFlagRequired("template-dir")
+	newCmd.Flags().String(sectionDirFlag, "", "Cards section directory")
+	newCmd.MarkFlagRequired(sectionDirFlag)
+	newCmd.Flags().String(templateDirFlag, "", "Template files directory")
+	newCmd.MarkFlagRequired(templateDirFlag)
 }

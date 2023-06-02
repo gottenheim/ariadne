@@ -15,7 +15,7 @@ var compressAnswerCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		osFs := afero.NewOsFs()
 
-		dirs, err := GetDirectoryFlags(cmd, osFs, []string{"card-dir"})
+		dirs, err := GetDirectoryFlags(cmd, osFs, []string{cardDirFlag})
 
 		if err != nil {
 			return err
@@ -36,6 +36,6 @@ var compressAnswerCmd = &cobra.Command{
 func init() {
 	cardCmd.AddCommand(compressAnswerCmd)
 
-	compressAnswerCmd.Flags().String("card-dir", "", "Card directory (relative to base)")
-	compressAnswerCmd.MarkFlagRequired("card-dir")
+	compressAnswerCmd.Flags().String(cardDirFlag, "", "Card directory (relative to base)")
+	compressAnswerCmd.MarkFlagRequired(cardDirFlag)
 }

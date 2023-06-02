@@ -18,6 +18,4 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.PersistentFlags().String("config-file", "", "Path to configuration file")
-	rootCmd.MarkFlagRequired("config-file")
 }
