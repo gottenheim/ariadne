@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/spf13/afero"
@@ -17,7 +16,7 @@ func GetDirectoryFlag(cmd *cobra.Command, fs afero.Fs, flagName string) (string,
 	}
 
 	if !exists {
-		return "", errors.New(fmt.Sprintf("Directory '%s' does not exist", dirPath))
+		return "", fmt.Errorf("directory '%s' does not exist", dirPath)
 	}
 
 	return dirPath, nil
