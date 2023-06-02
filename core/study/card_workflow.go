@@ -91,7 +91,7 @@ func (w *CardWorkflow) GetNextStates() ([]*CardState, error) {
 }
 
 func (w *CardWorkflow) TransitTo(state *CardState) error {
-	now := w.timeSource.Today()
+	now := w.timeSource.Now()
 	err := MarkLastActivityAsExecuted(w.card.Activities(), now)
 	if err != nil {
 		return err

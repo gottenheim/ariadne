@@ -17,7 +17,7 @@ func (s *newCardVisitor) OnRemindCard(remind *RemindCardActivity) error {
 	return remind.PreviousActivity().Accept(s)
 }
 
-func IsNewCardActivities(activities CardActivity) (bool, error) {
+func IsCardNew(activities CardActivity) (bool, error) {
 	isNew := &newCardVisitor{
 		result: true,
 	}

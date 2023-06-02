@@ -47,7 +47,7 @@ func CollectCards(t *testing.T, cards []*card.Card, config study.DailyCardsConfi
 	}
 
 	for _, newCard := range dailyCards.NewCards {
-		isNewCard, err := card.IsNewCardActivities(newCard.Activities())
+		isNewCard, err := card.IsCardNew(newCard.Activities())
 		if err != nil {
 			t.Fatal(err)
 		}

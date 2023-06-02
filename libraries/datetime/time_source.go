@@ -3,6 +3,6 @@ package datetime
 import "time"
 
 type TimeSource interface {
-	Today() time.Time
 	Now() time.Time
+	MoveNow(interval time.Duration)
 }

@@ -30,7 +30,7 @@ func (r *fileCardRepository) SaveCardActivities(cardActivities card.CardActivity
 
 	r.removeActivitiesFileIfExists(activitiesFilePath)
 
-	isNewCard, err := card.IsNewCardActivities(cardActivities)
+	isNewCard, err := card.IsCardNew(cardActivities)
 
 	if err != nil {
 		return err

@@ -13,7 +13,8 @@ func TestCardReminderTime(t *testing.T) {
 
 	learnCard := card.CreateLearnCardActivity()
 	remindCard := card.CreateRemindCardActivity(learnCard)
-	timeToRemindExpected := timeSource.Today().Add(time.Minute * 2)
+	today := datetime.GetToday(timeSource)
+	timeToRemindExpected := today.Add(time.Minute * 2)
 	remindCard.ScheduleTo(timeToRemindExpected)
 
 	timeToRemindActual, err := card.GetTimeToRemindToday(timeSource, remindCard)

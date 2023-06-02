@@ -49,7 +49,7 @@ func (f *newCardsCollector) Run(ctx context.Context, input <-chan card.BriefCard
 			return err
 		}
 
-		isNewCard, err := card.IsNewCardActivities(briefCard.Activities)
+		isNewCard, err := card.IsCardNew(briefCard.Activities)
 
 		if err != nil {
 			return err
@@ -90,7 +90,7 @@ func (f *newCardsCollector) Run(ctx context.Context, input <-chan card.BriefCard
 }
 
 func (f *newCardsCollector) isCardNewOrLearnedToday(briefCard card.BriefCard) (bool, error) {
-	isNewCard, err := card.IsNewCardActivities(briefCard.Activities)
+	isNewCard, err := card.IsCardNew(briefCard.Activities)
 
 	if err != nil {
 		return false, err

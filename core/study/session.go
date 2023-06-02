@@ -7,7 +7,7 @@ import (
 	"github.com/gottenheim/ariadne/libraries/pipeline"
 )
 
-type ChooseStateFunc func([]*CardState) (*CardState, error)
+type ChooseStateFunc func(*card.Card, []*CardState) (*CardState, error)
 
 type Session struct {
 	timeSource datetime.TimeSource
@@ -74,7 +74,7 @@ func (s *Session) moveCardToNextState(crd *card.Card, chooseState ChooseStateFun
 		return err
 	}
 
-	chosenState, err := chooseState(nextStates)
+	chosenState, err := chooseState(crd, nextStates)
 
 	if err != nil {
 		return err

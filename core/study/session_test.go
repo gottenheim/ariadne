@@ -10,8 +10,9 @@ import (
 )
 
 type isCardScheduledToRemindAt struct {
-	day    time.Time
-	result bool
+	timeSource datetime.TimeSource
+	day        time.Time
+	result     bool
 }
 
 func (s *isCardScheduledToRemindAt) OnLearnCard(learn *card.LearnCardActivity) error {
@@ -19,7 +20,7 @@ func (s *isCardScheduledToRemindAt) OnLearnCard(learn *card.LearnCardActivity) e
 }
 
 func (s *isCardScheduledToRemindAt) OnRemindCard(remind *card.RemindCardActivity) error {
-	s.result = !remind.IsExecuted() && remind.ScheduledTo() == s.day
+	s.result = !remind.IsExecuted() && datetime.IsSameDay(s.timeSource, remind.ScheduledTo(), s.day)
 
 	if s.result {
 		return nil
@@ -62,19 +63,8 @@ func assertMatchingCardsCount(t *testing.T, cards []*card.Card, matchingFunc fun
 	}
 }
 
-func TestSession_ShouldStudyTenCards_AndScheduleThemToTomorrow(t *testing.T) {
-	timeSource := datetime.NewFakeTimeSource()
-
-	cards := card.NewBatchCardGenerator().
-		WithCards(card.NewCardGenerationSpec("Cards scheduled to today", 100, card.LearnCard)).
-		Generate()
-
+func studyCards(t *testing.T, timeSource datetime.TimeSource, config *study.DailyCardsConfig, cards []*card.Card, chooseState study.ChooseStateFunc) {
 	cardRepo := card.NewFakeCardRepository(cards...)
-
-	config := &study.DailyCardsConfig{
-		NewCardsCount:       10,
-		ScheduledCardsCount: 0,
-	}
 
 	cardEmitter := &fakeCardEmitter{
 		briefCards: card.ExtractBriefCards(cards),
@@ -82,17 +72,192 @@ func TestSession_ShouldStudyTenCards_AndScheduleThemToTomorrow(t *testing.T) {
 
 	session := study.NewSession(timeSource, cardRepo)
 
-	err := session.Run(config, cardEmitter, func(states []*study.CardState) (*study.CardState, error) {
-		return getStateByGrade(states, Good), nil
-	})
+	err := session.Run(config, cardEmitter, chooseState)
 
 	if err != nil {
 		t.Fatal(err)
 	}
+}
 
-	tomorrow := timeSource.Today().AddDate(0, 0, 1)
+func rememberAllCardsWell(crd *card.Card, states []*study.CardState) (*study.CardState, error) {
+	return getStateByGrade(states, Good), nil
+}
+
+func forgotNCards(cardsToForget int) study.ChooseStateFunc {
+	cardsToForgetLeft := cardsToForget
+	return func(crd *card.Card, states []*study.CardState) (*study.CardState, error) {
+		if cardsToForgetLeft > 0 {
+			cardsToForgetLeft--
+			return getStateByGrade(states, Again), nil
+		} else {
+			return getStateByGrade(states, Good), nil
+		}
+	}
+}
+
+func TestSession_ShouldStudyTenNewCards_AndScheduleThemToTomorrow(t *testing.T) {
+	cards := card.NewBatchCardGenerator().
+		WithCards(card.NewCardGenerationSpec("New cards", 100, card.LearnCard)).
+		Generate()
+
+	config := &study.DailyCardsConfig{
+		NewCardsCount:       10,
+		ScheduledCardsCount: 0,
+	}
+
+	timeSource := datetime.NewFakeTimeSource()
+
+	studyCards(t, timeSource, config, cards, rememberAllCardsWell)
+
+	tomorrow := datetime.GetToday(timeSource).AddDate(0, 0, 1)
 
 	assertMatchingCardsCount(t, cards, func(c *card.Card) (bool, error) {
 		return IsCardScheduledToRemindAt(c, tomorrow)
+	}, 10)
+}
+
+func TestSession_ShouldNotStudyMoreNewCards_IfAllNewCardsForTodayAreAlreadyLearned(t *testing.T) {
+	cards := card.NewBatchCardGenerator().
+		WithCards(card.NewCardGenerationSpec("New cards", 100, card.LearnCard)).
+		Generate()
+
+	config := &study.DailyCardsConfig{
+		NewCardsCount:       10,
+		ScheduledCardsCount: 0,
+	}
+
+	timeSource := datetime.NewFakeTimeSource()
+
+	studyCards(t, timeSource, config, cards, rememberAllCardsWell)
+	studyCards(t, timeSource, config, cards, rememberAllCardsWell)
+
+	tomorrow := datetime.GetToday(timeSource).AddDate(0, 0, 1)
+
+	assertMatchingCardsCount(t, cards, func(c *card.Card) (bool, error) {
+		return IsCardScheduledToRemindAt(c, tomorrow)
+	}, 10)
+
+	assertMatchingCardsCount(t, cards, func(c *card.Card) (bool, error) {
+		return card.IsCardNew(c.Activities())
+	}, 90)
+}
+
+func TestSession_ShouldRescheduleCardsToSixDaysAhead_IfCardsCanBeRemembered(t *testing.T) {
+	cards := card.NewBatchCardGenerator().
+		WithCards(card.NewCardGenerationSpec("New cards", 100, card.LearnCard)).
+		Generate()
+
+	timeSource := datetime.NewFakeTimeSource()
+
+	studyCards(t, timeSource, &study.DailyCardsConfig{
+		NewCardsCount:       10,
+		ScheduledCardsCount: 0,
+	}, cards, rememberAllCardsWell)
+
+	timeSource.MoveNow(1 * study.Day)
+
+	studyCards(t, timeSource, &study.DailyCardsConfig{
+		NewCardsCount:       0,
+		ScheduledCardsCount: 10,
+	}, cards, rememberAllCardsWell)
+
+	sixDaysAhead := datetime.GetToday(timeSource).AddDate(0, 0, 6)
+
+	assertMatchingCardsCount(t, cards, func(c *card.Card) (bool, error) {
+		return IsCardScheduledToRemindAt(c, sixDaysAhead)
+	}, 10)
+}
+
+func TestSession_ShouldRescheduleForgottenCardsToTomorrow(t *testing.T) {
+	cards := card.NewBatchCardGenerator().
+		WithCards(card.NewCardGenerationSpec("New cards", 100, card.LearnCard)).
+		Generate()
+
+	timeSource := datetime.NewFakeTimeSource()
+
+	studyCards(t, timeSource, &study.DailyCardsConfig{
+		NewCardsCount:       10,
+		ScheduledCardsCount: 0,
+	}, cards, rememberAllCardsWell)
+
+	timeSource.MoveNow(1 * study.Day)
+
+	studyCards(t, timeSource, &study.DailyCardsConfig{
+		NewCardsCount:       0,
+		ScheduledCardsCount: 10,
+	}, cards, forgotNCards(3))
+
+	tomorrow := datetime.GetToday(timeSource).AddDate(0, 0, 1)
+
+	assertMatchingCardsCount(t, cards, func(c *card.Card) (bool, error) {
+		return IsCardScheduledToRemindAt(c, tomorrow)
+	}, 3)
+
+	sixDaysAhead := datetime.GetToday(timeSource).AddDate(0, 0, 6)
+
+	assertMatchingCardsCount(t, cards, func(c *card.Card) (bool, error) {
+		return IsCardScheduledToRemindAt(c, sixDaysAhead)
+	}, 7)
+}
+
+func TestSession_ShouldNotStudyMoreScheduledCards_IfAllScheduledCardsForTodayAreAlreadyReminded(t *testing.T) {
+	cards := card.NewBatchCardGenerator().
+		WithCards(card.NewCardGenerationSpec("New cards", 100, card.LearnCard)).
+		Generate()
+
+	timeSource := datetime.NewFakeTimeSource()
+
+	studyCards(t, timeSource, &study.DailyCardsConfig{
+		NewCardsCount:       10,
+		ScheduledCardsCount: 0,
+	}, cards, rememberAllCardsWell)
+
+	timeSource.MoveNow(1 * study.Day)
+
+	studyCards(t, timeSource, &study.DailyCardsConfig{
+		NewCardsCount:       0,
+		ScheduledCardsCount: 5,
+	}, cards, rememberAllCardsWell)
+
+	studyCards(t, timeSource, &study.DailyCardsConfig{
+		NewCardsCount:       0,
+		ScheduledCardsCount: 5,
+	}, cards, rememberAllCardsWell)
+
+	sixDaysAhead := datetime.GetToday(timeSource).AddDate(0, 0, 6)
+
+	assertMatchingCardsCount(t, cards, func(c *card.Card) (bool, error) {
+		return IsCardScheduledToRemindAt(c, sixDaysAhead)
+	}, 5)
+}
+
+func TestSession_ShouldStudyNewCardsAndRepeatScheduledInTheSameSession(t *testing.T) {
+	cards := card.NewBatchCardGenerator().
+		WithCards(card.NewCardGenerationSpec("New cards", 100, card.LearnCard)).
+		Generate()
+
+	config := &study.DailyCardsConfig{
+		NewCardsCount:       10,
+		ScheduledCardsCount: 10,
+	}
+
+	timeSource := datetime.NewFakeTimeSource()
+
+	studyCards(t, timeSource, config, cards, rememberAllCardsWell)
+
+	timeSource.MoveNow(1 * study.Day)
+
+	studyCards(t, timeSource, config, cards, rememberAllCardsWell)
+
+	tomorrow := datetime.GetToday(timeSource).AddDate(0, 0, 1)
+
+	assertMatchingCardsCount(t, cards, func(c *card.Card) (bool, error) {
+		return IsCardScheduledToRemindAt(c, tomorrow)
+	}, 10)
+
+	sixDaysAhead := datetime.GetToday(timeSource).AddDate(0, 0, 6)
+
+	assertMatchingCardsCount(t, cards, func(c *card.Card) (bool, error) {
+		return IsCardScheduledToRemindAt(c, sixDaysAhead)
 	}, 10)
 }
