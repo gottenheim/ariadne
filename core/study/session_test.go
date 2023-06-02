@@ -6,7 +6,7 @@ import (
 
 	"github.com/gottenheim/ariadne/core/card"
 	"github.com/gottenheim/ariadne/core/study"
-	"github.com/gottenheim/ariadne/infra/interactor"
+	"github.com/gottenheim/ariadne/details/interactor"
 	"github.com/gottenheim/ariadne/libraries/datetime"
 )
 
@@ -64,16 +64,16 @@ func assertMatchingCardsCount(t *testing.T, cards []*card.Card, matchingFunc fun
 	}
 }
 
-func studyCards(t *testing.T, timeSource datetime.TimeSource, config *study.DailyCardsConfig, cards []*card.Card, chooseState study.ChooseStateFunc) {
+func studyCards(t *testing.T, timeSource datetime.TimeSource, config *study.DailyCardsConfig, cards []*card.Card, chooseState interactor.ChooseStateFunc) {
 	cardRepo := card.NewFakeCardRepository(cards...)
 
 	cardEmitter := &fakeCardEmitter{
 		briefCards: card.ExtractBriefCards(cards),
 	}
 
-	session := study.NewSession(timeSource, cardRepo, interactor.NewFakeUserInteractor())
+	session := study.NewSession(timeSource, cardRepo, interactor.NewFakeUserInteractor(chooseState))
 
-	err := session.Run(config, cardEmitter, chooseState)
+	err := session.Run(config, cardEmitter)
 
 	if err != nil {
 		t.Fatal(err)
@@ -84,7 +84,7 @@ func rememberAllCardsWell(crd *card.Card, states []*study.CardState) (*study.Car
 	return getStateByGrade(states, Good), nil
 }
 
-func forgotNCards(cardsToForget int) study.ChooseStateFunc {
+func forgotNCards(cardsToForget int) interactor.ChooseStateFunc {
 	cardsToForgetLeft := cardsToForget
 	return func(crd *card.Card, states []*study.CardState) (*study.CardState, error) {
 		if cardsToForgetLeft > 0 {

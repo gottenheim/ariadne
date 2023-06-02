@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/gottenheim/ariadne/core/card"
-	"github.com/gottenheim/ariadne/infra/fs/fs_repo"
+	"github.com/gottenheim/ariadne/details/fs_repo"
 	"github.com/gottenheim/ariadne/libraries/config"
 	"github.com/gottenheim/ariadne/libraries/fs"
 )

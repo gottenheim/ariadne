@@ -24,11 +24,7 @@ func NewStudyCardsSession(timeSource datetime.TimeSource, cardRepo card.CardRepo
 func (s *StudyCardsSession) Run(cardEmitter pipeline.Emitter[card.BriefCard], config *study.DailyCardsConfig) error {
 	session := study.NewSession(s.timeSource, s.cardRepo, s.userInteractor)
 
-	session.Run(config, cardEmitter, s.chooseState)
+	session.Run(config, cardEmitter)
 
 	return nil
-}
-
-func (s *StudyCardsSession) chooseState(crd *card.Card, states []*study.CardState) (*study.CardState, error) {
-	return s.userInteractor.AskQuestion(crd, states)
 }

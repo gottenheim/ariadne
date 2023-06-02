@@ -5,16 +5,21 @@ import (
 	"github.com/gottenheim/ariadne/core/study"
 )
 
+type ChooseStateFunc func(*card.Card, []*study.CardState) (*study.CardState, error)
+
 type FakeUserInteractor struct {
+	chooseState ChooseStateFunc
 }
 
-func NewFakeUserInteractor() study.UserInteractor {
-	return &FakeUserInteractor{}
+func NewFakeUserInteractor(chooseState ChooseStateFunc) *FakeUserInteractor {
+	return &FakeUserInteractor{
+		chooseState: chooseState,
+	}
 }
 
 func (i *FakeUserInteractor) ShowDiscoveredDailyCards(dailyCards *study.DailyCards) {
 }
 
 func (i *FakeUserInteractor) AskQuestion(crd *card.Card, states []*study.CardState) (*study.CardState, error) {
-	return nil, nil
+	return i.chooseState(crd, states)
 }

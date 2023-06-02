@@ -5,8 +5,8 @@ import (
 	"path/filepath"
 
 	"github.com/gottenheim/ariadne/core/study"
-	"github.com/gottenheim/ariadne/infra/fs/fs_repo"
-	"github.com/gottenheim/ariadne/infra/interactor"
+	"github.com/gottenheim/ariadne/details/fs_repo"
+	"github.com/gottenheim/ariadne/details/interactor"
 	"github.com/gottenheim/ariadne/libraries/datetime"
 	"github.com/gottenheim/ariadne/use_cases"
 	"github.com/spf13/afero"

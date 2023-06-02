@@ -14,7 +14,7 @@ import (
 type CommandLineInteractor struct {
 }
 
-func NewCommandLineInteractor() study.UserInteractor {
+func NewCommandLineInteractor() *CommandLineInteractor {
 	return &CommandLineInteractor{}
 }
 
@@ -30,11 +30,25 @@ func (i *CommandLineInteractor) AskQuestion(crd *card.Card, states []*study.Card
 	if err != nil {
 		return nil, err
 	}
-	err = i.showAnswer(crd)
+	err = i.ShowAnswer(crd)
 	if err != nil {
 		return nil, err
 	}
 	return i.askUserHowGoodWasHisAnswer(crd, states)
+}
+
+func (i *CommandLineInteractor) ShowAnswer(crd *card.Card) error {
+	answer, err := crd.Answer()
+	if err != nil {
+		return err
+	}
+
+	for name, content := range answer {
+		fmt.Printf(sgr.MustParseln("[fg-green]----- %s -----\n"), name)
+		fmt.Printf(sgr.MustParseln("%s\n\n"), content)
+	}
+
+	return nil
 }
 
 func (i *CommandLineInteractor) showQuestionHeader(crd *card.Card) {
@@ -64,20 +78,6 @@ func (i *CommandLineInteractor) waitForUserToComeUpWithAnswer() error {
 	// ctrl + c or escape
 	if key == 3 || key == 27 {
 		return io.EOF
-	}
-
-	return nil
-}
-
-func (i *CommandLineInteractor) showAnswer(crd *card.Card) error {
-	answer, err := crd.Answer()
-	if err != nil {
-		return err
-	}
-
-	for name, content := range answer {
-		fmt.Printf(sgr.MustParseln("[fg-green]----- %s -----\n"), name)
-		fmt.Printf(sgr.MustParseln("%s\n\n"), content)
 	}
 
 	return nil

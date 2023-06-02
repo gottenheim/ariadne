@@ -7,8 +7,6 @@ import (
 	"github.com/gottenheim/ariadne/libraries/pipeline"
 )
 
-type ChooseStateFunc func(*card.Card, []*CardState) (*CardState, error)
-
 type Session struct {
 	timeSource     datetime.TimeSource
 	cardRepo       card.CardRepository
@@ -23,7 +21,7 @@ func NewSession(timeSource datetime.TimeSource, cardRepo card.CardRepository, us
 	}
 }
 
-func (s *Session) Run(dailyCardsConfig *DailyCardsConfig, cardEmitter pipeline.Emitter[card.BriefCard], chooseState ChooseStateFunc) error {
+func (s *Session) Run(dailyCardsConfig *DailyCardsConfig, cardEmitter pipeline.Emitter[card.BriefCard]) error {
 	dailyCards, err := s.collectDailyCards(dailyCardsConfig, cardEmitter)
 
 	if err != nil {
@@ -32,7 +30,7 @@ func (s *Session) Run(dailyCardsConfig *DailyCardsConfig, cardEmitter pipeline.E
 
 	s.userInteractor.ShowDiscoveredDailyCards(dailyCards)
 
-	return s.studyDailyCards(dailyCards, chooseState)
+	return s.studyDailyCards(dailyCards)
 }
 
 func (s *Session) collectDailyCards(dailyCardsConfig *DailyCardsConfig, cardEmitter pipeline.Emitter[card.BriefCard]) (*DailyCards, error) {
@@ -41,7 +39,7 @@ func (s *Session) collectDailyCards(dailyCardsConfig *DailyCardsConfig, cardEmit
 	return cardsCollector.Collect()
 }
 
-func (s *Session) studyDailyCards(dailyCards *DailyCards, chooseState ChooseStateFunc) error {
+func (s *Session) studyDailyCards(dailyCards *DailyCards) error {
 	it := NewDailyCardsIterator(s.timeSource, dailyCards)
 
 	for {
@@ -55,7 +53,7 @@ func (s *Session) studyDailyCards(dailyCards *DailyCards, chooseState ChooseStat
 			return nil
 		}
 
-		err = s.moveCardToNextState(crd, chooseState)
+		err = s.moveCardToNextState(crd)
 
 		if err != nil {
 			return err
@@ -69,7 +67,7 @@ func (s *Session) studyDailyCards(dailyCards *DailyCards, chooseState ChooseStat
 	}
 }
 
-func (s *Session) moveCardToNextState(crd *card.Card, chooseState ChooseStateFunc) error {
+func (s *Session) moveCardToNextState(crd *card.Card) error {
 	cardWorkflow := NewCardWorkflow(s.timeSource, crd)
 
 	nextStates, err := cardWorkflow.GetNextStates()
@@ -78,7 +76,7 @@ func (s *Session) moveCardToNextState(crd *card.Card, chooseState ChooseStateFun
 		return err
 	}
 
-	chosenState, err := chooseState(crd, nextStates)
+	chosenState, err := s.userInteractor.AskQuestion(crd, nextStates)
 
 	if err != nil {
 		return err

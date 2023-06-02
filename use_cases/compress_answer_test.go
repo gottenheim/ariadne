@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/gottenheim/ariadne/infra/fs/fs_repo"
+	"github.com/gottenheim/ariadne/details/fs_repo"
 	"github.com/gottenheim/ariadne/libraries/archive"
 	"github.com/gottenheim/ariadne/libraries/fs"
 	"github.com/gottenheim/ariadne/use_cases"
