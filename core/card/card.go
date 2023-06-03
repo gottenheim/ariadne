@@ -24,7 +24,7 @@ func CreateNew(section string, artifacts []CardArtifact) *Card {
 	}
 }
 
-func RestoreExisting(section string, entry string, artifacts []CardArtifact, activities CardActivity) *Card {
+func FromExisting(section string, entry string, artifacts []CardArtifact, activities CardActivity) *Card {
 	return &Card{
 		section:    section,
 		entry:      entry,

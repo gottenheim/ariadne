@@ -40,7 +40,7 @@ func (r *fileCardRepository) Get(section string, entry string) (*card.Card, erro
 		return nil, err
 	}
 
-	return card.RestoreExisting(section, entry, artifacts, activities), nil
+	return card.FromExisting(section, entry, artifacts, activities), nil
 }
 
 func (r *fileCardRepository) Save(card *card.Card) error {
@@ -59,6 +59,10 @@ func (r *fileCardRepository) Save(card *card.Card) error {
 		return err
 	}
 
+	return r.SaveActivities(card)
+}
+
+func (r *fileCardRepository) SaveActivities(card *card.Card) error {
 	return r.SaveCardActivities(card.Activities(), r.GetCardPath(card.Section(), card.Entry()))
 }
 

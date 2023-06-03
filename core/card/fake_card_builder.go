@@ -37,7 +37,7 @@ func (b *FakeCardBuilder) WithActivityChain(activities CardActivity) *FakeCardBu
 }
 
 func (b *FakeCardBuilder) Build() *Card {
-	return RestoreExisting(b.section, b.entry, b.artifacts, b.activities)
+	return FromExisting(b.section, b.entry, b.artifacts, b.activities)
 }
 
 func ExtractBriefCards(cards []*Card) []BriefCard {

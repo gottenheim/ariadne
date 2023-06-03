@@ -92,7 +92,7 @@ func (s *Session) moveCardToNextState(crd *card.Card) error {
 		return err
 	}
 
-	s.cardRepo.Save(crd)
+	s.cardRepo.SaveActivities(crd)
 
 	return nil
 }

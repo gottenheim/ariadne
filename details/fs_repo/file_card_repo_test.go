@@ -80,7 +80,7 @@ func TestOverwritingCardInExistingRepository(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	c := card.RestoreExisting("/home/user/books/cpp", "01",
+	c := card.FromExisting("/home/user/books/cpp", "01",
 		[]card.CardArtifact{
 			card.NewCardArtifact("source.cpp", []byte("new source code artifact")),
 			card.NewCardArtifact("header.h", []byte("new header artifact")),

@@ -1,6 +1,8 @@
 package card
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type FakeCardRepository struct {
 	cards map[string]*Card
@@ -21,13 +23,26 @@ func NewFakeCardRepository(cards ...*Card) CardRepository {
 
 func (r *FakeCardRepository) Get(section string, entry string) (*Card, error) {
 	key := r.getFullCardKey(section, entry)
-	card, _ := r.cards[key]
-	return card, nil
+	card, ok := r.cards[key]
+	if !ok {
+		return nil, fmt.Errorf("Card with key %s could not be found", key)
+	}
+	return FromExisting(card.section, card.entry, card.artifacts, card.activities), nil
 }
 
 func (r *FakeCardRepository) Save(card *Card) error {
 	key := r.getFullCardKey(card.Section(), card.Entry())
 	r.cards[key] = card
+	return nil
+}
+
+func (r *FakeCardRepository) SaveActivities(card *Card) error {
+	key := r.getFullCardKey(card.Section(), card.Entry())
+	existingCard, ok := r.cards[key]
+	if !ok {
+		return fmt.Errorf("Card with key %s could not be found", key)
+	}
+	existingCard.SetActivities(card.Activities())
 	return nil
 }
 
