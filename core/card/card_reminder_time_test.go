@@ -23,7 +23,7 @@ func TestCardReminderTime(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if timeToRemindActual != timeToRemindActual {
+	if timeToRemindActual != timeToRemindExpected {
 		t.Fatal("Expected time to remind differs from actual")
 	}
 }
