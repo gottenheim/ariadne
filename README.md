@@ -1,7 +1,8 @@
 # Project Ariadne
 A spaced repetition approach to memorize programming languages and technologies.
 
-# Basic idea
+# Quick overview
+Please, check out [shell example](https://github.com/gottenheim/ariadne-shell-example) to have a quick hands-on introduction to Ariadne tool.
 
-![image](https://github.com/gottenheim/ariadne/assets/15375180/605389f2-f66b-40c6-aa86-325345dc92c3)
+
 
