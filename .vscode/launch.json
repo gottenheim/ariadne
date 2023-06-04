@@ -14,7 +14,7 @@
                 "study-cards",
                 "--new-cards=10",
                 "--cards-to-remind=10",
-                "--dir=/home/npenn/cpp/",
+                "--dir=/home/npenn/cards/cpp/",
             ]
         }
     ]

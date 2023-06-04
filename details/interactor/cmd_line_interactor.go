@@ -3,6 +3,7 @@ package interactor
 import (
 	"fmt"
 	"io"
+	"strconv"
 	"unicode"
 
 	"github.com/eiannone/keyboard"
@@ -18,9 +19,28 @@ func NewCommandLineInteractor() *CommandLineInteractor {
 	return &CommandLineInteractor{}
 }
 
-func (i *CommandLineInteractor) ShowDiscoveredDailyCards(dailyCards *study.DailyCards) {
-	fmt.Printf(sgr.MustParseln("[fg-red]%d hot cards[reset], [fg-green]%d new cards[reset], [fg-blue]%d cards to remind[reset]"),
-		len(dailyCards.HotCardsToRevise), len(dailyCards.NewCards), len(dailyCards.ScheduledCards))
+func (i *CommandLineInteractor) ShowStudyProgress(selectedDailyCard *study.SelectedDailyCard, studyProgress *study.StudyProgress) {
+	underlineIf := func(condition bool) string {
+		if condition {
+			return "[underline]"
+		} else {
+			return ""
+		}
+	}
+	incrementIf := func(condition bool, val int) int {
+		if condition {
+			return val + 1
+		} else {
+			return val
+		}
+	}
+
+	str := fmt.Sprintf("[fg-red]%s%d hot cards[reset], [fg-green]%s%d new cards[reset], [fg-blue]%s%d cards to remind[reset]",
+		underlineIf(selectedDailyCard.CardType == study.HotDailyCard), incrementIf(selectedDailyCard.CardType == study.HotDailyCard, studyProgress.HotCardsleft),
+		underlineIf(selectedDailyCard.CardType == study.NewDailyCard), incrementIf(selectedDailyCard.CardType == study.NewDailyCard, studyProgress.NewCardsLeft),
+		underlineIf(selectedDailyCard.CardType == study.ScheduledDailyCard), incrementIf(selectedDailyCard.CardType == study.ScheduledDailyCard, studyProgress.ScheduledCardsLeft))
+
+	fmt.Print(sgr.MustParseln(str))
 }
 
 func (i *CommandLineInteractor) AskQuestion(crd *card.Card, states []*study.CardState) (*study.CardState, error) {
@@ -96,7 +116,18 @@ func (i *CommandLineInteractor) askUserHowGoodWasHisAnswer(crd *card.Card, state
 		if !ok {
 			gradeColor = "[fg-white]"
 		}
-		fmt.Printf(sgr.MustParse(gradeColor+"[underline]%s[underlineOff]%s "), string(state.Name[0]), state.Name[1:])
+
+		var interval string
+
+		if state.Interval.Minutes() < 60 {
+			interval = strconv.Itoa(int(state.Interval.Minutes())) + "m"
+		} else if state.Interval.Hours() < 24 {
+			interval = strconv.Itoa(int(state.Interval.Hours())) + "d"
+		} else {
+			interval = strconv.Itoa(int(state.Interval.Hours()/24)) + "d"
+		}
+
+		fmt.Printf(sgr.MustParse(gradeColor+"[underline]%s[underlineOff]%s (%s) "), string(state.Name[0]), state.Name[1:], interval)
 	}
 
 	fmt.Print("\n\n")

@@ -20,6 +20,9 @@ func NewFakeUserInteractor(chooseState ChooseStateFunc) *FakeUserInteractor {
 func (i *FakeUserInteractor) ShowDiscoveredDailyCards(dailyCards *study.DailyCards) {
 }
 
+func (i *FakeUserInteractor) ShowStudyProgress(selectedDailyCard *study.SelectedDailyCard, studyProgress *study.StudyProgress) {
+}
+
 func (i *FakeUserInteractor) AskQuestion(crd *card.Card, states []*study.CardState) (*study.CardState, error) {
 	return i.chooseState(crd, states)
 }

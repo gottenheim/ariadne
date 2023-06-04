@@ -144,6 +144,31 @@ func TestGetCardFromRepository(t *testing.T) {
 	}
 }
 
+func TestSkippingActivitiesFileDuringArtifactReading(t *testing.T) {
+	fakeFs, err := fs.NewFakeFs([]fs.FakeFileEntry{
+		fs.NewFakeFileEntry("/home/user/books/cpp/02", "source.cpp", `source code artifact`),
+		fs.NewFakeFileEntry("/home/user/books/cpp/02", "header.h", `header artifact`),
+		fs.NewFakeFileEntry("/home/user/books/cpp/02", ".activities", `ActivityType: learn`),
+	})
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	repo := fs_repo.NewFileCardRepository(fakeFs)
+
+	c, err := repo.Get("/home/user/books/cpp", "02")
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	activitiesFile := c.FindArtifactByName(".activities")
+	if activitiesFile != nil {
+		t.Fatal("Activities file must not be added to artifact collection")
+	}
+}
+
 func TestSkipNewCardProgressDuringSaving(t *testing.T) {
 	fakeFs, err := fs.NewFakeFs([]fs.FakeFileEntry{})
 

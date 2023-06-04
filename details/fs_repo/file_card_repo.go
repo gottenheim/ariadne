@@ -32,7 +32,7 @@ func (r *fileCardRepository) Get(section string, entry string) (*card.Card, erro
 	}
 
 	if len(artifacts) == 0 {
-		return nil, errors.New("Path %s doesn't contain card artifacts")
+		return nil, errors.New("path %s doesn't contain card artifacts")
 	}
 
 	activities, err := r.ReadCardActivities(cardPath)
@@ -178,5 +178,5 @@ func (r *fileCardRepository) readCardArtifacts(cardPath string) ([]card.CardArti
 }
 
 func (r *fileCardRepository) isServiceFile(fileName string) bool {
-	return fileName[0] == '.'
+	return filepath.Base(fileName)[0] == '.'
 }

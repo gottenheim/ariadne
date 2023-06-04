@@ -5,6 +5,6 @@ import (
 )
 
 type UserInteractor interface {
-	ShowDiscoveredDailyCards(dailyCards *DailyCards)
+	ShowStudyProgress(selectedDailyCard *SelectedDailyCard, studyProgress *StudyProgress)
 	AskQuestion(crd *card.Card, states []*CardState) (*CardState, error)
 }

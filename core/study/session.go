@@ -28,8 +28,6 @@ func (s *Session) Run(dailyCardsConfig *DailyCardsConfig, cardEmitter pipeline.E
 		return err
 	}
 
-	s.userInteractor.ShowDiscoveredDailyCards(dailyCards)
-
 	return s.studyDailyCards(dailyCards)
 }
 
@@ -43,15 +41,19 @@ func (s *Session) studyDailyCards(dailyCards *DailyCards) error {
 	it := NewDailyCardsIterator(s.timeSource, dailyCards)
 
 	for {
-		crd, err := it.Next()
+		dailyCard, err := it.Next()
 
 		if err != nil {
 			return err
 		}
 
-		if crd == nil {
+		if dailyCard == nil {
 			return nil
 		}
+
+		s.userInteractor.ShowStudyProgress(dailyCard, it.GetStudyProgress())
+
+		crd := dailyCard.Card
 
 		err = s.moveCardToNextState(crd)
 

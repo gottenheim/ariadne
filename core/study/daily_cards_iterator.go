@@ -8,6 +8,25 @@ import (
 	"github.com/gottenheim/ariadne/libraries/datetime"
 )
 
+type DailyCardType int
+
+const (
+	HotDailyCard DailyCardType = iota
+	NewDailyCard
+	ScheduledDailyCard
+)
+
+type SelectedDailyCard struct {
+	CardType DailyCardType
+	Card     *card.Card
+}
+
+type StudyProgress struct {
+	HotCardsleft       int
+	NewCardsLeft       int
+	ScheduledCardsLeft int
+}
+
 type DailyCardsIterator struct {
 	timeSource       datetime.TimeSource
 	newCards         []*card.Card
@@ -24,7 +43,7 @@ func NewDailyCardsIterator(timeSource datetime.TimeSource, dailyCards *DailyCard
 	}
 }
 
-func (i *DailyCardsIterator) Next() (*card.Card, error) {
+func (i *DailyCardsIterator) Next() (*SelectedDailyCard, error) {
 	randomCardsTotal := len(i.newCards) + len(i.scheduledCards)
 
 	if len(i.hotCardsToRevise) > 0 {
@@ -42,7 +61,10 @@ func (i *DailyCardsIterator) Next() (*card.Card, error) {
 
 		if canReturnHotCard {
 			i.hotCardsToRevise = i.hotCardsToRevise[1:]
-			return firstCard, nil
+			return &SelectedDailyCard{
+					CardType: HotDailyCard,
+					Card:     firstCard},
+				nil
 		}
 	}
 
@@ -53,19 +75,33 @@ func (i *DailyCardsIterator) Next() (*card.Card, error) {
 	randomIndex := rand.Int() % randomCardsTotal
 
 	if randomIndex < len(i.newCards) {
-		selectedCard := i.newCards[0]
+		newCard := i.newCards[0]
 		i.newCards = i.newCards[1:]
-		return selectedCard, nil
+		return &SelectedDailyCard{
+			CardType: NewDailyCard,
+			Card:     newCard,
+		}, nil
 	} else {
 		randomIndex -= len(i.newCards)
-		selectedCard := i.scheduledCards[randomIndex]
+		scheduledCard := i.scheduledCards[randomIndex]
 		i.scheduledCards = append(i.scheduledCards[0:randomIndex], i.scheduledCards[randomIndex+1:]...)
-		return selectedCard, nil
+		return &SelectedDailyCard{
+			CardType: ScheduledDailyCard,
+			Card:     scheduledCard,
+		}, nil
 	}
 }
 
 func (i *DailyCardsIterator) AddHotCardToRevise(crd *card.Card) {
 	i.hotCardsToRevise = append(i.hotCardsToRevise, crd)
+}
+
+func (i *DailyCardsIterator) GetStudyProgress() *StudyProgress {
+	return &StudyProgress{
+		HotCardsleft:       len(i.hotCardsToRevise),
+		NewCardsLeft:       len(i.newCards),
+		ScheduledCardsLeft: len(i.scheduledCards),
+	}
 }
 
 func sortCardsByTime(timeSource datetime.TimeSource, hotCards []*card.Card) []*card.Card {

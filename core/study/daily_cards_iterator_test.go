@@ -89,13 +89,13 @@ func TestDailyCardsIterator_ShouldReturnHotCardsFirst_IfTheirScheduleTimeIsExpir
 		HotCardsToRevise: hotCardsToRevise,
 	})
 
-	card, err := it.Next()
+	val, err := it.Next()
 
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if card.Section() != "Hot cards to revise" {
+	if val.CardType != study.HotDailyCard {
 		t.Error("Hot card to revise with expired time must be returned first")
 	}
 }
@@ -121,13 +121,13 @@ func TestDailyCardsIterator_ShouldNotReturnHotCardsFirst_IfTheirScheduleTimeIsNo
 		HotCardsToRevise: hotCardsToRevise,
 	})
 
-	card, err := it.Next()
+	val, err := it.Next()
 
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if card.Section() == "Hot cards to revise" {
+	if val.CardType == study.HotDailyCard {
 		t.Error("Hot card to revise with not expired time must not be returned first")
 	}
 }
@@ -250,13 +250,15 @@ func getCards(t *testing.T, it *study.DailyCardsIterator) []*card.Card {
 	var cards []*card.Card
 
 	for ; ; cardsCount++ {
-		crd, err := it.Next()
+		val, err := it.Next()
 		if err != nil {
 			t.Fatal(err)
 		}
-		if crd == nil {
+		if val == nil {
 			break
 		}
+
+		crd := val.Card
 
 		key := crd.Section() + crd.Entry()
 
