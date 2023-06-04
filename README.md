@@ -1,4 +1,4 @@
-# Project Ariadne
+# Ariadne
 A spaced repetition approach to memorize programming languages and technologies.
 
 ## Quick overview
