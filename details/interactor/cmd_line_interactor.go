@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"unicode"
 
+	"github.com/atotto/clipboard"
 	"github.com/eiannone/keyboard"
 	sgr "github.com/foize/go.sgr"
 	"github.com/gottenheim/ariadne/core/card"
@@ -46,7 +47,7 @@ func (i *CommandLineInteractor) ShowStudyProgress(selectedDailyCard *study.Selec
 func (i *CommandLineInteractor) AskQuestion(crd *card.Card, states []*study.CardState) (*study.CardState, error) {
 	i.showQuestionHeader(crd)
 	i.showQuestion(crd)
-	err := i.waitForUserToComeUpWithAnswer()
+	err := i.waitForUserToComeUpWithAnswer(crd)
 	if err != nil {
 		return nil, err
 	}
@@ -87,20 +88,29 @@ func (i *CommandLineInteractor) showQuestion(crd *card.Card) {
 	}
 }
 
-func (i *CommandLineInteractor) waitForUserToComeUpWithAnswer() error {
-	fmt.Println(sgr.MustParseln("[fg-white]Press any key to show answer[reset]"))
+func (i *CommandLineInteractor) waitForUserToComeUpWithAnswer(crd *card.Card) error {
+	fmt.Println(sgr.MustParseln("[fg-green][underline]C[underlineOff]opy path [fg-yellow][underline]S[underlineOff]how answer[reset]"))
 
-	_, key, err := keyboard.GetSingleKey()
-	if err != nil {
-		return err
+	for {
+		ch, key, err := keyboard.GetSingleKey()
+		if err != nil {
+			return err
+		}
+
+		if ch == 'c' || ch == 'C' {
+			i.copyFullCardPathToClipboard(crd)
+		} else if key == 13 || ch == 's' || ch == 'S' {
+			return nil
+		} else if key == 3 || key == 27 {
+			// ctrl + c or escape
+			return io.EOF
+		}
 	}
+}
 
-	// ctrl + c or escape
-	if key == 3 || key == 27 {
-		return io.EOF
-	}
-
-	return nil
+func (i *CommandLineInteractor) copyFullCardPathToClipboard(crd *card.Card) {
+	clipboard.WriteAll(fmt.Sprintf("%s/%s", crd.Section(), crd.Entry()))
+	fmt.Println("Card path has been copied to clipboard")
 }
 
 func (i *CommandLineInteractor) askUserHowGoodWasHisAnswer(crd *card.Card, states []*study.CardState) (*study.CardState, error) {

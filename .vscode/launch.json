@@ -13,7 +13,7 @@
             "args": [
                 "study-cards",
                 "--new-cards=10",
-                "--cards-to-remind=10",
+                "--cards-to-remind=100",
                 "--dir=/home/npenn/cards/cpp/",
             ]
         }
