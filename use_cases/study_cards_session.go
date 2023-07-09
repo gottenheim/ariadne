@@ -1,6 +1,8 @@
 package use_cases
 
 import (
+	"io"
+
 	"github.com/gottenheim/ariadne/core/card"
 	"github.com/gottenheim/ariadne/core/study"
 	"github.com/gottenheim/ariadne/libraries/datetime"
@@ -24,5 +26,11 @@ func NewStudyCardsSession(timeSource datetime.TimeSource, cardRepo card.CardRepo
 func (s *StudyCardsSession) Run(cardEmitter pipeline.Emitter[card.BriefCard], config *study.DailyCardsConfig) error {
 	session := study.NewSession(s.timeSource, s.cardRepo, s.userInteractor)
 
-	return session.Run(config, cardEmitter)
+	err := session.Run(config, cardEmitter)
+
+	if err != nil && err != io.EOF {
+		return err
+	}
+
+	return nil
 }
