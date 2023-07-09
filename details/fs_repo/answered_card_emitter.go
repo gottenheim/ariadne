@@ -2,6 +2,7 @@ package fs_repo
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -48,7 +49,7 @@ func (e *fileCardEmitter) Run(ctx context.Context, output chan<- card.BriefCard)
 		cardActivities, err := e.cardRepo.ReadCardActivities(cardDir)
 
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to read activities for card %v", cardDir)
 		}
 
 		section, entry := e.cardRepo.GetCardPathSection(cardDir), e.cardRepo.GetCardPathEntry(cardDir)

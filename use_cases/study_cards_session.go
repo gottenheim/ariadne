@@ -24,7 +24,5 @@ func NewStudyCardsSession(timeSource datetime.TimeSource, cardRepo card.CardRepo
 func (s *StudyCardsSession) Run(cardEmitter pipeline.Emitter[card.BriefCard], config *study.DailyCardsConfig) error {
 	session := study.NewSession(s.timeSource, s.cardRepo, s.userInteractor)
 
-	session.Run(config, cardEmitter)
-
-	return nil
+	return session.Run(config, cardEmitter)
 }

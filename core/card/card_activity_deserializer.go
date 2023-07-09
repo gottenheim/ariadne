@@ -2,6 +2,7 @@ package card
 
 import (
 	"bytes"
+	"fmt"
 	"time"
 
 	"github.com/gottenheim/ariadne/libraries/config"
@@ -11,7 +12,7 @@ func DeserializeCardActivityChain(activitiesBinary []byte) (CardActivity, error)
 	cfg, err := config.FromYamlReader(bytes.NewReader(activitiesBinary))
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Failed to read card activities: %v", err)
 	}
 
 	cardActivitiesModel := &CardActivitiesModel{}
