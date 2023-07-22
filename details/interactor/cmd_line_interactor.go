@@ -98,7 +98,10 @@ func (i *CommandLineInteractor) waitForUserToComeUpWithAnswer(crd *card.Card) er
 		}
 
 		if ch == 'c' || ch == 'C' {
-			i.copyFullCardPathToClipboard(crd)
+			err = i.copyFullCardPathToClipboard(crd)
+			if err != nil {
+				return err
+			}
 		} else if key == 13 || ch == 's' || ch == 'S' {
 			return nil
 		} else if key == 3 || key == 27 {
@@ -108,9 +111,13 @@ func (i *CommandLineInteractor) waitForUserToComeUpWithAnswer(crd *card.Card) er
 	}
 }
 
-func (i *CommandLineInteractor) copyFullCardPathToClipboard(crd *card.Card) {
-	clipboard.WriteAll(fmt.Sprintf("%s/%s", crd.Section(), crd.Entry()))
+func (i *CommandLineInteractor) copyFullCardPathToClipboard(crd *card.Card) error {
+	err := clipboard.WriteAll(fmt.Sprintf("%s/%s", crd.Section(), crd.Entry()))
+	if err != nil {
+		return err
+	}
 	fmt.Println("Card path has been copied to clipboard")
+	return nil
 }
 
 func (i *CommandLineInteractor) askUserHowGoodWasHisAnswer(crd *card.Card, states []*study.CardState) (*study.CardState, error) {
