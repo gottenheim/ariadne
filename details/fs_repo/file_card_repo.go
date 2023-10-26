@@ -14,7 +14,15 @@ import (
 )
 
 type fileCardRepository struct {
-	fs afero.Fs
+	fs           afero.Fs
+	dirsToIgnore []string
+}
+
+func NewFileCardRepositoryWithIgnoredDirs(fs afero.Fs, dirsToIgnore []string) *fileCardRepository {
+	return &fileCardRepository{
+		fs:           fs,
+		dirsToIgnore: dirsToIgnore,
+	}
 }
 
 func NewFileCardRepository(fs afero.Fs) *fileCardRepository {
@@ -159,13 +167,19 @@ func (r *fileCardRepository) readCardArtifacts(cardPath string) ([]card.CardArti
 	var artifacts []card.CardArtifact
 
 	err := afero.Walk(r.fs, cardPath, func(filePath string, info os.FileInfo, err error) error {
-		if info != nil && !info.IsDir() && !r.isServiceFile(filePath) {
-			fileContents, err := afero.ReadFile(r.fs, filePath)
-			if err != nil {
-				return err
+		if info != nil {
+			if r.isIgnoredDirectory(info) {
+				return filepath.SkipDir
 			}
-			fileName := path.Base(filePath)
-			artifacts = append(artifacts, card.NewCardArtifact(fileName, fileContents))
+
+			if !info.IsDir() && !r.isServiceFile(filePath) {
+				fileContents, err := afero.ReadFile(r.fs, filePath)
+				if err != nil {
+					return err
+				}
+				fileName := path.Base(filePath)
+				artifacts = append(artifacts, card.NewCardArtifact(fileName, fileContents))
+			}
 		}
 		return nil
 	})
@@ -179,4 +193,18 @@ func (r *fileCardRepository) readCardArtifacts(cardPath string) ([]card.CardArti
 
 func (r *fileCardRepository) isServiceFile(fileName string) bool {
 	return filepath.Base(fileName)[0] == '.'
+}
+
+func (r *fileCardRepository) isIgnoredDirectory(fileInfo os.FileInfo) bool {
+	if !fileInfo.IsDir() {
+		return false
+	}
+
+	for _, dirToIgnore := range r.dirsToIgnore {
+		if fileInfo.Name() == dirToIgnore {
+			return true
+		}
+	}
+
+	return false
 }

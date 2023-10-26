@@ -15,6 +15,7 @@ import (
 const dirFlag = "dir"
 const newCardsFlag = "new-cards"
 const cardsToRemindFlag = "cards-to-remind"
+const ignoreDir = "ignore-dir"
 
 var studyCardsCmd = &cobra.Command{
 	Use:   "study-cards",
@@ -32,7 +33,9 @@ var studyCardsCmd = &cobra.Command{
 
 		fmt.Printf("Directory used to discover cards: %s\n", cardsDir)
 
-		cardRepo := fs_repo.NewFileCardRepository(osFs)
+		dirsToIgnore := GetDirectoriesToIgnore(cmd, ignoreDir)
+
+		cardRepo := fs_repo.NewFileCardRepositoryWithIgnoredDirs(osFs, dirsToIgnore)
 		timeSource := datetime.NewOsTimeSource()
 
 		useCase := use_cases.NewStudyCardsSession(timeSource, cardRepo, interactor.NewCommandLineInteractor())
@@ -53,6 +56,8 @@ func init() {
 
 	studyCardsCmd.Flags().String(dirFlag, "", "Card directory")
 	studyCardsCmd.MarkFlagRequired(dirFlag)
+
+	studyCardsCmd.Flags().StringArray(ignoreDir, []string{}, "Directory to ignore")
 
 	studyCardsCmd.Flags().Int(newCardsFlag, 0, "Count of new cards to study today")
 	studyCardsCmd.MarkFlagRequired(newCardsFlag)

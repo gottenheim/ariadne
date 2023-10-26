@@ -35,3 +35,9 @@ func GetDirectoryFlags(cmd *cobra.Command, fs afero.Fs, flagNames []string) ([]s
 
 	return dirs, nil
 }
+
+func GetDirectoriesToIgnore(cmd *cobra.Command, flagName string) []string {
+	dirsToIgnore, _ := cmd.Flags().GetStringArray(flagName)
+
+	return dirsToIgnore
+}

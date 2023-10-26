@@ -266,3 +266,28 @@ func TestReadCardActivities(t *testing.T) {
 
 	config.AssertIdenticalYamlStrings(t, string(initialActivitiesBinary), string(actualActivitiesBinary))
 }
+
+func TestSkippingIgnoredDirectoriesDuringArtifactReading(t *testing.T) {
+	fakeFs, err := fs.NewFakeFs([]fs.FakeFileEntry{
+		fs.NewFakeFileEntry("/home/user/books/cpp/02", "source.cpp", `source code artifact`),
+		fs.NewFakeFileEntry("/home/user/books/cpp/02", "header.h", `header artifact`),
+		fs.NewFakeFileEntry("/home/user/books/cpp/02/bin", "ignored", `file that must be ignored`),
+	})
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	repo := fs_repo.NewFileCardRepositoryWithIgnoredDirs(fakeFs, []string{"bin", "obj"})
+
+	c, err := repo.Get("/home/user/books/cpp", "02")
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ignoredFile := c.FindArtifactByName("ignored")
+	if ignoredFile != nil {
+		t.Fatal("File in ignored directory must not be included into card")
+	}
+}
